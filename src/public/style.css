@@ -1,0 +1,248 @@
+body {
+    background-color: #BBDDFF;
+    font-family: 'Noto Sans TC', sans-serif;
+    /* font-weight: 500; */
+    font-size: 24px;
+}
+
+span.dot {
+    height: 5px;
+    width: 5px;
+    background-color: #000;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+h1 {
+    margin-block-start: 0.1em;
+    margin-block-end: 0.1em;
+}
+
+div#message {
+    color: #977;
+    font-size: 80%;
+}
+
+.mainInput {
+    width: 728px;
+    height: 50px;
+    padding: none;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+div#chartContainer {
+    display: none;
+    font-size: 18px;
+}
+
+section.singleCommentThead, section.linkedSec {
+    margin: 5px 0px;
+}
+
+.linkedComment {
+    font-size: 14px;
+    font-weight: bold;
+    vertical-align: top; /* not sure why 'top' becomes middle */
+}
+.vidInfo {    
+    margin-top: 10px;
+    white-space: nowrap;
+}
+.metadata {
+    display: inline-block;
+    vertical-align: top;
+    /* overflow: hidden; */
+    line-height: 1.5em;
+}
+.vidTitle {
+    font-size: 28px;
+    vertical-align: top;
+    font-weight: bolder;
+}
+.author {
+    vertical-align: top;
+    font-weight: bold;
+    font-size: 22px;
+}
+div.viewCount {
+    display: inline-block;
+}
+span.concurrent {
+    color: #bb0000;
+}
+.ratings {
+    display: inline-block;
+    text-align: right;
+}
+.moreMeta, .vidTimestamp{
+    font-size:20px;
+    /* line-height: .8em; */
+}
+
+span#eta {
+    font-size: 18px;
+    color: #555;
+    font-style: italic;
+}
+
+.intro {
+    display: inline-block;
+}
+div.commentHeader {
+    vertical-align: middle;
+}
+.sortSection {
+    font-size: 18px;
+    vertical-align: bottom;
+    display: inline-block;
+}
+p.littleLabel {
+    margin: 0px;
+    font-weight: bold;
+}
+
+button {
+    font-family:inherit;
+    font-size: inherit;
+}
+button.send {
+    height: 56px;
+}
+button.sendSort {
+    height: 35px;
+}
+button.moreBtn {
+    height: 60px;
+    max-width: 1050px;
+}
+
+.commentsList {
+    font-size:16px;
+}
+div#loadStatus {
+    margin: 10px 0px;
+}
+
+div#chooseLoad {
+    display: none;
+}
+div#sortLoaded {
+    display: none;
+    font-size: 20px;
+}
+
+div.commentThreadDiv, div.linked {
+    margin-top: 6px;
+    margin-bottom: 6px;
+    line-height: 1.5em;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+div.linked {
+    background-color: #DDEEFF;
+}
+
+input.enterBounds {
+    height: 25px;
+    width: 95px;
+    font: inherit;
+}
+
+a.channelPfpLink {    
+    margin-right: 5px;
+    margin-top: 5px;
+    display:inline-block;
+    vertical-align: top;
+    white-space: normal;
+}
+
+div.streamTimes {
+    font-size: 20px;
+}
+
+.commentContent, .replyContent {
+    display:inline-block;
+    white-space: normal;
+    word-wrap: break-word;
+    margin-right:60px;
+    width: 943px;
+}
+.replyContent {
+    width: 886px
+}
+span.num {
+    float: right;
+}
+
+.commentFooter {
+    font-weight: bold;
+}
+img.pfp {
+    /* hardcoded */
+    height: 48px;
+    width: 48px;
+}
+img.thumbnail {
+    width: 320px;
+    height: 180px;
+}
+#moreDiv {
+    display: none;
+}
+#showMoreDiv {
+    display: none;
+}
+
+a.authorName {
+    text-decoration: none;
+    font-weight: bold;
+    color:blue;
+}
+a.authorNameOp {
+    text-decoration: none;
+    font-weight: bold;
+    color:white;
+    
+}
+span.authorNameCreator {
+    background-color: #006bec;
+    border-radius: 12px;
+    padding: 0px 3px;
+    vertical-align: middle;
+    text-align: center;
+    color: #fff;
+}
+a.authorName:hover, a.authorNameOp:hover {
+    text-decoration: underline;
+}
+
+a.timeStampLink {
+    color: #222222;
+    text-decoration: none;
+}
+a.timeStampLink:hover {
+    text-decoration: underline;
+}
+
+a.authorLink {
+    color: inherit;
+    text-decoration: none;
+}
+a.authorLink:hover {
+    text-decoration: underline;
+}
+
+hr {
+    height: 0px;
+    color: #000;
+    border: 1px solid black;
+    max-width: 1000px;
+    margin:0px;
+}
+hr.sect {
+    border: 2px solid;
+    margin: 15px 0px;
+}
