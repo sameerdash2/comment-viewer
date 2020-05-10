@@ -5,7 +5,7 @@ let app = express();
 let http = require('http').createServer(app);
 let io = require('socket.io')(http);
 const fs = require('fs');
-let stream = fs.createWriteStream("logs.json", {flags: 'a'});
+// let stream = fs.createWriteStream("logs.json", {flags: 'a'});
 
 app.use(express.static("public"));
 
@@ -92,11 +92,11 @@ io.on('connection', function (socket) {
 		trueStart = new Date();
 		currentSort = type;
 		switch (type) {
-			case "dateOldest":                        
+			case "dateOldest":
 				executeAllComments("");
 				break;
 			case "dateNewest":
-				// gone forever.
+				// Removed
 				// executeComments("time", "");
 				break;
 			case "relevanceMost":
@@ -202,7 +202,6 @@ io.on('connection', function (socket) {
 			inc = 1;
 		}
 		
-		let startTime = new Date();
 		let add = "";
 		let number = 0, className = "";
 		while (commentIndex != goal) {
@@ -283,22 +282,9 @@ io.on('connection', function (socket) {
 					totalExpected = response.data.items[0].statistics.commentCount; // for load percentage
 					videoPublished = response.data.items[0].snippet.publishedAt; // for graph bound
 					uploaderId = response.data.items[0].snippet.channelId; // for highlighting OP comments
-					if (forLinked) {
-						socket.emit("videoInfo", { content:displayTitle(response, locale, true), reset:false } );
-						socket.emit("commentInfo", { num: totalExpected, disabled: false, eta: eta(totalExpected) });
-					}
-					else {
-						resetPage();
-						// Send the video title + details.
-						socket.emit("videoInfo", { content:displayTitle(response, locale, false), reset:true } );
-						if (typeof response.data.items[0].statistics.commentCount === "undefined") {
-							socket.emit("commentInfo", {num: -1, disabled: true, eta: ""});
-						}
-						else {
-							executeTestComment(totalExpected, response.data.items[0].snippet.liveBroadcastContent);
-						}
-					}
-					
+					if (!forLinked) resetPage();
+					socket.emit("videoInfo", { content:displayTitle(response, locale, forLinked), reset: !forLinked } );
+					executeTestComment(totalExpected, response.data.items[0].snippet.liveBroadcastContent);					
 				}
 				else {
 					socket.emit("idInvalid");
@@ -325,8 +311,9 @@ io.on('connection', function (socket) {
 			.then(function(response) {
 				// for upcoming/live streams, disregard a 0 count.
 				if (!(liveBroadcastContent != "none" && count == 0)) {
-					socket.emit("commentInfo", { num: count, disabled: false, eta: eta(count) });
-					if (count < 200 && count > 0) {
+					let beginLoad = count < 200 && count > 0;
+					socket.emit("commentInfo", { num: count, disabled: false, eta: eta(count), commence: beginLoad });
+					if (beginLoad) {
 						handleLoad("dateOldest");
 					}
 				}
@@ -335,7 +322,7 @@ io.on('connection', function (socket) {
 					console.error("Test comment execute error", err.response.data.error);
 					if (liveBroadcastContent == "none") {					
 						if (err.response.data.error.errors[0].reason == "commentsDisabled") {
-							socket.emit("commentInfo", {num: count, disabled: true, eta: ""});
+							socket.emit("commentInfo", {num: count, disabled: true, eta: "", commence: false});
 						}
 						else if (err.response.data.error.errors[0].reason == "processingFailure") {						
 							setTimeout(executeTestComment, 1, count);
@@ -447,7 +434,6 @@ io.on('connection', function (socket) {
     	io.emit('chat message', msg);
   	});
   	socket.on('idSent', function (id) {
-		console.log("id: " + id);
 		checkSendID(id);
 	});
 	socket.on("requestAll", function() {
