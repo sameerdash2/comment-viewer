@@ -283,7 +283,7 @@ io.on('connection', function (socket) {
 					videoPublished = response.data.items[0].snippet.publishedAt; // for graph bound
 					uploaderId = response.data.items[0].snippet.channelId; // for highlighting OP comments
 					if (!forLinked) resetPage();
-					socket.emit("videoInfo", { content:displayTitle(response, locale, forLinked), reset: !forLinked } );
+					socket.emit("videoInfo", { response:response, forLinked:forLinked } );
 					executeTestComment(totalExpected, response.data.items[0].snippet.liveBroadcastContent);					
 				}
 				else {

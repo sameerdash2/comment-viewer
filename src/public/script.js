@@ -28,6 +28,7 @@ $(document).ready(function() {
     let viewGraph = document.getElementById("viewGraph");
     let startDate = document.getElementById("startDate");
     let endDate = document.getElementById("endDate");
+    let info = document.getElementById("info");
 
     let storedReplies = {};
 
@@ -139,10 +140,10 @@ $(document).ready(function() {
         message.html("Invalid video link or ID.");
         message.css('color', ERR);
     });
-    socket.on("videoInfo", ({ content, reset }) => {
-        if (reset) { resetPage(); }
+    socket.on("videoInfo", ({ response, forLinked }) => {
+        if (!forLinked) { resetPage(); }
         message.html("&nbsp;");
-        $("#info").html(content);
+        info.innerHTML = displayTitle(response, forLinked);
     });
     socket.on("commentInfo", ({num, disabled, eta, commence}) => {
         $("#chooseLoad").toggle(!disabled && !commence && num < MAX);     
