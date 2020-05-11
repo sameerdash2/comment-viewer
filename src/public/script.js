@@ -21,6 +21,10 @@ $(document).ready(function() {
     let startText, endText;
     let graphPoints = [];
 
+    let session = {
+        commentNum: 0,
+    }
+
     let submitBtn = $("#submit");
     let message = $("#message");
     let commentsSection = $("#commentsSection");
@@ -140,10 +144,14 @@ $(document).ready(function() {
         message.html("Invalid video link or ID.");
         message.css('color', ERR);
     });
-    socket.on("videoInfo", ({ response, forLinked }) => {
+    socket.on("videoInfo", ({ video, forLinked }) => {
         if (!forLinked) { resetPage(); }
+        session.totalExpected = video.statistics.commentCount; // for load percentage
+        session.videoId = video.id;
+        session.videoPublished = video.snippet.publishedAt; // for graph bound
+        session.uploaderId = video.snippet.channelId; // for highlighting OP comments        
         message.html("&nbsp;");
-        info.innerHTML = displayTitle(response, forLinked);
+        info.innerHTML = displayTitle(video, forLinked);
     });
     socket.on("commentInfo", ({num, disabled, eta, commence}) => {
         $("#chooseLoad").toggle(!disabled && !commence && num < MAX);     
@@ -161,32 +169,49 @@ $(document).ready(function() {
         }
     });
 
-    socket.on("loadStatus", (text) => {
-        loadStatus.html(text);
+    socket.on("loadStatus", (totalCount) => {
+        loadStatus.html(totalCount);
+        document.getElementById("loadStatus").innerHTML = totalCount.toLocaleString() + " comments loaded ("
+            + (Math.round(totalCount / session.totalExpected * 1000) / 10).toFixed(1) + "%)";
     });
 
-    socket.on("renderedComments", ({reset, html, showMore}) => {      
+    socket.on("groupComments", ({ reset, items, showMore }) => {      
         message.html("&nbsp;");
         if (reset) {
             $("#submit").prop("disabled", false);
+            session.commentNum = 0;
             commentsSection.empty();
             loadStatus.empty();
             storedReplies = {};
             $("#sortLoaded").show();
         }
-        commentsSection.append(html);
+        let add = "", len = items.length;
+        for (let i = 0; i < len; i++) {
+            session.commentNum++;
+            // TODO: Check linked
+			// if (linkedParent == library[commentIndex].snippet.topLevelComment.id) { continue; }
+	
+			add += `<hr><div class="commentThreadDiv">` + formatCommentThread(items[i], session.commentNum, session.uploaderId, session.videoId, false, false) + `</div>`;
+		
+        }
+        document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
         $("#showMoreDiv").toggle(showMore);
         $("#showMoreBtn").prop("disabled", false);
     });
-    socket.on("renderedReplies", ({ content, id, num }) => {
-        storedReplies[id] = [true, num];
-        // show repliesExpand
+    socket.on("newReplies", ({ items, id}) => {
+        let len = items.length;
+        storedReplies[id] = [true, len];
         $("#repliesEE-" + id).show();
-        // update repliesEXpand
-        $("#repliesEE-" + id).html(content);
-        // update hint
-        $("#replyhint-" + id).html("Hide " + num + " replies");
-        // reenable getReplies- button
+        let newContent = "";
+        let isLinked, className;
+        for (let i = len - 1; i >= 0; i--) {
+			isLinked = items[i].id == session.currentLinked;
+			className = isLinked ? "linked" : "commentThreadDiv";
+			newContent +=`<div class="` + className + `">` + formatCommentThread(items[i], len - i, session.uploaderId, session.videoId, isLinked, true)
+				+ `</div>`;
+        }
+        document.getElementById("repliesEE-" + id).innerHTML = newContent;
+        $("#replyhint-" + id).html("Hide " + len + " replies");
         $("#getReplies-" + id).prop("disabled", false);
     });
     socket.on("renderedLinked", (html) => {
@@ -298,6 +323,9 @@ $(document).ready(function() {
         $("#b_dateOldest").prop("disabled", true);
         viewGraph.disabled = false;
         viewGraph.style.display = "none"; //safety
+        session = {
+            commentNum: 0,
+        };
 
         startText = "";
         endText = "";

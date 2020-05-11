@@ -19,7 +19,6 @@ io.on('connection', function (socket) {
 	let idString = "";
 	let videoPublished, uploaderId;
 	let loadedReplies = {};
-	let shownReplies = {};
 	let currentLinked = "";
 	let linkedParent = "";
 
@@ -38,7 +37,6 @@ io.on('connection', function (socket) {
 		likedComments = [];
 		totalCount = 0;
 		loadedReplies = {};
-		shownReplies = {};
     
 		socket.emit("resetPage");
 		//currentLinked = "";
@@ -117,14 +115,13 @@ io.on('connection', function (socket) {
 			mergeSort(likedComments, 0, len - 1);
 			console.log("Finished mergesort on " + len + " comments in " + (new Date().getTime() - thing.getTime()) + "ms");
 		}
-		shownReplies = {};
 		if (order == "dateOldest" || order == "likesLeast") {
 			commentIndex = allComments.length;
 		}
 		else {
 			commentIndex = -1;
 		}
-		displayLoadedComments(true);
+		sendLoadedComments(true);
 	}
 	
 	function executeAllComments(nxtPageToken, errors = 0) {
@@ -144,8 +141,7 @@ io.on('connection', function (socket) {
 					totalCount += response.data.items[i].snippet.totalReplyCount;
 				}
 				
-				socket.emit("loadStatus", totalCount.toLocaleString() + " comments loaded ("
-					+ (Math.round(totalCount / totalExpected * 1000) / 10).toFixed(1) + "%)");
+				socket.emit("loadStatus", totalCount);
 				if (response.data.nextPageToken) {
 					setTimeout(executeAllComments, 0, response.data.nextPageToken, errors);
 				}
@@ -168,7 +164,7 @@ io.on('connection', function (socket) {
 					// take care of possible pinned comment at the top
 					reSort(allComments);
 					
-					displayLoadedComments(true);
+					sendLoadedComments(true);
 				}
 	
 			},
@@ -183,36 +179,27 @@ io.on('connection', function (socket) {
 				});
 	}
 	
-	function displayLoadedComments(newSet = false) {
+	function sendLoadedComments(newSet = false) {
 		let library = (currentSort == "likesMost" || currentSort == "likesLeast") ? likedComments : allComments;
 		let len = allComments.length;
 		let more = false;
 	
-		let inc, goal;
+		let goal;
+		let subset;
 		if (currentSort == "dateOldest" || currentSort == "likesLeast") {
 			// end to start of array
 			goal = Math.max(commentIndex - MAXDISPLAY, 0);
 			more = goal != 0;
-			inc = -1;
+			subset = library.slice(goal, commentIndex).reverse();
 		}
 		else {
 			// start to end
 			goal = Math.min(commentIndex + MAXDISPLAY, len - 1);
 			more = goal != len - 1;
-			inc = 1;
+			subset = library.slice(commentIndex + 1, goal + 1);
 		}
-		
-		let add = "";
-		let number = 0, className = "";
-		while (commentIndex != goal) {
-			commentIndex += inc;
-			if (linkedParent == library[commentIndex].snippet.topLevelComment.id) { continue; }
-			number = (inc == 1) ? commentIndex + 1 : len - commentIndex;
-	
-			add += `<hr><div class="commentThreadDiv">` + formatCommentThread(library[commentIndex], idString, uploaderId, locale, number) + `</div>`;
-		}
-		//console.log("populated display in " + (new Date().getTime() - startTime.getTime()) + "ms");
-		socket.emit("renderedComments", { reset: newSet, html: add, showMore: more });
+		commentIndex = goal;
+		socket.emit("groupComments", { reset: newSet, items: subset, showMore: more });
 	}
 	
 	function executeLinkedComment(commentId, reply = false) {
@@ -283,7 +270,7 @@ io.on('connection', function (socket) {
 					videoPublished = response.data.items[0].snippet.publishedAt; // for graph bound
 					uploaderId = response.data.items[0].snippet.channelId; // for highlighting OP comments
 					if (!forLinked) resetPage();
-					socket.emit("videoInfo", { response:response, forLinked:forLinked } );
+					socket.emit("videoInfo", { video:response.data.items[0], forLinked:forLinked } );
 					executeTestComment(totalExpected, response.data.items[0].snippet.liveBroadcastContent);					
 				}
 				else {
@@ -336,7 +323,7 @@ io.on('connection', function (socket) {
 	
 	function getReplies(commentId) {
 		if (loadedReplies[commentId]) {
-			displayReplies(commentId);
+			sendReplies(commentId);
 		}
 		else {
 			loadedReplies[commentId] = []; //will populate
@@ -361,7 +348,7 @@ io.on('connection', function (socket) {
 					else {
 						loadedReplies[commentId] = replies;
 						console.log("got replies: " + loadedReplies[commentId].length);
-						displayReplies(commentId);
+						sendReplies(commentId);
 					}
 	
 				},
@@ -376,19 +363,8 @@ io.on('connection', function (socket) {
 					});
 	}
 
-	function displayReplies(commentId) {
-		let newContent = "";
-		let len = loadedReplies[commentId].length;
-		let className, isLinked;
-		for (let i = len - 1; i >= 0; i--) {
-			isLinked = loadedReplies[commentId][i].id == currentLinked;
-			className = isLinked ? "linked" : "commentThreadDiv";
-			newContent +=`<div class="` + className + `">` + formatCommentThread(loadedReplies[commentId][i], idString, uploaderId, locale, len - i, isLinked, true)
-				+ `</div>`;
-		}
-		//let replyHint = "Hide " + len + " replies";
-		socket.emit("renderedReplies", { content: newContent, id: commentId, num: len });
-		shownReplies[commentId] = true;
+	function sendReplies(commentId) {
+		socket.emit("newReplies", { items: loadedReplies[commentId], id: commentId});
 	}
 	
 	function displayComment(response, isLinked) {
@@ -446,7 +422,7 @@ io.on('connection', function (socket) {
 		}
 	})
 	socket.on("showMore", function() {
-		displayLoadedComments();
+		sendLoadedComments();
 	});
 	socket.on("sortRequest", function (type) {
 		console.log("sort type: " + type);
@@ -667,97 +643,6 @@ function formatCommentThread(item, videoId, uploaderId, locale, number, linked =
     `;
 
     return content;
-}
-
-function displayTitle(response, locale, useCount) {
-    let liveState = response.data.items[0].snippet.liveBroadcastContent;
-
-    // casting in order to use toLocaleString()
-	let viewCount = Number(response.data.items[0].statistics.viewCount);
-    let likeCount = Number(response.data.items[0].statistics.likeCount);
-    let dislikeCount = Number(response.data.items[0].statistics.dislikeCount);
-    let commentCount = Number(response.data.items[0].statistics.commentCount);
-
-    let ratingsSec = `<div class="ratings">`;
-    if (typeof response.data.items[0].statistics.likeCount === "undefined") {
-        ratingsSec += `<i class="fas fa-thumbs-up"></i> <span class="it">Ratings have been hidden.</span>`;
-    }
-    else {
-        ratingsSec += `<i class="fas fa-thumbs-up"></i> ` + likeCount.toLocaleString() + 
-            `&nbsp;&nbsp;&nbsp;&nbsp;<i class="fas fa-thumbs-down"></i> ` + dislikeCount.toLocaleString();
-    }
-    ratingsSec += `</div>`;
-
-    let viewcountSec = `<div class="viewcount"><i class="fas fa-eye"></i> `;
-    let timestampSec = `<div class="vidTimestamp">`;
-	let commentCountSec = `<div id="commentInfo" class="commentCount">`;
-	let streamTimesSec = ``;
-    if (liveState == "live") {
-        let concurrentViewers = Number(response.data.items[0].liveStreamingDetails.concurrentViewers);
-        viewcountSec += `<span class="concurrent">` + concurrentViewers.toLocaleString() + ` watching now</span> / `
-            + viewCount.toLocaleString() + ` total views`;
-        let startTime = new Date(response.data.items[0].liveStreamingDetails.actualStartTime);                    
-        let diffMs = (new Date() - startTime); // milliseconds
-        let diffHrs = Math.floor(diffMs / 3600000); // hours
-        let diffMins = Math.floor(((diffMs % 86400000) % 3600000) / 60000); // minutes
-        let diffSecs = Math.round((((diffMs % 86400000) % 3600000) % 60000) / 1000);
-        timestampSec += `<strong>Stream start time:</strong> ` + parseDate(startTime.toISOString(), locale)
-            + ` (Elapsed: ` + diffHrs + `h ` + diffMins + `m ` + diffSecs + `s)`;
-    }
-    else if (liveState == "upcoming") {
-        viewcountSec += `<span class="concurrent">Upcoming live stream</span>`;
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> `
-            + parseDate(response.data.items[0].snippet.publishedAt, locale) + `<br><i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> `
-            + parseDate(response.data.items[0].liveStreamingDetails.scheduledStartTime, locale);
-    }
-    else {
-		// YT premium shows don't return viewcount
-		if (typeof response.data.items[0].statistics.viewCount === "undefined") {
-			viewcountSec += ` <span class="it">View count unavailable</span>`;
-		}
-		else {
-			viewcountSec += viewCount.toLocaleString() + ` views`;
-		}
-        
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ` + parseDate(response.data.items[0].snippet.publishedAt, locale);
-
-        if (typeof response.data.items[0].liveStreamingDetails !== "undefined") {
-            streamTimesSec += `<div class="streamTimes"><strong>Stream start time:</strong> `
-                + parseDate(response.data.items[0].liveStreamingDetails.actualStartTime, locale)
-                + `<br><strong>Stream end time:</strong> ` + parseDate(response.data.items[0].liveStreamingDetails.actualEndTime, locale) + `</div>`;
-        }
-
-        commentCountSec += `<i class="fas fa-comment"></i> `;
-        commentCountSec += useCount ? Number(commentCount).toLocaleString() + ` comments` : ` Loading comment information...`;
-	}
-    viewcountSec += `</div>`;
-    timestampSec += `</div>`;
-	commentCountSec += `</div>`;
-
-    let newContent = `
-        <img class="thumbnail" src="` + response.data.items[0].snippet.thumbnails.medium.url + `">
-        <div class="metadata">
-            <div class="vidTitle">
-                <a class="authorName" href="https://www.youtube.com/watch?v=` + response.data.items[0].id + `" target="_blank">
-                    ` + response.data.items[0].snippet.title + `
-                </a>
-            </div>
-            <div class="author">
-				<a class="authorLink" href="https://www.youtube.com/channel/` + response.data.items[0].snippet.channelId
-					+ `" target="_blank">` + response.data.items[0].snippet.channelTitle + `</a>
-            </div>
-            <div class="moreMeta">
-                ` + viewcountSec + `
-                ` + ratingsSec + `
-                ` + timestampSec + `
-            </div>
-		</div>
-		` + streamTimesSec + `
-        ` + commentCountSec + `
-    `;
-	//vidInfo.innerHTML = newContent;
-	//socket.emit("videoInfo", newContent);
-	return newContent;
 }
 
 console.log("begin");
