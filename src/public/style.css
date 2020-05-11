@@ -35,6 +35,10 @@ div#message {
 div#chartContainer {
     display: none;
     font-size: 18px;
+    width: 1000px;
+    border: 3px solid black;
+    margin-top: 5px;
+    padding: 5px;
 }
 
 section.singleCommentThead, section.linkedSec {
