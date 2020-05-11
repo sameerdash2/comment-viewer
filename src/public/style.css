@@ -208,11 +208,9 @@ a.authorNameOp {
     
 }
 span.authorNameCreator {
-    background-color: #006bec;
-    border-radius: 12px;
+    background-color: #33bbff;
     padding: 0px 3px;
     vertical-align: middle;
-    text-align: center;
     color: #fff;
 }
 a.authorName:hover, a.authorNameOp:hover {
