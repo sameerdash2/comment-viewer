@@ -213,10 +213,11 @@ io.on('connection', function (socket) {
 					resetPage();
 					idString = response.data.items[0].snippet.videoId;
 					executeTitle(true);
-					displayComment(response, !reply);
 					if (reply) {
-						console.log("currentLinked " + currentLinked);
-						executeLinkedReply(currentLinked);
+						executeLinkedReply(response.data.items[0]);
+					}
+					else {
+						sendLinkedComment(response.data.items[0]);
 					}
 				}
 				else {
@@ -229,31 +230,28 @@ io.on('connection', function (socket) {
 					if (err.response.data.error.errors[0].reason == "quotaExceeded") {
 						quotaExceeded();
 					}
-					else if (err.response.data.error.errors[0].reason == "processingFailure") {
-						
+					else if (err.response.data.error.errors[0].reason == "processingFailure") {						
 						setTimeout(executeLinkedComment, 10, commentId, reply);
 					}
 				});
 	}
 	
-	function executeLinkedReply(replyId) {
-		console.log("replyId ", replyId);
+	function executeLinkedReply(parent) {
 		return youtube.comments.list({
 			"part": "snippet",
-			"id": replyId,
+			"id": currentLinked,
 			})
 				.then(function(response) {
 					console.log("Response received (Linked REPLY)", response);
-					displayLinkedReply(replyId, response);
+					sendLinkedComment(parent, response.data.items[0]);
 				},
 				function(err) {
 					console.error("Linked reply execute error", err.response.data.error);					
 					if (err.response.data.error.errors[0].reason == "quotaExceeded") {
 						quotaExceeded();
 					}
-					else if (err.response.data.error.errors[0].reason == "processingFailure") {
-						
-						setTimeout(executeLinkedReply, 10, replyId);
+					else if (err.response.data.error.errors[0].reason == "processingFailure") {						
+						setTimeout(executeLinkedReply, 10, parent);
 					}
 				});
 	}
@@ -366,16 +364,9 @@ io.on('connection', function (socket) {
 	function sendReplies(commentId) {
 		socket.emit("newReplies", { items: loadedReplies[commentId], id: commentId});
 	}
-	
-	function displayComment(response, isLinked) {
-		let html = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-			+ formatCommentThread(response.data.items[0], idString, uploaderId, locale, -1, isLinked) + `</div></section><hr><br>`;
-		socket.emit("renderedLinked", html);
-	}
-	
-	function displayLinkedReply(id, response) {
-		let text = `<div class="linked">` + formatCommentThread(response.data.items[0], idString, uploaderId, locale, -1, true, true) + `</div>`;
-		socket.emit("renderedLinkedReply", { html: text, commentId: id });
+
+	function sendLinkedComment(parent, reply = null) {
+		socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply});
 	}
 
 	function makeGraph() {

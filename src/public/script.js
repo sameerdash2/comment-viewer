@@ -188,8 +188,8 @@ $(document).ready(function() {
         let add = "", len = items.length;
         for (let i = 0; i < len; i++) {
             session.commentNum++;
-            // TODO: Check linked
-			// if (linkedParent == library[commentIndex].snippet.topLevelComment.id) { continue; }
+            // Skip comment if it's the linked one.
+			if (session.linkedParent == items[i].id) { continue; }
 	
 			add += `<hr><div class="commentThreadDiv">` + formatCommentThread(items[i], session.commentNum, session.uploaderId, session.videoId, false, false) + `</div>`;
 		
@@ -214,13 +214,15 @@ $(document).ready(function() {
         $("#replyhint-" + id).html("Hide " + len + " replies");
         $("#getReplies-" + id).prop("disabled", false);
     });
-    socket.on("renderedLinked", (html) => {
-        $("#linkedHolder").html(html);
-        //$("#chooseLoad").show();
-        message.html("&nbsp;");
-    });                
-    socket.on("renderedLinkedReply", ({ html, commentId }) => {
-        $("#repliesEE-" + commentId.substring(0, commentId.indexOf("."))).html(html);
+    socket.on("linkedComment", ({parent, hasReply, reply}) => {
+        session.linkedParent = parent.id;
+        session.currentLinked = hasReply ? reply.id : parent.id;
+        document.getElementById("linkedHolder").innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
+            + formatCommentThread(parent, -1, session.uploaderId, session.videoId, !hasReply, false) + `</div></section><hr><br>`;
+        if (hasReply) {
+            document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
+                + formatCommentThread(reply, -1, session.uploaderId, session.videoId, true, true) + `</div>`;
+        }
     });
 
     socket.on("graphData", function({data, published}) {
