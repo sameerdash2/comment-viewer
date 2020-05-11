@@ -10,11 +10,7 @@ const fs = require('fs');
 app.use(express.static("public"));
 
 io.on('connection', function (socket) {
-	console.log('a user connected with', socket.handshake.query, socket.request.headers['accept-language']);
-	let al = socket.request.headers['accept-language'];
-	let comma = al.indexOf(',');
-	if (comma > 0) al = al.substring(0, comma);
-	let locale = { lang:al, timezone:socket.handshake.query.timezone };
+	console.log('a user connected');
 
 	let idString = "";
 	let videoPublished, uploaderId;
@@ -90,18 +86,9 @@ io.on('connection', function (socket) {
 		trueStart = new Date();
 		currentSort = type;
 		switch (type) {
+			// only one case 
 			case "dateOldest":
 				executeAllComments("");
-				break;
-			case "dateNewest":
-				// Removed
-				// executeComments("time", "");
-				break;
-			case "relevanceMost":
-				// nothing
-				break;
-			case "relevanceLeast":
-				// nothing    
 				break;
 		}
 	}
@@ -443,39 +430,6 @@ const youtube = google.youtube({
 	auth: config.GAPI_KEY
 });
 
-function parseDate(iso, locale) {
-	// Uses user's timezone, but doesn't support daylight saving (same timezone year-round like Skype)
-	// let fakeDate = new Date(new Date(iso).getTime() + locale.timezone * 60 * 1000);
-
-	// server time
-	let date = new Date(iso);
-
-    // return DAYS[date.getDay()] + " " + MONTHS[date.getMonth()] + " " + date.getDate() + " " + iso.substring(0, 4)
-	//     + " - " + date.toLocaleTimeString(locale);
-    return date.toLocaleString(locale.lang);
-}
-
-// function comma(x) {
-//     // https://stackoverflow.com/a/2901298
-//     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-// }
-
-function bubbleSort(comments) {
-    let change = true;
-    let len = comments.length;
-    while (change) {
-        change = false;
-        for (let i = 0; i < len - 1; i++) {
-            if (comments[i].snippet.topLevelComment.snippet.likeCount < comments[i + 1].snippet.topLevelComment.snippet.likeCount) {
-                change = true;
-                let thing = comments[i];
-                comments[i] = comments[i + 1];
-                comments[i + 1] = thing;
-            }
-        }
-    }
-}
-
 function merge(arr, l, m, r) { 
     let i, j, k; 
     let n1 = m - l + 1; 
@@ -541,101 +495,6 @@ function eta(count) {
 	let etaTime = (seconds > 60) ? Math.floor(seconds / 60) + " min" : seconds + " seconds";
 	return "Estimated load time: " + etaTime;
 }
-
-function formatCommentThread(item, videoId, uploaderId, locale, number, linked = false, reply = false) {
-	let content = "";
-	let mainComment;
-    let replyCount = -1;
-	let contentClass;
-	if (reply) {
-		mainComment = item;
-		contentClass = "replyContent";
-	}
-	else {
-		mainComment = item.snippet.topLevelComment;
-		contentClass = "commentContent";
-        replyCount = item.snippet.totalReplyCount;
-	}
-
-	let publishedAt = mainComment.snippet.publishedAt;
-	let updatedAt = mainComment.snippet.updatedAt;
-	let channelUrl = mainComment.snippet.authorChannelUrl;
-	let commentId = mainComment.id;
-	let likeCount = mainComment.snippet.likeCount;
-	let pfpUrl = mainComment.snippet.authorProfileImageUrl;
-	let displayName = mainComment.snippet.authorDisplayName;
-	let textDisplay = mainComment.snippet.textDisplay;
-	// Checking existence for this because one time it was left out for some reason
-	let channelId = mainComment.snippet.authorChannelId ? mainComment.snippet.authorChannelId.value : "";
-	    
-    let linkedSegment = "";
-    let replySegment = "";
-	let likeSegment = "";
-	let numSegment = "";
-	let opSegment = "";
-
-    let timeString = parseDate(publishedAt, locale);
-    if (publishedAt != updatedAt) {
-        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseDate(updatedAt, locale) + `)`;
-	}
-	
-    if (linked) {
-        linkedSegment = `<span class="linkedComment">• LINKED COMMENT</span>`;
-        //className = "linked";
-        //if (reply) className = "linked";
-    }
-    
-    // second condition included for safety
-    if (replyCount > 0 && !reply) {
-        replySegment = `
-            <div id="replies-` + commentId + `" class="commentRepliesDiv">
-                <div class="repliesExpanderCollapsed">
-                    <button id="getReplies-` + commentId + `" class="showHideButton" type="button">
-                        <span id="replyhint-` + commentId + `" class="showHideText">Load ` + replyCount + ` replies</span>
-                    </button>
-                </div>
-                <div id="repliesEE-` + commentId + `" class="repliesExpanderExpanded">
-                    
-                </div>
-            </div>
-        `;
-    }
-    
-    if (likeCount) {
-        likeSegment += `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ` + likeCount.toLocaleString() + `</div>`;
-    }
-    else {
-        likeSegment += `<div class="commentFooter"></div>`;
-	}
-
-	if (number > 0) numSegment += `<span class="num">#` + number + `</span>`;
-
-	if (channelId == uploaderId) opSegment += `class="authorNameCreator"`;
-
-    content += `
-		<a class="channelPfpLink" href="` + channelUrl + `" target="_blank">
-			<img class="pfp" src="` + pfpUrl + `">
-		</a>
-
-		<div class="` + contentClass +`">
-			<div class="commentHeader">
-				<span ` + opSegment + `><a href="` + channelUrl + `" class="authorName" target="_blank">` + displayName + `</a></span>
-				<span>|</span>
-				<span class="timeStamp">
-					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + commentId + `" class="timeStampLink" target="_blank">
-						` + timeString + `
-					</a>
-				</span>
-				` + linkedSegment + numSegment + `
-			</div>
-			<div class="commentText">` + textDisplay + `</div>
-			` + likeSegment + replySegment + `
-		</div>
-    `;
-
-    return content;
-}
-
 console.log("begin");
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -643,6 +502,3 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 const MAXDISPLAY = 100;
 const MAX = 100000;
-
-//loadClient();
-//window.onload = loadClient();
