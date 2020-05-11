@@ -28,7 +28,6 @@ io.on('connection', function (socket) {
 	let trueStart;
 
 	function resetPage() {
-		console.log("resetting");
 		allComments = [];
 		likedComments = [];
 		totalCount = 0;
@@ -195,7 +194,6 @@ io.on('connection', function (socket) {
 			"id": commentId
 		})
 			.then(function(response) {
-				console.log("Response received (ONE COMMENT)", response);
 				if (response.data.pageInfo.totalResults) {
 					resetPage();
 					idString = response.data.items[0].snippet.videoId;
@@ -229,7 +227,6 @@ io.on('connection', function (socket) {
 			"id": currentLinked,
 			})
 				.then(function(response) {
-					console.log("Response received (Linked REPLY)", response);
 					sendLinkedComment(parent, response.data.items[0]);
 				},
 				function(err) {
@@ -249,7 +246,6 @@ io.on('connection', function (socket) {
 			"id": idString
 		})
 			.then(function(response) {
-				console.log("Response received (VIDEO): ", response.data.items);
 				if (response.data.pageInfo.totalResults > 0) {
 					totalExpected = response.data.items[0].statistics.commentCount; // for load percentage
 					videoPublished = response.data.items[0].snippet.publishedAt; // for graph bound
@@ -332,7 +328,6 @@ io.on('connection', function (socket) {
 					}
 					else {
 						loadedReplies[commentId] = replies;
-						console.log("got replies: " + loadedReplies[commentId].length);
 						sendReplies(commentId);
 					}
 	
@@ -383,15 +378,10 @@ io.on('connection', function (socket) {
   	socket.on('disconnect', function () {
     	console.log('user disconnected');
   	});
-  	socket.on('chat message', function (msg) {
-    	console.log('message: ' + msg);
-    	io.emit('chat message', msg);
-  	});
   	socket.on('idSent', function (id) {
 		checkSendID(id);
 	});
 	socket.on("requestAll", function() {
-		console.log("totalExpectd", totalExpected);
 		if (totalExpected < MAX) {
 			handleLoad("dateOldest");
 		}
@@ -403,7 +393,6 @@ io.on('connection', function (socket) {
 		sendLoadedComments();
 	});
 	socket.on("sortRequest", function (type) {
-		console.log("sort type: " + type);
 		if (type != currentSort) { doSort(type); }
 		else { console.log("(ERROR) - received illegal request for sort " + type); }
 	});
@@ -486,7 +475,6 @@ function reSort(comments) {
 			}
 		}
 		comments.splice(m, 0, comments.shift());
-		console.log("found pinned, inserted at index " + m);
 	}
 }
 
@@ -495,7 +483,6 @@ function eta(count) {
 	let etaTime = (seconds > 60) ? Math.floor(seconds / 60) + " min" : seconds + " seconds";
 	return "Estimated load time: " + etaTime;
 }
-console.log("begin");
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
