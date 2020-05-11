@@ -138,7 +138,7 @@ function formatCommentThread(item, number, uploaderId, videoId, linked = false, 
             <div id="replies-` + commentId + `" class="commentRepliesDiv">
                 <div class="repliesExpanderCollapsed">
                     <button id="getReplies-` + commentId + `" class="showHideButton" type="button">
-                        <span id="replyhint-` + commentId + `" class="showHideText">Load ` + replyCount + ` replies</span>
+                        Load ` + replyCount + ` replies
                     </button>
                 </div>
                 <div id="repliesEE-` + commentId + `" class="repliesExpanderExpanded">

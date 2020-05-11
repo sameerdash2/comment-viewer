@@ -284,7 +284,7 @@ io.on('connection', function (socket) {
 				// for upcoming/live streams, disregard a 0 count.
 				if (!(liveBroadcastContent != "none" && count == 0)) {
 					let beginLoad = count < 200 && count > 0;
-					socket.emit("commentInfo", { num: count, disabled: false, eta: eta(count), commence: beginLoad });
+					socket.emit("commentsInfo", { num: count, disabled: false, eta: eta(count), commence: beginLoad });
 					if (beginLoad) {
 						handleLoad("dateOldest");
 					}
@@ -294,7 +294,7 @@ io.on('connection', function (socket) {
 					console.error("Test comment execute error", err.response.data.error);
 					if (liveBroadcastContent == "none") {					
 						if (err.response.data.error.errors[0].reason == "commentsDisabled") {
-							socket.emit("commentInfo", {num: count, disabled: true, eta: "", commence: false});
+							socket.emit("commentsInfo", {num: count, disabled: true, eta: "", commence: false});
 						}
 						else if (err.response.data.error.errors[0].reason == "processingFailure") {						
 							setTimeout(executeTestComment, 1, count);

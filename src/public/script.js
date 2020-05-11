@@ -1,4 +1,4 @@
-$(document).ready(function() {
+document.addEventListener("DOMContentLoaded", function() {
     const socket = io("", {
         query: "timezone=" + (-new Date().getTimezoneOffset())
     });
@@ -7,7 +7,32 @@ $(document).ready(function() {
     const DEF = "#000";
     const LOAD = "#666";
     const MAXDISPLAY = 100;
-    const MAX = 100000;
+    const MAX = 100000;    
+
+    // Stores info specific to the currently shown video; clears upon new video.
+    let session = {
+        commentNum: 0,
+    }
+
+    let submitBtn = document.getElementById("submit");
+    let message = document.getElementById("message");
+    let commentsSection = document.getElementById("commentsSection");
+    let loadStatus = document.getElementById("loadStatus");
+    let viewGraph = document.getElementById("viewGraph");
+    let startDate = document.getElementById("startDate");
+    let endDate = document.getElementById("endDate");
+    let info = document.getElementById("info");
+    let showMoreBtn = document.getElementById("showMoreBtn");
+    let linkedHolder = document.getElementById("linkedHolder");
+    let chartContainer = document.getElementById("chartContainer");
+
+    let storedReplies = {};
+
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = "Submit";
+    showMoreBtn.innerHTML = `Show ` + MAXDISPLAY + ` more comments...`;
+
+    // Graph setup
     let ctx = document.getElementById('graph');
     Chart.defaults.global.defaultFontColor = '#222222';
     Chart.defaults.global.defaultFontSize = 14;
@@ -17,66 +42,48 @@ $(document).ready(function() {
         drawTicks: false
     }
     let graphShown = false;
-    let testGraph = true;
     let startText, endText;
     let graphPoints = [];
 
-    let session = {
-        commentNum: 0,
-    }
-
-    let submitBtn = $("#submit");
-    let message = $("#message");
-    let commentsSection = $("#commentsSection");
-    let loadStatus = $("#loadStatus");
-    let viewGraph = document.getElementById("viewGraph");
-    let startDate = document.getElementById("startDate");
-    let endDate = document.getElementById("endDate");
-    let info = document.getElementById("info");
-
-    let storedReplies = {};
-
-    submitBtn.prop('disabled', false);
-    submitBtn.html("Submit");
-    $("#showMoreBtn").html(`Show ${MAXDISPLAY} more comments...`);
-
-    $('#videoForm').submit(function(event){
+    document.getElementById("videoForm").addEventListener('submit', function(event){
         event.preventDefault(); // prevents page reloading
-        message.html("Working...");
-        message.css('color', LOAD);
-        socket.emit('idSent', $('#enterID').val());
-        if (testGraph) {
-            $("#chartContainer").hide();
-            testGraph = false;
-        }
-        $('#enterID').val('');
+        let enterID = document.getElementById("enterID");
+        message.innerHTML = "Working...";
+        message.style.color = LOAD;
+        socket.emit('idSent', enterID.value);
+        enterID.value = "";
         return false;
     });
-    $("#submitAll").click(function() {                    
-        $("#chooseLoad").hide();
-        $("#eta").empty();
-        $("#submit").prop("disabled", true);
-        message.html("Commencing...");                    
-        loadStatus.html("Initializing...");
+    document.getElementById("submitAll").addEventListener('click', function() {
+        document.getElementById("chooseLoad").style.display = "none";
+        submitBtn.disabled = true;
+        loadStatus.innerHTML = "Initializing...";
         
         socket.emit("requestAll");
     });
-    $("#showMoreBtn").click(function() {
-        $(this).prop("disabled", true);
+    showMoreBtn.addEventListener('click', function() {
+        showMoreBtn.disabled = true;
         socket.emit("showMore");
     });
-    $(".sendSort").click(function (event) {
-        $(".sendSort").prop("disabled", false);
-        $(event.currentTarget).prop("disabled", true);
-        socket.emit("sortRequest", event.currentTarget.id.substring(2));
+    
+    document.getElementById("sortLoaded").addEventListener('click', function(event) {
+        let closest = event.target.closest(".sendSort");
+        if (closest) {
+            // Enable all except the clicked button
+            let items = document.querySelectorAll(".sendSort");
+            items.forEach(function(elem) {
+                elem.disabled = (elem.id == closest.id);
+            });
+            socket.emit("sortRequest", closest.id.substring(2));
+        }
     });
     viewGraph.addEventListener('click', function() {
         if (graphShown) {
-            $("#chartContainer").hide();
+            chartContainer.style.display = "none";
             graphShown = false;
         }
         else if (graphPoints.length > 0) {
-            $("#chartContainer").show();
+            chartContainer.style.display = "block";
             graphShown = true;
         }
         else {
@@ -85,15 +92,20 @@ $(document).ready(function() {
         }
 
     });
-
-    $(".enterBounds").keypress(function (event) {
+    
+    let inputs = document.querySelectorAll(".enterBounds");
+    inputs.forEach(function(elem) {
+        elem.addEventListener('keydown', boundUpdate);
+    });
+    function boundUpdate(event) {        
         if (event.keyCode == 13) {
             updateGraphBounds();
         }
-    });
-    $("#resetBounds").click(function () {
-        $("#startDate").val(startText);
-        $("#endDate").val(endText);
+    }
+
+    document.getElementById("resetBounds").addEventListener('click', function() {
+        startDate.value = startText;
+        endDate.value = endText;
         updateGraphBounds();
     });
 
@@ -118,72 +130,77 @@ $(document).ready(function() {
         }
         return Math.ceil(m * 1.1);
     }
-    
-    commentsSection.on("click", ".showHideButton", repliesButton);
-    $("#linkedHolder").on("click", ".showHideButton", repliesButton);
+
+    commentsSection.addEventListener('click', repliesButton);
+    linkedHolder.addEventListener('click', repliesButton);
     function repliesButton(event) {
-        let commentId = event.currentTarget.id.substring(11);
-        if (storedReplies[commentId]) {
-            if (storedReplies[commentId][0] == true) {
-                $("#repliesEE-" + commentId).hide();
-                $("#replyhint-" + commentId).html("Show " + storedReplies[commentId][1] + " replies");
-                storedReplies[commentId][0] = false;
+        let closest = event.target.closest(".showHideButton");
+        if (closest) {
+            let commentId = closest.id.substring(11);
+            if (storedReplies[commentId]) {
+                let expanded = document.getElementById("repliesEE-" + commentId);
+                if (storedReplies[commentId][0] == true) {
+                    expanded.style.display = "none";
+                    closest.innerHTML = "Show " + storedReplies[commentId][1] + " replies";
+                    storedReplies[commentId][0] = false;
+                }
+                else {
+                    expanded.style.display = "block";
+                    closest.innerHTML = "Hide " + storedReplies[commentId][1] + " replies";
+                    storedReplies[commentId][0] = true;
+                }
             }
             else {
-                $("#repliesEE-" + commentId).show();
-                $("#replyhint-" + commentId).html("Hide " + storedReplies[commentId][1] + " replies");
-                storedReplies[commentId][0] = true;
+                closest.disabled = true;
+                socket.emit("replyRequest", commentId);
             }
         }
-        else {
-            $("#" + event.currentTarget.id).prop("disabled", true);
-            socket.emit("replyRequest", commentId);
-        }
     }
+
     socket.on("idInvalid", function() {
-        message.html("Invalid video link or ID.");
-        message.css('color', ERR);
+        message.innerHTML = "Invalid video link or ID.";
+        message.style.color = ERR;
     });
     socket.on("videoInfo", ({ video, forLinked }) => {
         if (!forLinked) { resetPage(); }
         session.totalExpected = video.statistics.commentCount; // for load percentage
         session.videoId = video.id;
         session.videoPublished = video.snippet.publishedAt; // for graph bound
-        session.uploaderId = video.snippet.channelId; // for highlighting OP comments        
-        message.html("&nbsp;");
+        session.uploaderId = video.snippet.channelId; // for highlighting OP comments
+        message.innerHTML = "&nbsp;";
         info.innerHTML = displayTitle(video, forLinked);
     });
-    socket.on("commentInfo", ({num, disabled, eta, commence}) => {
-        $("#chooseLoad").toggle(!disabled && !commence && num < MAX);     
+    socket.on("commentsInfo", ({num, disabled, eta, commence}) => {
+        let commentInfo = document.getElementById("commentInfo");
+        document.getElementById("chooseLoad").style.display = (!disabled && !commence && num < MAX) ? "block" : "none";
         viewGraph.style.display = num >= 50 ? "block" : "none";
         if (disabled) {
-            $("#commentInfo").html(`<i class="fas fa-comment"></i> Comments have been disabled on this video.`);
+            commentInfo.innerHTML = `<i class="fas fa-comment"></i> Comments have been disabled on this video.`;
             if (num > 0) {
-                $("#commentInfo").append(` <span class="it">(` + Number(num).toLocaleString() + ` hidden comments)</span>`);
+                commentInfo.innerHTML += ` <span class="it">(` + Number(num).toLocaleString() + ` hidden comments)</span>`;
             }
         }
         else {
-            $("#commentInfo").html(`<i class="fas fa-comment"></i> ` + Number(num).toLocaleString() + ` comments`);
-            $("#eta").html(eta);
-            if (num >= MAX) loadStatus.html("Only videos with under " + MAX + " comments are supported.");
+            commentInfo.innerHTML = `<i class="fas fa-comment"></i> ` + Number(num).toLocaleString() + ` comments`;
+            document.getElementById("eta").innerHTML = eta;
+            if (num >= MAX) loadStatus.innerHTML = "Only videos with under " + MAX + " comments are supported.";
         }
     });
 
     socket.on("loadStatus", (totalCount) => {
-        loadStatus.html(totalCount);
-        document.getElementById("loadStatus").innerHTML = totalCount.toLocaleString() + " comments loaded ("
+        loadStatus.innerHTML = totalCount.toLocaleString() + " comments loaded ("
             + (Math.round(totalCount / session.totalExpected * 1000) / 10).toFixed(1) + "%)";
     });
 
     socket.on("groupComments", ({ reset, items, showMore }) => {      
-        message.html("&nbsp;");
+        message.innerHTML = "&nbsp;";
         if (reset) {
-            $("#submit").prop("disabled", false);
+            submitBtn.disabled = false;
             session.commentNum = 0;
-            commentsSection.empty();
-            loadStatus.empty();
+            commentsSection.innerHTML = "";
+            loadStatus.innerHTML = "";
             storedReplies = {};
-            $("#sortLoaded").show();
+            document.getElementById("sortLoaded").style.display = "block";
         }
         let add = "", len = items.length;
         for (let i = 0; i < len; i++) {
@@ -194,14 +211,14 @@ $(document).ready(function() {
 			add += `<hr><div class="commentThreadDiv">` + formatCommentThread(items[i], session.commentNum, session.uploaderId, session.videoId, false, false) + `</div>`;
 		
         }
-        document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
-        $("#showMoreDiv").toggle(showMore);
-        $("#showMoreBtn").prop("disabled", false);
+        commentsSection.insertAdjacentHTML('beforeend', add);
+        document.getElementById("showMoreDiv").style.display = showMore ? "block" : "none";
+        showMoreBtn.disabled = false;
     });
     socket.on("newReplies", ({ items, id}) => {
         let len = items.length;
         storedReplies[id] = [true, len];
-        $("#repliesEE-" + id).show();
+        document.getElementById("repliesEE-" + id).style.display = "block";
         let newContent = "";
         let isLinked, className;
         for (let i = len - 1; i >= 0; i--) {
@@ -211,13 +228,13 @@ $(document).ready(function() {
 				+ `</div>`;
         }
         document.getElementById("repliesEE-" + id).innerHTML = newContent;
-        $("#replyhint-" + id).html("Hide " + len + " replies");
-        $("#getReplies-" + id).prop("disabled", false);
+        document.getElementById("getReplies-" + id).innerHTML = "Hide " + len + " replies";
+        document.getElementById("getReplies-" + id).disabled = false;
     });
     socket.on("linkedComment", ({parent, hasReply, reply}) => {
         session.linkedParent = parent.id;
         session.currentLinked = hasReply ? reply.id : parent.id;
-        document.getElementById("linkedHolder").innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
+        linkedHolder.innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
             + formatCommentThread(parent, -1, session.uploaderId, session.videoId, !hasReply, false) + `</div></section><hr><br>`;
         if (hasReply) {
             document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
@@ -230,7 +247,7 @@ $(document).ready(function() {
             timeChart.destroy();
         }
         graphPoints = data;
-        $("#chartContainer").show();
+        chartContainer.style.display = "block";
 
         // Declare left bound as video publish date, unless there's a comment before publish
         let start = new Date(Math.min(new Date(published), new Date(data[0].x)));
@@ -238,8 +255,8 @@ $(document).ready(function() {
         let end = new Date();
         startText = start.toISOString().substring(0, 10);
         endText = end.toISOString().substring(0, 10);
-        $("#startDate").val(startText);
-        $("#endDate").val(endText);
+        startDate.value = startText;
+        endDate.value = endText;
 
         let yMax = calcGraphMax(startText, endText);
 
@@ -312,17 +329,17 @@ $(document).ready(function() {
 
     socket.on("resetPage", resetPage);
     function resetPage() {
-        $("#linkedHolder").empty();
-        commentsSection.empty();
-        loadStatus.empty();
-        $("#chooseLoad").hide();
-        $("#sortLoaded").hide();
-        $("#moreDiv").hide();
-        $("#showMoreDiv").hide();
+        linkedHolder.innerHTML = "";
+        commentsSection.innerHTML = "";
+        loadStatus.innerHTML = "";
+        document.getElementById("eta").innerHTML = "";
+        document.getElementById("chooseLoad").style.display = "none";
+        document.getElementById("sortLoaded").style.display = "none";
+        document.getElementById("showMoreDiv").style.display = "none";
         
-        $("#b_likesMost").prop("disabled", false);
-        $("#b_dateNewest").prop("disabled", false);
-        $("#b_dateOldest").prop("disabled", true);
+        document.getElementById("b_likesMost").disabled = false;
+        document.getElementById("b_dateNewest").disabled = false;
+        document.getElementById("b_dateOldest").disabled = true;
         viewGraph.disabled = false;
         viewGraph.style.display = "none"; //safety
         session = {
@@ -335,14 +352,14 @@ $(document).ready(function() {
         if (graphPoints.length > 0) {
             timeChart.destroy();
             graphShown = false;
-            $("#chartContainer").hide();
+            chartContainer.style.display = "none";
             graphPoints = [];
         }
         
         storedReplies = {};
     }
-    socket.on("quotaExceeded", () => {                    
-        message.html("Quota exceeded. Please try again later");
-        message.css('color', ERR);
+    socket.on("quotaExceeded", () => {             
+        message.innerHTML = "Quota exceeded. Please try again later";
+        message.style.color = ERR;
     });
 });
