@@ -1,4 +1,4 @@
-function displayTitle(video, useCount) {
+function displayTitle(video, useCount, options) {
     let liveState = video.snippet.liveBroadcastContent;
 
     // casting in order to use toLocaleString()
@@ -6,6 +6,9 @@ function displayTitle(video, useCount) {
     let likeCount = Number(video.statistics.likeCount);
     let dislikeCount = Number(video.statistics.dislikeCount);
     let commentCount = Number(video.statistics.commentCount);
+
+    let thumbnailSec = ``;
+    if (options.showImg) thumbnailSec += `<img class="thumbnail" src="` + video.snippet.thumbnails.medium.url + `">`;
 
     let ratingsSec = `<div class="ratings">`;
     if (typeof video.statistics.likeCount === "undefined") {
@@ -30,14 +33,14 @@ function displayTitle(video, useCount) {
         let diffHrs = Math.floor(diffMs / 3600000); // hours
         let diffMins = Math.floor(((diffMs % 86400000) % 3600000) / 60000); // minutes
         let diffSecs = Math.round((((diffMs % 86400000) % 3600000) % 60000) / 1000);
-        timestampSec += `<strong>Stream start time:</strong> ` + parseDate(startTime.toISOString())
+        timestampSec += `<strong>Stream start time:</strong> ` + parseDate(startTime.toISOString(), options.timezone)
             + ` (Elapsed: ` + diffHrs + `h ` + diffMins + `m ` + diffSecs + `s)`;
     }
     else if (liveState == "upcoming") {
         viewcountSec += `<span class="concurrent">Upcoming live stream</span>`;
         timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> `
-            + parseDate(video.snippet.publishedAt) + `<br><i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> `
-            + parseDate(video.liveStreamingDetails.scheduledStartTime);
+            + parseDate(video.snippet.publishedAt, options.timezone) + `<br><i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> `
+            + parseDate(video.liveStreamingDetails.scheduledStartTime, options.timezone);
     }
     else {
 		// YT premium shows don't return viewcount
@@ -48,12 +51,12 @@ function displayTitle(video, useCount) {
 			viewcountSec += viewCount.toLocaleString() + ` views`;
 		}
         
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ` + parseDate(video.snippet.publishedAt);
+        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ` + parseDate(video.snippet.publishedAt, options.timezone);
 
         if (typeof video.liveStreamingDetails !== "undefined") {
             streamTimesSec += `<div class="streamTimes"><strong>Stream start time:</strong> `
-                + parseDate(video.liveStreamingDetails.actualStartTime)
-                + `<br><strong>Stream end time:</strong> ` + parseDate(video.liveStreamingDetails.actualEndTime) + `</div>`;
+                + parseDate(video.liveStreamingDetails.actualStartTime, options.timezone)
+                + `<br><strong>Stream end time:</strong> ` + parseDate(video.liveStreamingDetails.actualEndTime, options.timezone) + `</div>`;
         }
 
         commentCountSec += `<i class="fas fa-comment"></i> `;
@@ -64,7 +67,7 @@ function displayTitle(video, useCount) {
 	commentCountSec += `</div>`;
 
     let newContent = `
-        <img class="thumbnail" src="` + video.snippet.thumbnails.medium.url + `">
+        ` + thumbnailSec + `
         <div class="metadata">
             <div class="vidTitle">
                 <a class="authorName" href="https://www.youtube.com/watch?v=` + video.id + `" target="_blank">
@@ -89,7 +92,7 @@ function displayTitle(video, useCount) {
 	return newContent;
 }
 
-function formatCommentThread(item, number, uploaderId, videoId, linked = false, reply = false) {
+function formatCommentThread(item, number, options, uploaderId, videoId, linked = false, reply = false) {
 	let content = "";
 	let mainComment;
     let replyCount = -1;
@@ -119,11 +122,12 @@ function formatCommentThread(item, number, uploaderId, videoId, linked = false, 
     let replySegment = "";
 	let likeSegment = "";
 	let numSegment = "";
-	let opSegment = "";
+    let opSegment = "";
+    let pfpSegment = "";
 
-    let timeString = parseDate(publishedAt);
+    let timeString = parseDate(publishedAt, options.timezone);
     if (publishedAt != updatedAt) {
-        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseDate(updatedAt) + `)`;
+        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseDate(updatedAt, options.timezone) + `)`;
 	}
 	
     if (linked) {
@@ -157,12 +161,12 @@ function formatCommentThread(item, number, uploaderId, videoId, linked = false, 
 
 	if (number > 0) numSegment += `<span class="num">#` + number + `</span>`;
 
-	if (channelId == uploaderId) opSegment += `class="authorNameCreator"`;
+    if (channelId == uploaderId) opSegment += `class="authorNameCreator"`;
+    
+    if (options.showImg) pfpSegment += `<img class="pfp" src="` + pfpUrl + `">`;
 
     content += `
-		<a class="channelPfpLink" href="` + channelUrl + `" target="_blank">
-			<img class="pfp" src="` + pfpUrl + `">
-		</a>
+		<a class="channelPfpLink" href="` + channelUrl + `" target="_blank">` + pfpSegment + `</a>
 
 		<div class="` + contentClass +`">
 			<div class="commentHeader">
@@ -183,12 +187,14 @@ function formatCommentThread(item, number, uploaderId, videoId, linked = false, 
     return content;
 }
 
-function parseDate(iso) {
+function parseDate(iso, timezone) {
     let date = new Date(iso);
-    
-    // Uses client's locale
 
     /* return DAYS[date.getDay()] + " " + MONTHS[date.getMonth()] + " " + date.getDate() + " " + iso.substring(0, 4)
         + " - " + date.toLocaleTimeString(); */
-    return date.toLocaleString();
+    let output = date.toLocaleString();
+    if (timezone == "utc") {
+        output = date.toUTCString().substring(5);
+    }
+    return output;
 }

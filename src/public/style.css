@@ -1,7 +1,7 @@
 body {
     background-color: #BBDDFF;
     font-family: 'Noto Sans TC', sans-serif;
-    /* font-weight: 500; */
+    margin-left: 24px;
     font-size: 24px;
 }
 
@@ -26,8 +26,7 @@ div#message {
 
 .mainInput {
     width: 728px;
-    height: 50px;
-    padding: none;
+    height: 42px;
     font-family: inherit;
     font-size: inherit;
 }
@@ -86,6 +85,33 @@ span.concurrent {
     /* line-height: .8em; */
 }
 
+span#options {
+  position: relative;
+  display: inline-block;
+  font-size: 20px;
+}
+span#arrow {
+    font-size: 16px;
+}
+#optionsContent {
+  display: none;
+  font-size: 16px;
+  position: absolute;
+  background-color: #f7f7f7;
+  min-width: 160px;
+  width: max-content;
+  box-shadow: 8px 8px 12px 0px rgba(0,0,0,0.2);
+  padding: 8px;
+  z-index: 1;
+}
+
+#options:hover #optionsContent {
+  display: block;
+}
+div.optionsHeader {
+    font-weight: bold;
+}
+
 span#eta {
     font-size: 18px;
     color: #555;
@@ -113,7 +139,7 @@ button {
     font-size: inherit;
 }
 button.send {
-    height: 56px;
+    height: 48px;
 }
 button.sendSort {
     height: 35px;
@@ -139,8 +165,7 @@ div#sortLoaded {
 }
 
 div.commentThreadDiv, div.linked {
-    margin-top: 6px;
-    margin-bottom: 6px;
+    margin: 6px 0px;
     line-height: 1.5em;
     overflow: hidden;
     white-space: nowrap;
@@ -162,6 +187,9 @@ a.channelPfpLink {
     display:inline-block;
     vertical-align: top;
     white-space: normal;
+    height: 48px;
+    width: 48px;
+    background-color: #4AA3FF;
 }
 
 div.streamTimes {
@@ -172,8 +200,8 @@ div.streamTimes {
     display:inline-block;
     white-space: normal;
     word-wrap: break-word;
-    margin-right:60px;
     width: 943px;
+    margin-left: 5px;
 }
 .replyContent {
     width: 886px

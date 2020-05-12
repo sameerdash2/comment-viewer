@@ -16,6 +16,20 @@
                 Enter a YouTube video link, video ID, or direct link to a comment: <br>
                 <input class="mainInput" type="text" id="enterID"/>
                 <button id="submit" class="send" disabled>Loading...</button>
+                <span id="options">
+                    <span>Options <span id="arrow">▼</span></span>
+                    <div id="optionsContent">
+                        <div class="optionsHeader">Time zone</div>
+                        <input type="radio" id="local" name="timezone" value="local" checked>
+                        <label for="local" id="localLabel">Local time</label>
+                        <br>
+                        <input type="radio" id="utc" name="timezone" value="utc">
+                        <label for="utc" id="utcLabel">UTC</label>
+                        <br><hr>
+                        <input type="checkbox" id="noImg" value="Bike">
+                        <label for="noImg">Don't load images</label>
+                    </div>
+                </span>
             </form>
         </div>
         <div id="message">&nbsp;</div>

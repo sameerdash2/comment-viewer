@@ -14,6 +14,10 @@ document.addEventListener("DOMContentLoaded", function() {
         commentNum: 0,
     }
 
+    // Updates on new video
+    let options = {};
+    updateOptions();
+
     let submitBtn = document.getElementById("submit");
     let message = document.getElementById("message");
     let commentsSection = document.getElementById("commentsSection");
@@ -92,13 +96,16 @@ document.addEventListener("DOMContentLoaded", function() {
         message.style.color = ERR;
     });
     socket.on("videoInfo", ({ video, forLinked }) => {
-        if (!forLinked) { resetPage(); }
+        if (!forLinked) {
+            resetPage();
+            updateOptions();
+        }
         session.totalExpected = video.statistics.commentCount; // for load percentage
         session.videoId = video.id;
         session.videoPublished = video.snippet.publishedAt; // for graph bound
         session.uploaderId = video.snippet.channelId; // for highlighting OP comments
         message.innerHTML = "&nbsp;";
-        info.innerHTML = displayTitle(video, forLinked);
+        info.innerHTML = displayTitle(video, forLinked, options);
     });
     socket.on("commentsInfo", ({num, disabled, eta, commence}) => {
         let commentInfo = document.getElementById("commentInfo");
@@ -137,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // Skip comment if it's the linked one.
 			if (session.linkedParent == items[i].id) { continue; }
 	
-			add += `<hr><div class="commentThreadDiv">` + formatCommentThread(items[i], session.commentNum, session.uploaderId, session.videoId, false, false) + `</div>`;
+			add += `<hr><div class="commentThreadDiv">` + formatCommentThread(items[i], session.commentNum, options, session.uploaderId, session.videoId, false, false) + `</div>`;
 		
         }
         commentsSection.insertAdjacentHTML('beforeend', add);
@@ -153,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function() {
         for (let i = len - 1; i >= 0; i--) {
 			isLinked = items[i].id == session.currentLinked;
 			className = isLinked ? "linked" : "commentThreadDiv";
-			newContent +=`<div class="` + className + `">` + formatCommentThread(items[i], len - i, session.uploaderId, session.videoId, isLinked, true)
+			newContent +=`<div class="` + className + `">` + formatCommentThread(items[i], len - i, options, session.uploaderId, session.videoId, isLinked, true)
 				+ `</div>`;
         }
         document.getElementById("repliesEE-" + id).innerHTML = newContent;
@@ -161,13 +168,14 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("getReplies-" + id).disabled = false;
     });
     socket.on("linkedComment", ({parent, hasReply, reply}) => {
+        updateOptions();
         session.linkedParent = parent.id;
         session.currentLinked = hasReply ? reply.id : parent.id;
         linkedHolder.innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-            + formatCommentThread(parent, -1, session.uploaderId, session.videoId, !hasReply, false) + `</div></section><hr><br>`;
+            + formatCommentThread(parent, -1, options, session.uploaderId, session.videoId, !hasReply, false) + `</div></section><hr><br>`;
         if (hasReply) {
             document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
-                + formatCommentThread(reply, -1, session.uploaderId, session.videoId, true, true) + `</div>`;
+                + formatCommentThread(reply, -1, options, session.uploaderId, session.videoId, true, true) + `</div>`;
         }
     });
 
@@ -190,6 +198,14 @@ document.addEventListener("DOMContentLoaded", function() {
         
         storedReplies = {};
     }
+
+    function updateOptions() {
+        options = {
+            timezone: document.querySelector('input[name="timezone"]:checked').value,
+            showImg: !document.getElementById("noImg").checked,
+        };
+    }
+
     socket.on("quotaExceeded", () => {             
         message.innerHTML = "Quota exceeded. Please try again later";
         message.style.color = ERR;
