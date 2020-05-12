@@ -50,9 +50,10 @@ section.singleCommentThead, section.linkedSec {
     font-weight: bold;
     vertical-align: top; /* not sure why 'top' becomes middle */
 }
-.vidInfo {    
-    margin-top: 10px;
+div#info {    
+    margin: 10px 0px;
     white-space: nowrap;
+    min-height: 225px;
 }
 .metadata {
     display: inline-block;
