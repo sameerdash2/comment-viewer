@@ -181,8 +181,7 @@ input.enterBounds {
     font: inherit;
 }
 
-a.channelPfpLink {    
-    margin-right: 5px;
+a.channelPfpLink {
     margin-top: 5px;
     display:inline-block;
     vertical-align: top;

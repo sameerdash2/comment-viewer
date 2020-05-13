@@ -166,9 +166,8 @@ function formatCommentThread(item, number, options, uploaderId, videoId, linked 
     if (options.showImg) pfpSegment += `<img class="pfp" src="` + pfpUrl + `">`;
 
     content += `
-		<a class="channelPfpLink" href="` + channelUrl + `" target="_blank">` + pfpSegment + `</a>
-
-		<div class="` + contentClass +`">
+		<a class="channelPfpLink" href="` + channelUrl + `" target="_blank">` + pfpSegment + `</a><!--Comment to fight inline-block's auto margin
+		--><div class="` + contentClass +`">
 			<div class="commentHeader">
 				<span ` + opSegment + `><a href="` + channelUrl + `" class="authorName" target="_blank">` + displayName + `</a></span>
 				<span>|</span>
