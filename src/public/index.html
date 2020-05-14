@@ -37,7 +37,7 @@
         <div id="info">
 
         </div>
-        
+        <div id="graphContainer"></div>
         <br>
         <div id="linkedHolder" class="commentsList"></div>
         <div id="chooseLoad" class="choose">
@@ -48,6 +48,8 @@
             <span id="eta"></span>
         </div>
         <div id="sortLoaded" class="choose">
+            <button id="viewGraph" class="option">Toggle graph</button>
+            <br>
             <span><strong>Sort by:</strong></span>
             <button id="b_likesMost" class="sendSort">Likes</button>
             <button id="b_dateNewest" class="sendSort">Date (newest first)</button>
@@ -64,7 +66,8 @@
         </div>
 
         <script src="/socket.io/socket.io.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"  crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="dist/uPlot.min.css">
+        <script src="dist/uPlot.iife.min.js"></script>
         <script src="./util.js"></script>
         <script src="./script.js"></script>
     </body>

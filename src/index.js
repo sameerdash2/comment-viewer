@@ -354,27 +354,14 @@ io.on('connection', function (socket) {
 	}
 
 	function makeGraph() {
+		// Send array of ISO dates to client
 		let len = allComments.length;
-		let dates = {};
-		let startDate = (allComments[len - 1].snippet.topLevelComment.snippet.publishedAt < videoPublished)
-			? new Date(allComments[len - 1].snippet.topLevelComment.snippet.publishedAt) : new Date(videoPublished);
-		let endDate = new Date();
-		let currentDate = startDate;
-		while (currentDate <= endDate) {
-			dates[(new Date(currentDate).toISOString().substring(0, 10))] = 0;
-			currentDate.setDate(currentDate.getDate() + 1);
-		}
-		// Populate dates from comments
+		let dates = [];
 		for (let i = 0; i < len; i++) {
-			dates[(allComments[i].snippet.topLevelComment.snippet.publishedAt).substring(0, 10)]++;
-		}
-
-		let data = [];
-		for (let key in dates) {
-			data.push({x: key, y: dates[key]});
+			dates.push(allComments[i].snippet.topLevelComment.snippet.publishedAt);
 		}
 		
-		socket.emit("graphData", {data:data, published:videoPublished});
+		socket.emit("graphData", dates);
 	}
 	
   	socket.on('disconnect', function () {

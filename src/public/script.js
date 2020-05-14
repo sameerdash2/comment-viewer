@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Stores info specific to the currently shown video; clears upon new video.
     let session = {
         commentNum: 0,
+        graphState: 0, //0=none,1=loaded,2=shown
     }
 
     // Updates on new video
@@ -23,9 +24,10 @@ document.addEventListener("DOMContentLoaded", function() {
     let loadStatus = document.getElementById("loadStatus");
     let info = document.getElementById("info");
     let showMoreBtn = document.getElementById("showMoreBtn");
-    let linkedHolder = document.getElementById("linkedHolder");
+    let linkedHolder = document.getElementById("linkedHolder");    
 
     let storedReplies = {};
+    let viewGraph = document.getElementById("viewGraph");
 
     submitBtn.disabled = false;
     submitBtn.innerHTML = "Submit";
@@ -62,6 +64,22 @@ document.addEventListener("DOMContentLoaded", function() {
             });
             socket.emit("sortRequest", closest.id.substring(2));
         }
+    });
+
+    viewGraph.addEventListener('click', function() {
+        if (session.graphState == 2) {
+            // TODO: Hide graph
+            session.graphState = 1;
+        }
+        else if (session.graphState == 1) {
+            // TODO: Show graph
+            session.graphState = 2;
+        }
+        else {
+            viewGraph.disabled = true;
+            socket.emit("graphRequest");
+        }
+
     });
 
     commentsSection.addEventListener('click', repliesButton);
@@ -178,6 +196,60 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    socket.on("graphData", (dates) => {
+        // Object to keep count 
+        let dictionary = {}, len = dates.length;
+        let tZone = (options.timezone == "utc") ? "UTC" : undefined;
+        console.log("hayoeu",session.videoPublished,dates[len - 1]);
+        let startDate = new Date(Math.min( new Date(session.videoPublished), new Date(dates[len - 1]) ));
+        startDate.setHours(0,0,0,0);
+        let endDate = new Date();
+        endDate.setHours(0,0,0,0);
+        let currentDate = startDate;
+        console.log("from", startDate, "to", endDate);
+        // One key for each day, represented as unix time milliseconds
+		while (currentDate <= endDate) {
+			dictionary[new Date(currentDate).getTime()] = 0;
+			currentDate.setDate(currentDate.getDate() + 1);
+		}
+        // Populate date counts from comments
+        for (let i = 0; i < len; i++) {
+            dictionary[new Date(dates[i]).setHours(0,0,0,0)]++;
+        }
+        console.log(dictionary);
+        let data = [[], []];
+        for (let key in dictionary) {
+            // Graph requires seconds. All comments have 000 ms, but flooring to be safe
+            data[0].push(Math.floor(key / 1000));
+            data[1].push(dictionary[key]);
+        }
+        
+        let opts = {
+            title: "Comments",
+            width: 1000,
+            height: 400,
+            series: [
+                {
+                    label: "Date",
+                    value: (self, rawValue) => new Date(rawValue*1000).toLocaleDateString(),
+                },
+                {
+                    // in-legend display
+                    label: "Comments",
+
+                    // series style
+                    stroke: "blue",
+                    width: 2,
+                    fill: "rgba(0, 0, 255, 0.3)",
+                },
+
+            ],
+        };
+
+        let uplot = new uPlot(opts, data, document.getElementById("graphContainer"));
+        session.graphState = 2;
+    });
+
     socket.on("resetPage", resetPage);
     function resetPage() {
         linkedHolder.innerHTML = "";
@@ -193,6 +265,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("b_dateOldest").disabled = true;
         session = {
             commentNum: 0,
+            graphState: 0,
         };
         
         storedReplies = {};
