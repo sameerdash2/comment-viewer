@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const DEF = "#000";
     const LOAD = "#666";
     const MAXDISPLAY = 100;
-    const MAX = 100000;    
 
     // Stores info specific to the currently shown video; clears upon new video.
     let session = {
@@ -107,9 +106,9 @@ document.addEventListener("DOMContentLoaded", function() {
         message.innerHTML = "&nbsp;";
         info.innerHTML = displayTitle(video, forLinked, options);
     });
-    socket.on("commentsInfo", ({num, disabled, eta, commence}) => {
+    socket.on("commentsInfo", ({num, disabled, eta, commence, max}) => {
         let commentInfo = document.getElementById("commentInfo");
-        document.getElementById("chooseLoad").style.display = (!disabled && !commence && num < MAX) ? "block" : "none";
+        document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
         if (disabled) {
             commentInfo.innerHTML = `<i class="fas fa-comment"></i> Comments have been disabled on this video.`;
             if (num > 0) {
@@ -119,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function() {
         else {
             commentInfo.innerHTML = `<i class="fas fa-comment"></i> ` + Number(num).toLocaleString() + ` comments`;
             document.getElementById("eta").innerHTML = eta;
-            if (num >= MAX) loadStatus.innerHTML = "Only videos with under " + MAX + " comments are supported.";
+            if (max > 0) loadStatus.innerHTML = "Videos with over " + max.toLocaleString() + " comments are not supported.";
         }
     });
 

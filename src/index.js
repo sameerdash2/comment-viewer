@@ -1,5 +1,5 @@
 const {google} = require('googleapis');
-const config = require('./config');
+const config = require('./config.json');
 let express = require('express');
 let app = express();
 let http = require('http').createServer(app);
@@ -280,7 +280,8 @@ io.on('connection', function (socket) {
 				// for upcoming/live streams, disregard a 0 count.
 				if (!(liveBroadcastContent != "none" && count == 0)) {
 					let beginLoad = count < 200 && count > 0;
-					socket.emit("commentsInfo", { num: count, disabled: false, eta: eta(count), commence: beginLoad });
+					socket.emit("commentsInfo", { num: count, disabled: false, eta: eta(count),
+						commence: beginLoad, max: (count > config.maxLoad) ? config.maxLoad : -1 });
 					if (beginLoad) {
 						handleLoad("dateOldest");
 					}
@@ -290,7 +291,8 @@ io.on('connection', function (socket) {
 					console.error("Test comment execute error", err.response.data.error);
 					if (liveBroadcastContent == "none") {					
 						if (err.response.data.error.errors[0].reason == "commentsDisabled") {
-							socket.emit("commentsInfo", {num: count, disabled: true, eta: "", commence: false});
+							socket.emit("commentsInfo", {num: count, disabled: true, eta: "",
+								commence: false, max: (count > config.maxLoad) ? config.maxLoad : -1 });
 						}
 						else if (err.response.data.error.errors[0].reason == "processingFailure") {						
 							setTimeout(executeTestComment, 1, count);
@@ -382,7 +384,7 @@ io.on('connection', function (socket) {
 		checkSendID(id);
 	});
 	socket.on("requestAll", function() {
-		if (totalExpected < MAX) {
+		if (totalExpected < config.maxLoad) {
 			handleLoad("dateOldest");
 		}
 		else {
@@ -416,7 +418,7 @@ http.listen(8000, function () {
 //Initialize yt api library
 const youtube = google.youtube({
 	version: "v3",
-	auth: config.GAPI_KEY
+	auth: config.gapiKey
 });
 
 function merge(arr, l, m, r) { 
@@ -488,4 +490,3 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const MAXDISPLAY = 100;
-const MAX = 100000;
