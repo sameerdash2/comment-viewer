@@ -125,9 +125,10 @@ document.addEventListener("DOMContentLoaded", function() {
         message.innerHTML = "&nbsp;";
         info.innerHTML = displayTitle(video, forLinked, options);
     });
-    socket.on("commentsInfo", ({num, disabled, eta, commence, max}) => {
+    socket.on("commentsInfo", ({num, disabled, eta, commence, max, graph}) => {
         let commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
+        viewGraph.style.display = graph ? "block" : "none";
         if (disabled) {
             commentInfo.innerHTML = `<i class="fas fa-comment"></i> Comments have been disabled on this video.`;
             if (num > 0) {
@@ -200,11 +201,16 @@ document.addEventListener("DOMContentLoaded", function() {
     socket.on("graphData", (dates) => {
         // Object to keep count 
         let dictionary = {}, len = dates.length;
-        let tZone = (options.timezone == "utc") ? "UTC" : undefined;
         let startDate = new Date(Math.min( new Date(session.videoPublished), new Date(dates[len - 1]) ));
-        startDate.setHours(0,0,0,0);
         let endDate = new Date();
-        endDate.setHours(0,0,0,0);
+        if (options.timezone == "utc") {
+            startDate.setUTCHours(0,0,0,0);
+            endDate.setUTCHours(0,0,0,0);
+        }
+        else {
+            startDate.setHours(0,0,0,0);
+            endDate.setHours(0,0,0,0);
+        }
         let currentDate = startDate;
         // One key for each day, represented as unix time milliseconds
 		while (currentDate <= endDate) {
@@ -212,8 +218,10 @@ document.addEventListener("DOMContentLoaded", function() {
 			currentDate.setDate(currentDate.getDate() + 1);
 		}
         // Populate date counts from comments
+        let floorDate;
         for (let i = 0; i < len; i++) {
-            dictionary[new Date(dates[i]).setHours(0,0,0,0)]++;
+            floorDate = (options.timezone == "utc") ? new Date(dates[i]).setUTCHours(0,0,0,0) : new Date(dates[i]).setHours(0,0,0,0);
+            dictionary[floorDate]++;
         }
         let data = [[], []];
         for (let key in dictionary) {
@@ -229,31 +237,35 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     function makeGraph(data) {
-        // config for both axes
         let axis = {
             font: "14px Noto Sans TC",
-            grid: {
-                stroke: GRIDCOLOR,
-            },
+            grid: { stroke: GRIDCOLOR, },
             ticks: {
                 show: true,
                 size: 5,
                 stroke: GRIDCOLOR,
-            }
+            },
         }
+
+        let zone = options.timezone == "utc" ? "UTC" : undefined;
         let opts = {
             width: 1000,
             height: 400,
+            tzDate: ts => uPlot.tzDate(new Date(ts * 1000), zone),
             axes: [axis, axis],
             series: [
                 {
                     // x series
                     label: "Date",
-                    value: (self, rawValue) => new Date(rawValue*1000).toLocaleDateString(),
+                    value: (self, rawValue) => {
+                        return options.timezone == "utc"
+                            ? new Date(rawValue*1000).toUTCString().substring(5, 16) : new Date(rawValue*1000).toLocaleDateString()
+                    },
                 },
                 {
                     // y series
-                    label: "Comments",                    
+                    label: "Comments",
+                    value: (self, rawValue) => rawValue.toLocaleString(),
                     stroke: "blue",
                     width: 2,
                     points: {
