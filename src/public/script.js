@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const DEF = "#000";
     const LOAD = "#666";
     const MAXDISPLAY = 100;
+    const GRIDCOLOR = "rgba(0,0,0,0.1)";
 
     // Stores info specific to the currently shown video; clears upon new video.
     let session = {
@@ -68,11 +69,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     viewGraph.addEventListener('click', function() {
         if (session.graphState == 2) {
-            // TODO: Hide graph
+            document.getElementById("graphContainer").style.display = "none";
             session.graphState = 1;
         }
         else if (session.graphState == 1) {
-            // TODO: Show graph
+            document.getElementById("graphContainer").style.display = "block";
             session.graphState = 2;
         }
         else {
@@ -200,13 +201,11 @@ document.addEventListener("DOMContentLoaded", function() {
         // Object to keep count 
         let dictionary = {}, len = dates.length;
         let tZone = (options.timezone == "utc") ? "UTC" : undefined;
-        console.log("hayoeu",session.videoPublished,dates[len - 1]);
         let startDate = new Date(Math.min( new Date(session.videoPublished), new Date(dates[len - 1]) ));
         startDate.setHours(0,0,0,0);
         let endDate = new Date();
         endDate.setHours(0,0,0,0);
         let currentDate = startDate;
-        console.log("from", startDate, "to", endDate);
         // One key for each day, represented as unix time milliseconds
 		while (currentDate <= endDate) {
 			dictionary[new Date(currentDate).getTime()] = 0;
@@ -216,39 +215,63 @@ document.addEventListener("DOMContentLoaded", function() {
         for (let i = 0; i < len; i++) {
             dictionary[new Date(dates[i]).setHours(0,0,0,0)]++;
         }
-        console.log(dictionary);
         let data = [[], []];
         for (let key in dictionary) {
             // Graph requires seconds. All comments have 000 ms, but flooring to be safe
             data[0].push(Math.floor(key / 1000));
             data[1].push(dictionary[key]);
         }
-        
+
+        makeGraph(data);
+        document.getElementById("graphContainer").style.display = "block";
+        session.graphState = 2;
+        viewGraph.disabled = false;
+    });
+
+    function makeGraph(data) {
+        // config for both axes
+        let axis = {
+            font: "14px Noto Sans TC",
+            grid: {
+                stroke: GRIDCOLOR,
+            },
+            ticks: {
+                show: true,
+                size: 5,
+                stroke: GRIDCOLOR,
+            }
+        }
         let opts = {
-            title: "Comments",
             width: 1000,
             height: 400,
+            axes: [axis, axis],
             series: [
                 {
+                    // x series
                     label: "Date",
                     value: (self, rawValue) => new Date(rawValue*1000).toLocaleDateString(),
                 },
                 {
-                    // in-legend display
-                    label: "Comments",
-
-                    // series style
+                    // y series
+                    label: "Comments",                    
                     stroke: "blue",
                     width: 2,
-                    fill: "rgba(0, 0, 255, 0.3)",
+                    points: {
+                        show: false,
+                    }
                 },
-
             ],
+            cursor: {
+                y: false,
+                points: {
+                    size: 100,
+                },
+            },
+            focus: {alpha: 0}
         };
 
         let uplot = new uPlot(opts, data, document.getElementById("graphContainer"));
-        session.graphState = 2;
-    });
+    }
 
     socket.on("resetPage", resetPage);
     function resetPage() {
@@ -267,6 +290,8 @@ document.addEventListener("DOMContentLoaded", function() {
             commentNum: 0,
             graphState: 0,
         };
+        document.getElementById("graphContainer").style.display = "none";
+        document.getElementById("graphContainer").innerHTML = "";
         
         storedReplies = {};
     }
