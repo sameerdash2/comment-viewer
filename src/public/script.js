@@ -214,8 +214,13 @@ document.addEventListener("DOMContentLoaded", function() {
         let currentDate = startDate;
         // One key for each day, represented as unix time milliseconds
 		while (currentDate <= endDate) {
-			dictionary[new Date(currentDate).getTime()] = 0;
-			currentDate.setDate(currentDate.getDate() + 1);
+            dictionary[new Date(currentDate).getTime()] = 0;
+            if (options.timezone == "utc") {
+                currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+            }
+            else {
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
 		}
         // Populate date counts from comments
         let floorDate;
