@@ -191,9 +191,14 @@ function parseDate(iso, timezone) {
 
     /* return DAYS[date.getDay()] + " " + MONTHS[date.getMonth()] + " " + date.getDate() + " " + iso.substring(0, 4)
         + " - " + date.toLocaleTimeString(); */
-    let output = date.toLocaleString();
-    if (timezone == "utc") {
-        output = date.toUTCString().substring(5);
+    let output;
+    switch (timezone) {
+        case "utc":
+            output = date.toUTCString().substring(5);
+            break;
+        case "local":
+        default:
+            output = date.toLocaleString();
     }
     return output;
 }
