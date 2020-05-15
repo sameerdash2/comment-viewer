@@ -1,4 +1,4 @@
-function displayTitle(video, useCount, options) {
+function formatTitle(video, useCount, options) {
     let liveState = video.snippet.liveBroadcastContent;
 
     // casting in order to use toLocaleString()
@@ -33,14 +33,14 @@ function displayTitle(video, useCount, options) {
         let diffHrs = Math.floor(diffMs / 3600000); // hours
         let diffMins = Math.floor(((diffMs % 86400000) % 3600000) / 60000); // minutes
         let diffSecs = Math.round((((diffMs % 86400000) % 3600000) % 60000) / 1000);
-        timestampSec += `<strong>Stream start time:</strong> ` + parseDate(startTime.toISOString(), options.timezone)
+        timestampSec += `<strong>Stream start time:</strong> ` + parseTimestamp(startTime.toISOString(), options.timezone)
             + ` (Elapsed: ` + diffHrs + `h ` + diffMins + `m ` + diffSecs + `s)`;
     }
     else if (liveState == "upcoming") {
         viewcountSec += `<span class="concurrent">Upcoming live stream</span>`;
         timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> `
-            + parseDate(video.snippet.publishedAt, options.timezone) + `<br><i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> `
-            + parseDate(video.liveStreamingDetails.scheduledStartTime, options.timezone);
+            + parseTimestamp(video.snippet.publishedAt, options.timezone) + `<br><i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> `
+            + parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone);
     }
     else {
 		// YT premium shows don't return viewcount
@@ -51,12 +51,12 @@ function displayTitle(video, useCount, options) {
 			viewcountSec += viewCount.toLocaleString() + ` views`;
 		}
         
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ` + parseDate(video.snippet.publishedAt, options.timezone);
+        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ` + parseTimestamp(video.snippet.publishedAt, options.timezone);
 
         if (typeof video.liveStreamingDetails !== "undefined") {
             streamTimesSec += `<div class="streamTimes"><strong>Stream start time:</strong> `
-                + parseDate(video.liveStreamingDetails.actualStartTime, options.timezone)
-                + `<br><strong>Stream end time:</strong> ` + parseDate(video.liveStreamingDetails.actualEndTime, options.timezone) + `</div>`;
+                + parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)
+                + `<br><strong>Stream end time:</strong> ` + parseTimestamp(video.liveStreamingDetails.actualEndTime, options.timezone) + `</div>`;
         }
 
         commentCountSec += `<i class="fas fa-comment"></i> `;
@@ -92,7 +92,7 @@ function displayTitle(video, useCount, options) {
 	return newContent;
 }
 
-function formatCommentThread(item, number, options, uploaderId, videoId, linked = false, reply = false) {
+function formatComment(item, number, options, uploaderId, videoId, linked = false, reply = false) {
 	let content = "";
 	let mainComment;
     let replyCount = -1;
@@ -125,9 +125,9 @@ function formatCommentThread(item, number, options, uploaderId, videoId, linked 
     let opSegment = "";
     let pfpSegment = "";
 
-    let timeString = parseDate(publishedAt, options.timezone);
+    let timeString = parseTimestamp(publishedAt, options.timezone);
     if (publishedAt != updatedAt) {
-        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseDate(updatedAt, options.timezone) + `)`;
+        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseTimestamp(updatedAt, options.timezone) + `)`;
 	}
 	
     if (linked) {
@@ -186,7 +186,7 @@ function formatCommentThread(item, number, options, uploaderId, videoId, linked 
     return content;
 }
 
-function parseDate(iso, timezone) {
+function parseTimestamp(iso, timezone) {
     let date = new Date(iso);
 
     /* return DAYS[date.getDay()] + " " + MONTHS[date.getMonth()] + " " + date.getDate() + " " + iso.substring(0, 4)
