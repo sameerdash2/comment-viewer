@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", function() {
             focus: {alpha: 0}
         };
 
-        let uplot = new uPlot(opts, data, document.getElementById("graphContainer"));
+        let uplot = new uPlot(opts, data, document.getElementById("graphSpace"));
     }
 
     socket.on("resetPage", resetPage);
@@ -308,7 +308,7 @@ document.addEventListener("DOMContentLoaded", function() {
             graphState: 0,
         };
         document.getElementById("graphContainer").style.display = "none";
-        document.getElementById("graphContainer").innerHTML = "";
+        document.getElementById("graphSpace").innerHTML = "";
         
         storedReplies = {};
     }
