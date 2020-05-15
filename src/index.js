@@ -292,7 +292,10 @@ io.on('connection', function (socket) {
 			},
 				function(err) {
 					console.error("Test comment execute error", err.response.data.error);
-					if (liveBroadcastContent == "none") {					
+					if (err.response.data.error.errors[0].reason == "quotaExceeded") {
+						quotaExceeded();
+					}
+					else if (liveBroadcastContent == "none") {
 						if (err.response.data.error.errors[0].reason == "commentsDisabled") {
 							socket.emit("commentsInfo", {num: count, disabled: true, eta: "",
 								commence: false, max: (count > config.maxLoad) ? config.maxLoad : -1, graph: false });
