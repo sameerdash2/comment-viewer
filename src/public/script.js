@@ -1,8 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const socket = io("", {
-        query: "timezone=" + (-new Date().getTimezoneOffset())
-    });
-    //const socket = io();
+    const socket = io();
     const ERR = "#A00";
     const DEF = "#000";
     const LOAD = "#666";
