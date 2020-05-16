@@ -1,15 +1,19 @@
 {
   "name": "commentviewer",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "View and analyze YouTube comments easily.",
+  "main": "src/index.js",
   "dependencies": {
-    "chart.js": "^2.9.3",
-    "chartjs-adapter-moment": "^0.1.1",
     "googleapis": "^49.0.0",
     "moment": "^2.25.1",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.3.0",
+    "uplot": "^1.0.8"
   },
+  "devDependencies": {},
   "scripts": {
-    "start": "node index.js"
-  }
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "author": "FrozenKite",
+  "license": "ISC"
 }
