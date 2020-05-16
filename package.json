@@ -8,5 +8,8 @@
     "googleapis": "^49.0.0",
     "moment": "^2.25.1",
     "socket.io": "^2.3.0"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
