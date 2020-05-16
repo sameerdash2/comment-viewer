@@ -277,11 +277,7 @@ document.addEventListener("DOMContentLoaded", function() {
             ],
             cursor: {
                 y: false,
-                points: {
-                    size: 100,
-                },
             },
-            focus: {alpha: 0}
         };
 
         let uplot = new uPlot(opts, data, document.getElementById("graphSpace"));
