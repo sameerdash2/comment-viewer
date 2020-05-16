@@ -7,7 +7,7 @@ let io = require('socket.io')(http);
 const fs = require('fs');
 // let stream = fs.createWriteStream("logs.json", {flags: 'a'});
 
-app.use(express.static("public"));
+app.use(express.static("src/public"));
 
 io.on('connection', function (socket) {
 	console.log('a user connected');
@@ -404,8 +404,12 @@ io.on('connection', function (socket) {
 	});
 });
 
-http.listen(8000, function () {
-	console.log('listening on *:8000');
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 8000;
+}
+http.listen(port, function () {
+	console.log('listening on ', port);
 });
 
 //Initialize yt api library
