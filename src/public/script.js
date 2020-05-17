@@ -254,7 +254,19 @@ document.addEventListener("DOMContentLoaded", function() {
             width: 1000,
             height: 400,
             tzDate: ts => uPlot.tzDate(new Date(ts * 1000), zone),
-            axes: [axis, axis],
+            axes: [{
+                ...axis,
+                // custom values to hide hours/mins when zooming in
+                values: [
+                    [3600 * 24 * 365,    "{YYYY}",  7, "",         1],
+                    [3600 * 24 * 28,     "{MMM}",   7, "\n{YYYY}", 1],
+                    [3600 * 24,          "{M}/{D}", 7, "\n{YYYY}", 1],
+                    [3600,               "",        4, "{M}/{D}",  1],
+                    [60,                 "",        4, "{M}/{D}",  1],
+                    [1,                  "",        4, "{M}/{D}",  1],
+                    [0.001,              "",        4, "{M}/{D}",  1],
+                  ],
+            }, axis],
             series: [
                 {
                     // x series
