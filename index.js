@@ -13,7 +13,7 @@ io.on('connection', function (socket) {
 	console.log('a user connected');
 
 	let idString = "";
-	let videoPublished, uploaderId;
+	let videoPublished;
 	let loadedReplies = {};
 	let currentLinked = "";
 	let linkedParent = "";
@@ -117,7 +117,7 @@ io.on('connection', function (socket) {
 			"part": "snippet",
 			"videoId": idString,
 			"order": "time",
-			"maxResults": "100",
+			"maxResults": 100,
 			"pageToken": nxtPageToken
 		})
 			.then(function(response) {
@@ -229,7 +229,13 @@ io.on('connection', function (socket) {
 			"id": currentLinked,
 			})
 				.then(function(response) {
-					sendLinkedComment(parent, response.data.items[0]);
+					if (response.data.items[0]) {
+						sendLinkedComment(parent, response.data.items[0]);
+					}
+					else {
+						// send only parent
+						sendLinkedComment(parent);
+					}
 				},
 				function(err) {
 					console.error("Linked reply execute error", err.response.data.error);					
@@ -250,8 +256,7 @@ io.on('connection', function (socket) {
 			.then(function(response) {
 				if (response.data.pageInfo.totalResults > 0) {
 					totalExpected = response.data.items[0].statistics.commentCount; // for load percentage
-					videoPublished = response.data.items[0].snippet.publishedAt; // for graph bound
-					uploaderId = response.data.items[0].snippet.channelId; // for highlighting OP comments
+					videoPublished = response.data.items[0].snippet.publishedAt; // for 24h graph check
 					if (!forLinked) resetPage();
 					socket.emit("videoInfo", { video:response.data.items[0], forLinked:forLinked } );
 					executeTestComment(totalExpected, response.data.items[0].snippet.liveBroadcastContent);					
@@ -265,8 +270,7 @@ io.on('connection', function (socket) {
 					if (err.response.data.error.errors[0].reason == "quotaExceeded") {
 						quotaExceeded();
 					}
-					else if (err.response.data.error.errors[0].reason == "processingFailure") {
-						
+					else if (err.response.data.error.errors[0].reason == "processingFailure") {						
 						setTimeout(executeTitle, 1, forLinked);
 					}
 				});
