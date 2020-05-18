@@ -153,6 +153,7 @@ document.addEventListener("DOMContentLoaded", function() {
             loadStatus.innerHTML = "";
             storedReplies = {};
             document.getElementById("sortLoaded").style.display = "block";
+            document.getElementById("statsOptions").style.display = "block";
         }
         let add = "", len = items.length;
         for (let i = 0; i < len; i++) {
@@ -303,6 +304,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("eta").innerHTML = "";
         document.getElementById("chooseLoad").style.display = "none";
         document.getElementById("sortLoaded").style.display = "none";
+        document.getElementById("statsOptions").style.display = "none";
         document.getElementById("showMoreDiv").style.display = "none";
         
         document.getElementById("b_likesMost").disabled = false;

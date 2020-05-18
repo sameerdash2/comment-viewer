@@ -167,6 +167,11 @@ div#sortLoaded {
     display: none;
     font-size: 20px;
 }
+div#statsOptions {
+    display: none;
+    font-size: 18px;
+    margin-bottom: 5px;
+}
 
 div.commentThreadDiv, div.linked {
     margin: 6px 0px;
