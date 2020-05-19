@@ -130,7 +130,6 @@ io.on('connection', function (socket) {
 					// Retrieve replies if there are over 100, to reduce load time later
 					if (response.data.items[i].snippet.totalReplyCount > 100) {
 						executeReplies(response.data.items[i].id, "", [], true);
-						console.log("got some", response.data.items[i].snippet.totalReplyCount);
 					}
 				}
 				
