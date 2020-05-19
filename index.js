@@ -127,6 +127,11 @@ io.on('connection', function (socket) {
 				totalCount += len;
 				for (let i = 0; i < len; i++) {
 					totalCount += response.data.items[i].snippet.totalReplyCount;
+					// Retrieve replies if there are over 100, to reduce load time later
+					if (response.data.items[i].snippet.totalReplyCount > 100) {
+						executeReplies(response.data.items[i].id, "", [], true);
+						console.log("got some", response.data.items[i].snippet.totalReplyCount);
+					}
 				}
 				
 				socket.emit("loadStatus", totalCount);
@@ -320,11 +325,11 @@ io.on('connection', function (socket) {
 		}
 		else {
 			loadedReplies[commentId] = []; //will populate
-			executeReplies(commentId, "", []);
+			executeReplies(commentId, "", [], false);
 		}
 	}
 	
-	function executeReplies(commentId, nxtPageToken, replies) {
+	function executeReplies(commentId, nxtPageToken, replies, silent) {
 		return youtube.comments.list({
 			"part": "snippet",
 			"maxResults": 100,
@@ -336,11 +341,11 @@ io.on('connection', function (socket) {
 					// static bc Objects
 					Array.prototype.push.apply(replies, response.data.items);
 					if (response.data.nextPageToken) {
-						executeReplies(commentId, response.data.nextPageToken, replies);
+						executeReplies(commentId, response.data.nextPageToken, replies, silent);
 					}
 					else {
 						loadedReplies[commentId] = replies;
-						sendReplies(commentId);
+						if (!silent) sendReplies(commentId);
 					}
 	
 				},
@@ -350,7 +355,7 @@ io.on('connection', function (socket) {
 							quotaExceeded();
 						}
 						else if (err.response.data.error.errors[0].reason == "processingFailure") {
-							setTimeout(executeReplies, 1, commentId, nxtPageToken, replies);
+							setTimeout(executeReplies, 1, commentId, nxtPageToken, replies, silent);
 						}                                
 					});
 	}
