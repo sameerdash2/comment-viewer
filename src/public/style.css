@@ -1,8 +1,27 @@
+* {
+    margin: 0;
+}
 body {
     background-color: #BBDDFF;
     font-family: 'Noto Sans TC', sans-serif;
-    margin-left: 24px;
     font-size: 24px;
+    min-height: 100vh;
+    position: relative;
+}
+main {
+    margin-left: 24px;
+    padding-bottom: 52px;
+}
+
+footer {
+    background-color: #ddeeff;
+    font-size: 16px;
+    padding: 5px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    border-top: 1px solid #999;
+    box-sizing: border-box;
 }
 
 span.dot {
@@ -15,8 +34,7 @@ span.dot {
 }
 
 h1 {
-    margin-block-start: 0.1em;
-    margin-block-end: 0.1em;
+    padding: .1em 0;
 }
 
 div#message {

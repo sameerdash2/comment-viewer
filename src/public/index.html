@@ -10,64 +10,70 @@
     </head>
     
     <body>
-        <h1>YouTube Comment Viewer</h1>
-        <div id="intro">
-            <form id="videoForm" autocomplete="off">
-                Enter a YouTube video link, video ID, or direct link to a comment: <br>
-                <input class="mainInput" type="text" id="enterID"/>
-                <button id="submit" class="send" disabled>Loading...</button>
-                <span id="options">
-                    <span>Options <span id="arrow">▼</span></span>
-                    <div id="optionsContent">
-                        <div class="optionsHeader">Time zone</div>
-                        <input type="radio" id="selectLocal" name="timezone" value="local" checked>
-                        <label for="selectLocal" id="localLabel">Local time</label>
-                        <br>
-                        <input type="radio" id="selectUtc" name="timezone" value="utc">
-                        <label for="selectUtc" id="utcLabel">UTC</label>
-                        <br><hr>
-                        <input type="checkbox" id="noImg" value="Bike">
-                        <label for="noImg">Don't load images</label>
-                    </div>
-                </span>
-            </form>
-        </div>
-        <div id="message">&nbsp;</div>
-        <hr class="sect">
-        <div id="info">
+        <main>
+            <h1>YouTube Comment Viewer</h1>
+            <div id="intro">
+                <form id="videoForm" autocomplete="off">
+                    Enter a YouTube video link, video ID, or direct link to a comment: <br>
+                    <input class="mainInput" type="text" id="enterID"/>
+                    <button id="submit" class="send" disabled>Loading...</button>
+                    <span id="options">
+                        <span>Options <span id="arrow">▼</span></span>
+                        <div id="optionsContent">
+                            <div class="optionsHeader">Time zone</div>
+                            <input type="radio" id="selectLocal" name="timezone" value="local" checked>
+                            <label for="selectLocal" id="localLabel">Local time</label>
+                            <br>
+                            <input type="radio" id="selectUtc" name="timezone" value="utc">
+                            <label for="selectUtc" id="utcLabel">UTC</label>
+                            <br><hr>
+                            <input type="checkbox" id="noImg" value="Bike">
+                            <label for="noImg">Don't load images</label>
+                        </div>
+                    </span>
+                </form>
+            </div>
+            <div id="message">&nbsp;</div>
+            <hr class="sect">
+            <div id="info">
 
-        </div>
-        <div id="statsOptions">
-            <button id="viewGraph" class="option">Toggle graph</button>
-        </div>
-        <div id="graphContainer">
-            <div id="graphSpace"></div>
-            <div id="graphDesc">Drag to zoom, double-click to reset</div>
-        </div>
-        <br>
-        <div id="linkedHolder" class="commentsList"></div>
-        <div id="chooseLoad" class="choose">
-            <!-- <div>Load comments by:</div> -->
-            <!-- <button id="submitDesc" class="send" onclick="handleLoad('time', false)">Date (newest first)</button>
-            <button id="submitRel" class="send" onclick="handleLoad('relevance', false)">Relevance</button> -->
-            <button id="submitAll" class="send">Load all comments</button>
-            <span id="eta"></span>
-        </div>
-        <div id="sortLoaded" class="choose">
-            <span><strong>Sort by:</strong></span>
-            <button id="b_likesMost" class="sendSort">Likes</button>
-            <button id="b_dateNewest" class="sendSort">Date (newest first)</button>
-            <button id="b_dateOldest" class="sendSort">Date (oldest first)</button>
-        </div>
-        <div id="loadStatus" class="loadStatus"></div>
-        <div id="commentsSection" class="commentsList">
-            
-            <!-- main zone -->
+            </div>
+            <div id="statsOptions">
+                <button id="viewGraph" class="option">Toggle graph</button>
+            </div>
+            <div id="graphContainer">
+                <div id="graphSpace"></div>
+                <div id="graphDesc">Drag to zoom, double-click to reset</div>
+            </div>
+            <br>
+            <div id="linkedHolder" class="commentsList"></div>
+            <div id="chooseLoad" class="choose">
+                <!-- <div>Load comments by:</div> -->
+                <!-- <button id="submitDesc" class="send" onclick="handleLoad('time', false)">Date (newest first)</button>
+                <button id="submitRel" class="send" onclick="handleLoad('relevance', false)">Relevance</button> -->
+                <button id="submitAll" class="send">Load all comments</button>
+                <span id="eta"></span>
+            </div>
+            <div id="sortLoaded" class="choose">
+                <span><strong>Sort by:</strong></span>
+                <button id="b_likesMost" class="sendSort">Likes</button>
+                <button id="b_dateNewest" class="sendSort">Date (newest first)</button>
+                <button id="b_dateOldest" class="sendSort">Date (oldest first)</button>
+            </div>
+            <div id="loadStatus" class="loadStatus"></div>
+            <div id="commentsSection" class="commentsList">
+                
+                <!-- main zone -->
 
-        </div>
-        <div id="showMoreDiv">
-            <button id="showMoreBtn" class="loadMore">Show more comments...</button>
-        </div>
+            </div>
+            <div id="showMoreDiv">
+                <button id="showMoreBtn" class="loadMore">Show more comments...</button>
+            </div>
+        </main>
+
+        <footer>
+            <span>v1.1.0</span>
+        </footer>
 
         <script src="/socket.io/socket.io.js"></script>
         <link rel="stylesheet" href="dist/uPlot.min.css">
