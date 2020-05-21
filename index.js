@@ -289,11 +289,11 @@ io.on('connection', function (socket) {
 			.then(function(response) {
 				// for upcoming/live streams, disregard a 0 count.
 				if (!(liveBroadcastContent != "none" && count == 0)) {
-					let beginLoad = count < 200 && count > 0;
+					let beginLoad = count < 200;
 					graphAvailable = count >= 50 && new Date(videoPublished).getTime() <= (new Date().getTime() - 24*60*60*1000);
 					socket.emit("commentsInfo", { num: count, disabled: false, eta: eta(count),
 						commence: beginLoad, max: (count > config.maxLoad) ? config.maxLoad : -1, graph: graphAvailable });
-					if (beginLoad) {
+					if (beginLoad && count > 0) {
 						handleLoad("dateOldest");
 					}
 				}
