@@ -491,7 +491,4 @@ function eta(count) {
 	return "Estimated load time: " + etaTime;
 }
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 const MAXDISPLAY = 100;
