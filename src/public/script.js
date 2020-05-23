@@ -188,11 +188,12 @@ document.addEventListener("DOMContentLoaded", function() {
         updateOptions();
         session.linkedParent = parent.id;
         session.currentLinked = hasReply ? reply.id : parent.id;
+        // uploaderId may or may not have been received, so sending a blank to be Consistent
         linkedHolder.innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-            + formatComment(parent, -1, options, session.uploaderId, session.videoId, !hasReply, false) + `</div></section><hr><br>`;
+            + formatComment(parent, -1, options, "", parent.snippet.videoId, !hasReply, false) + `</div></section><hr><br>`;
         if (hasReply) {
             document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
-                + formatComment(reply, -1, options, session.uploaderId, session.videoId, true, true) + `</div>`;
+                + formatComment(reply, -1, options, "", parent.snippet.videoId, true, true) + `</div>`;
         }
     });
 
