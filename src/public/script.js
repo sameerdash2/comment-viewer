@@ -275,7 +275,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     label: "Date",
                     value: (self, rawValue) => {
                         return options.timezone == "utc"
-                            ? new Date(rawValue*1000).toUTCString().substring(5, 16) : new Date(rawValue*1000).toLocaleDateString()
+                            ? new Date(rawValue*1000).toISOString().substring(0, 10) : new Date(rawValue*1000).toLocaleDateString()
                     },
                 },
                 {

@@ -189,12 +189,10 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
 function parseTimestamp(iso, timezone) {
     let date = new Date(iso);
 
-    /* return DAYS[date.getDay()] + " " + MONTHS[date.getMonth()] + " " + date.getDate() + " " + iso.substring(0, 4)
-        + " - " + date.toLocaleTimeString(); */
     let output;
     switch (timezone) {
         case "utc":
-            output = date.toUTCString().substring(5);
+            output = date.toISOString().substring(0, 10) + " " + date.toISOString().substring(11,19);
             break;
         case "local":
         default:
