@@ -37,6 +37,10 @@ h1 {
     padding: .1em 0;
 }
 
+input[type="radio"], input[type="checkbox"] {
+    margin: 0px 2px;
+}
+
 div#message {
     color: #977;
     font-size: 80%;
