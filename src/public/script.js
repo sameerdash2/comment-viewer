@@ -113,7 +113,6 @@ document.addEventListener("DOMContentLoaded", function() {
     socket.on("videoInfo", ({ video, forLinked }) => {
         if (!forLinked) {
             resetPage();
-            updateOptions();
         }
         session.totalExpected = video.statistics.commentCount; // for load percentage
         session.videoId = video.id;
@@ -185,7 +184,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("getReplies-" + id).disabled = false;
     });
     socket.on("linkedComment", ({parent, hasReply, reply}) => {
-        updateOptions();
+        resetPage();
         session.linkedParent = parent.id;
         session.currentLinked = hasReply ? reply.id : parent.id;
         // uploaderId may or may not have been received, so sending a blank to be Consistent
@@ -319,6 +318,8 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("graphSpace").innerHTML = "";
         
         storedReplies = {};
+
+        updateOptions();
     }
 
     function updateOptions() {
