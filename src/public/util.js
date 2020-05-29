@@ -87,8 +87,6 @@ function formatTitle(video, useCount, options) {
 		` + streamTimesSec + `
         ` + commentCountSec + `
     `;
-	//vidInfo.innerHTML = newContent;
-	//socket.emit("videoInfo", newContent);
 	return newContent;
 }
 
@@ -99,11 +97,11 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
 	let contentClass;
 	if (reply) {
 		mainComment = item;
-		contentClass = "replyContent";
+		contentClass = options.showImg ? "replyContent" : "replyContentFull";
 	}
 	else {
 		mainComment = item.snippet.topLevelComment;
-		contentClass = "commentContent";
+		contentClass = options.showImg ? "commentContent" : "commentContentFull";
         replyCount = item.snippet.totalReplyCount;
 	}
 
@@ -130,11 +128,7 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
         timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseTimestamp(updatedAt, options.timezone) + `)`;
 	}
 	
-    if (linked) {
-        linkedSegment = `<span class="linkedComment">• LINKED COMMENT</span>`;
-        //className = "linked";
-        //if (reply) className = "linked";
-    }
+    if (linked) linkedSegment = `<span class="linkedComment">• LINKED COMMENT</span>`;
     
     // second condition included for safety
     if (replyCount > 0 && !reply) {
@@ -163,11 +157,13 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
 
     if (channelId == uploaderId) opSegment += `class="authorNameCreator"`;
     
-    if (options.showImg) pfpSegment += `<img class="pfp" src="` + pfpUrl + `">`;
+    if (options.showImg) {
+        pfpSegment += `<a class="channelPfpLink" href="` + channelUrl + `" target="_blank"><img class="pfp" src="` + pfpUrl + `"></a>`;
+    }
 
-    content += `
-		<a class="channelPfpLink" href="` + channelUrl + `" target="_blank">` + pfpSegment + `</a><!--Comment to fight inline-block's auto margin
-		--><div class="` + contentClass +`">
+    content += 
+        pfpSegment
+        + `<div class="` + contentClass +`">
 			<div class="commentHeader">
 				<span ` + opSegment + `><a href="` + channelUrl + `" class="authorName" target="_blank">` + displayName + `</a></span>
 				<span>|</span>

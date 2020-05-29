@@ -214,6 +214,7 @@ input.enterBounds {
 
 a.channelPfpLink {
     margin-top: 5px;
+    margin-right: 5px;
     display:inline-block;
     vertical-align: top;
     white-space: normal;
@@ -226,15 +227,21 @@ div.streamTimes {
     font-size: 20px;
 }
 
-.commentContent, .replyContent {
+.commentContent, .replyContent, .commentContentFull, .replyContentFull {
     display:inline-block;
     white-space: normal;
     word-wrap: break-word;
-    width: 943px;
-    margin-left: 5px;
+    width: 947px;
+}
+.commentContentFull {
+    width: 1000px;
 }
 .replyContent {
-    width: 886px
+    width: 894px;
+}
+.replyContentFull {
+    width: 967px;
+    margin-left: 32px;
 }
 span.num {
     float: right;
