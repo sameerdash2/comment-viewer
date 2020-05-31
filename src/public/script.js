@@ -290,6 +290,7 @@ document.addEventListener("DOMContentLoaded", function() {
             ],
             cursor: {
                 y: false,
+                drag: { dist: 10 }
             },
         };
 

@@ -7,11 +7,11 @@
     "node": "12.16.x"
   },
   "dependencies": {
+    "express": "^4.17.1",
     "googleapis": "^49.0.0",
     "moment": "^2.25.1",
-    "express": "^4.17.1",
     "socket.io": "^2.3.0",
-    "uplot": "^1.0.8"
+    "uplot": "^1.0.9"
   },
   "devDependencies": {},
   "scripts": {
