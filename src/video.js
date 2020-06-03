@@ -52,7 +52,7 @@ class Video {
             if (!(this._video.snippet.liveBroadcastContent != "none" && count == 0)) {
                 let beginLoad = count < 200;
                 this._graphAvailable = count >= 50 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 24*60*60*1000);
-                this._socket.emit("commentsInfo", { num: count, disabled: false, eta: Utils.eta(count),
+                this._socket.emit("commentsInfo", { num: count, disabled: false,
                     commence: beginLoad, max: (count > config.maxLoad) ? config.maxLoad : -1, graph: this._graphAvailable });
                 if (beginLoad && count > 0) {
                     this.handleLoad("dateOldest");
@@ -68,7 +68,7 @@ class Video {
             }
             else if (this._video.snippet.liveBroadcastContent == "none" && err.response.data.error.errors[0].reason == "commentsDisabled") {
                 this._commentsEnabled = false;
-                this._socket.emit("commentsInfo", {num: count, disabled: true, eta: "",
+                this._socket.emit("commentsInfo", {num: count, disabled: true,
                     commence: false, max: (count > config.maxLoad) ? config.maxLoad : -1, graph: false });
             }
         });
@@ -104,6 +104,7 @@ class Video {
 
     loadFromDatabase(callback) {
         console.log("loading from database!");
+        let y = new Date();
         this._app.database.getComments(this._id, (rows) => {
             let len = rows.length;
             this._indexedComments = len;
@@ -111,6 +112,7 @@ class Video {
                 this._comments.push(JSON.parse(rows[i].comment));
                 this._indexedComments += this._comments[i].snippet.totalReplyCount;
             }
+            console.log("it took", new Date().getTime() - y.getTime(),"ms for parse");
 
             callback();
         });

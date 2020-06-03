@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function() {
         message.innerHTML = "&nbsp;";
         info.innerHTML = formatTitle(video, forLinked, options);
     });
-    socket.on("commentsInfo", ({num, disabled, eta, commence, max, graph}) => {
+    socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
         let commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
         viewGraph.style.display = graph ? "block" : "none";
@@ -133,7 +133,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         else {
             commentInfo.innerHTML = `<i class="fas fa-comment"></i> ` + Number(num).toLocaleString() + ` comments`;
-            document.getElementById("eta").innerHTML = eta;
             if (max > 0) loadStatus.innerHTML = "Videos with over " + max.toLocaleString() + " comments are not supported.";
         }
     });
@@ -302,7 +301,6 @@ document.addEventListener("DOMContentLoaded", function() {
         linkedHolder.innerHTML = "";
         commentsSection.innerHTML = "";
         loadStatus.innerHTML = "";
-        document.getElementById("eta").innerHTML = "";
         document.getElementById("chooseLoad").style.display = "none";
         document.getElementById("sortLoaded").style.display = "none";
         document.getElementById("statsOptions").style.display = "none";

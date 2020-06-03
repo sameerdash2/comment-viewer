@@ -196,3 +196,21 @@ function parseTimestamp(iso, timezone) {
     }
     return output;
 }
+
+function parseDurationMSS(timeSeconds) {
+    let minutes = Math.floor(timeSeconds / 60);
+    let seconds = timeSeconds % 60;
+    return minutes + ':' + ('0' + seconds).slice(-2);
+}
+
+function parseDurationHMMSS(timeSeconds) {
+    let hours = Math.floor(timeSeconds / 60 / 60);
+    let minutes = Math.floor(timeSeconds / 60) % 60;
+    let seconds = timeSeconds % 60;
+    return hours + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
+}
+
+function eta(x) {
+    // Estimates number of seconds to load x comments
+    return Math.floor(x / 250) + 1;
+}
