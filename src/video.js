@@ -79,7 +79,6 @@ class Video {
             this._currentSort = type;
             this._startTime = new Date();
             this._app.database.checkVideo(this._id, (row) => {
-                console.log("the row", row);
                 if (row) {
                     if (row.inProgress) {
                         // TODO: Handle
@@ -94,7 +93,6 @@ class Video {
                     }
                 }
                 else {
-                    console.log("new video " + this._id, this._video.snippet.title.substr(0, 20));
                     this._app.database.addVideo(this._id);
                     this.fetchAllComments("", false);
                 }
@@ -103,7 +101,6 @@ class Video {
     }
 
     loadFromDatabase(callback) {
-        console.log("loading from database!");
         let y = new Date();
         this._app.database.getComments(this._id, (rows) => {
             let len = rows.length;
@@ -112,7 +109,6 @@ class Video {
                 this._comments.push(JSON.parse(rows[i].comment));
                 this._indexedComments += this._comments[i].snippet.totalReplyCount;
             }
-            console.log("it took", new Date().getTime() - y.getTime(),"ms for parse");
 
             callback();
         });
@@ -156,7 +152,6 @@ class Video {
 
                 // Add new comments to beginning of database-stored ones
                 // (If new video, it adds to the empty array)
-                console.log("stored length", this._comments.length,"new length", this._newComments.length);
                 Array.prototype.unshift.apply(this._comments, this._newComments);
 
                 let elapsed = new Date().getTime() - this._startTime.getTime();

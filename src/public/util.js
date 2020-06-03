@@ -12,7 +12,7 @@ function formatTitle(video, useCount, options) {
 
     let ratingsSec = `<div class="ratings">`;
     if (typeof video.statistics.likeCount === "undefined") {
-        ratingsSec += `<i class="fas fa-thumbs-up"></i> <span class="it">Ratings have been hidden.</span>`;
+        ratingsSec += `<i class="fas fa-thumbs-up"></i> <span class="gray">Ratings have been hidden.</span>`;
     }
     else {
         ratingsSec += `<i class="fas fa-thumbs-up"></i> ` + likeCount.toLocaleString() + 
@@ -42,7 +42,7 @@ function formatTitle(video, useCount, options) {
     else {
 		// YT premium shows don't return viewcount
 		if (typeof video.statistics.viewCount === "undefined") {
-			viewcountSec += ` <span class="it">View count unavailable</span>`;
+			viewcountSec += ` <span class="gray">View count unavailable</span>`;
 		}
 		else {
 			viewcountSec += viewCount.toLocaleString() + ` views`;
@@ -52,8 +52,7 @@ function formatTitle(video, useCount, options) {
 
         if (typeof video.liveStreamingDetails !== "undefined") {
             streamTimesSec += `<div class="streamTimes"><strong>Stream start time:</strong> `
-                + parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)
-                + `<br><strong>Stream end time:</strong> ` + parseTimestamp(video.liveStreamingDetails.actualEndTime, options.timezone) + `</div>`;
+                + parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone) + `</div>`;
         }
 
         commentCountSec += `<i class="fas fa-comment"></i> `;
