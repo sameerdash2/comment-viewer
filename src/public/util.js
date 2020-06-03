@@ -28,13 +28,10 @@ function formatTitle(video, useCount, options) {
         let concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
         viewcountSec += `<span class="concurrent">` + concurrentViewers.toLocaleString() + ` watching now</span> / `
             + viewCount.toLocaleString() + ` total views`;
-        let startTime = new Date(video.liveStreamingDetails.actualStartTime);                    
-        let diffMs = (new Date() - startTime); // milliseconds
-        let diffHrs = Math.floor(diffMs / 3600000); // hours
-        let diffMins = Math.floor(((diffMs % 86400000) % 3600000) / 60000); // minutes
-        let diffSecs = Math.round((((diffMs % 86400000) % 3600000) % 60000) / 1000);
+        let startTime = new Date(video.liveStreamingDetails.actualStartTime);
+        let duration = (new Date().getTime() - startTime.getTime());
         timestampSec += `<strong>Stream start time:</strong> ` + parseTimestamp(startTime.toISOString(), options.timezone)
-            + ` (Elapsed: ` + diffHrs + `h ` + diffMins + `m ` + diffSecs + `s)`;
+            + ` (Elapsed: ` + parseDurationHMMSS(Math.floor(duration / 1000)) + `)`;
     }
     else if (liveState == "upcoming") {
         viewcountSec += `<span class="concurrent">Upcoming live stream</span>`;
