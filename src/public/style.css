@@ -66,6 +66,13 @@ div#graphDesc {
     color: #555;
 }
 
+div.gray {
+    color: #555;
+}
+span.gray {
+    color: #555;
+}
+
 section.singleCommentThead, section.linkedSec {
     margin: 5px 0px;
 }

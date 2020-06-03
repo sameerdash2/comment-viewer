@@ -142,7 +142,6 @@ class Video {
 
             // Write new comments to database
             if (i > 0) this._app.database.writeNewComments(this._id, response.data.items.slice(0, i));
-            console.log("write took", new Date().getTime() - a.getTime(),"ms");
 
             // Send load status to client to display percentage
             this._socket.emit("loadStatus", this._indexedComments);
