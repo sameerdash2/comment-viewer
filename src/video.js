@@ -11,9 +11,11 @@ class Video {
 
     reset() {
         this._comments = [];
+        this._newComments = [];
         this._likedComments = [];
         this._indexedComments = 0; // All retrieved comments + their reply counts
         this._loadedReplies = {};
+        // this._fetchUntil = new Date(0).toISOString();
     }
 
     fetchTitle(idString, forLinked) {
@@ -57,7 +59,7 @@ class Video {
                 }
             }
         }, err => {
-            console.error("Test comment execute error", err.response.data.error);
+            // console.error("Test comment execute error", err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
             }
@@ -73,41 +75,92 @@ class Video {
     }
 
     handleLoad(type) {
-        if (this._commentsEnabled && this._commentCount < config.maxLoad) {
-            this._startTime = new Date();
+        if (this._commentsEnabled && this._commentCount < config.maxLoad && type == "dateOldest") {
             this._currentSort = type;
-            switch (type) {
-                // only one case
-                case "dateOldest":
-                    this.fetchAllComments("");
-                    break;
-            }
+            this._startTime = new Date();
+            this._app.database.checkVideo(this._id, (row) => {
+                console.log("the row", row);
+                if (row) {
+                    if (row.inProgress) {
+                        // TODO: Handle
+                    }
+                    else {
+                        // TODO: 30-second cooldown
+                        // TODO: Determine whether records are too old & re-fetch all comments
+
+                        this.loadFromDatabase(() => {
+                            this.fetchAllComments("", true);
+                        });
+                    }
+                }
+                else {
+                    console.log("new video " + this._id, this._video.snippet.title.substr(0, 20));
+                    this._app.database.addVideo(this._id);
+                    this.fetchAllComments("", false);
+                }
+            });
         }
     }
 
-    fetchAllComments(pageToken) {
-        this._app.ytapi.executeCommentChunk(this._id, pageToken).then( response => {
-            Array.prototype.push.apply(this._comments, response.data.items); // Apparently static method is needed when working with Objects
-            let len = response.data.items.length;
-            this._indexedComments += len;
+    loadFromDatabase(callback) {
+        console.log("loading from database!");
+        this._app.database.getComments(this._id, (rows) => {
+            let len = rows.length;
+            this._indexedComments = len;
             for (let i = 0; i < len; i++) {
-                this._indexedComments += response.data.items[i].snippet.totalReplyCount;
-                // Retrieve replies if there are over 100, to reduce load time later
-                if (response.data.items[i].snippet.totalReplyCount > 100) {
-                    this.fetchReplies(response.data.items[i].id, "", true);
-                }
+                this._comments.push(JSON.parse(rows[i].comment));
+                this._indexedComments += this._comments[i].snippet.totalReplyCount;
             }
-            
+
+            callback();
+        });
+    }
+
+    fetchAllComments(pageToken, appending) {
+        this._app.ytapi.executeCommentChunk(this._id, pageToken).then( response => {
+            // Array.prototype.push.apply(this._newComments, response.data.items);
+
+            let len = response.data.items.length;
+            let proceed = true;
+            let a = new Date();
+            let i;
+            for (i = 0; i < len; i++) {
+                // If appending to database-stored comments, check if current comment has passed the date
+                // of the newest stored comment.
+                // Then make sure the current comment is actually stored (for equal timestamps, rare case)
+                if (appending && response.data.items[i].snippet.topLevelComment.snippet.publishedAt
+                        <= this._comments[0].snippet.topLevelComment.snippet.publishedAt
+                        && Utils.commentInArray(this._comments, response.data.items[i])) {
+                    proceed = false;
+                    break;
+                }
+                this._newComments.push(response.data.items[i]);
+                this._indexedComments += 1 + response.data.items[i].snippet.totalReplyCount;
+            }
+
+            // Write new comments to database
+            if (i > 0) this._app.database.writeNewComments(this._id, response.data.items.slice(0, i));
+            console.log("write took", new Date().getTime() - a.getTime(),"ms");
+
+            // Send load status to client to display percentage
             this._socket.emit("loadStatus", this._indexedComments);
-            if (response.data.nextPageToken) {
-                // Get the next 100 comments
-                setTimeout(() => { this.fetchAllComments(response.data.nextPageToken) }, 0);
+
+            // If there are more comments, and database-stored comments have not been reached, retrieve the next 100 comments
+            if (response.data.nextPageToken && proceed) {
+                setTimeout(() => { this.fetchAllComments(response.data.nextPageToken, appending) }, 0);
             }
             else {
                 // Finished retrieving all comment threads.
+                this._app.database.markVideoComplete(this._id);
+
+                // Add new comments to beginning of database-stored ones
+                // (If new video, it adds to the empty array)
+                console.log("stored length", this._comments.length,"new length", this._newComments.length);
+                Array.prototype.unshift.apply(this._comments, this._newComments);
+
                 let elapsed = new Date().getTime() - this._startTime.getTime();
-                console.log("Retrieved all " + this._comments.length + " comments in " + elapsed
-                    + "ms, shown CPS = " + (this._indexedComments / elapsed * 1000));
+                console.log("Retrieved all " + this._newComments.length + " comments in " + elapsed
+                    + "ms, TRUE CPS = " + (this._newComments.length / elapsed * 1000));
                 
                 this._currentSort = "dateOldest";
                 this._commentIndex = this._comments.length;
@@ -123,7 +176,7 @@ class Video {
                     this._app.ytapi.quotaExceeded();
                 }
                 else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                    setTimeout(() => { this.fetchAllComments() }, 10);
+                    setTimeout(() => { this.fetchAllComments(pageToken, appending) }, 10);
                 }
             });
     }

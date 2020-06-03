@@ -67,6 +67,15 @@ class Utils {
         return "Estimated load time: " + etaTime;
     }
 
+    static commentInArray(array, comment) {
+        let len = array.length;
+        for (let i = 0; i < len; i++) {
+            if (array[i].id == comment.id)
+                return true;
+        }
+        return false;
+    }
+
 }
 
 module.exports = Utils;

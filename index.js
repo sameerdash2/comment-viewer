@@ -1,5 +1,6 @@
 const YouTubeAPI = require('./src/gapi');
 const Video = require('./src/video');
+const Database = require('./src/database');
 const express = require('express');
 const application = express();
 const http = require('http').createServer(application);
@@ -10,6 +11,7 @@ class App {
         application.use(express.static("src/public"));
         this.ytapi = new YouTubeAPI();
         this.createServer();
+        this.database = new Database();
         this.listen();
     }
 

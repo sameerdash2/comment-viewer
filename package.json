@@ -11,6 +11,7 @@
     "googleapis": "^49.0.0",
     "moment": "^2.25.1",
     "socket.io": "^2.3.0",
+    "sqlite3": "^4.2.0",
     "uplot": "^1.0.9"
   },
   "devDependencies": {},
