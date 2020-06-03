@@ -126,9 +126,9 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
         viewGraph.style.display = graph ? "block" : "none";
         if (disabled) {
-            commentInfo.innerHTML = `<i class="fas fa-comment"></i> Comments have been disabled on this video.`;
+            commentInfo.innerHTML = `<i class="fas fa-comment"></i> <span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
-                commentInfo.innerHTML += ` <span class="it">(` + Number(num).toLocaleString() + ` hidden comments)</span>`;
+                commentInfo.innerHTML += ` <span class="red">(` + Number(num).toLocaleString() + ` hidden comments)</span>`;
             }
         }
         else {

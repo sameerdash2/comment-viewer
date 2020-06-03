@@ -26,7 +26,7 @@ function formatTitle(video, useCount, options) {
 	let streamTimesSec = ``;
     if (liveState == "live") {
         let concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
-        viewcountSec += `<span class="concurrent">` + concurrentViewers.toLocaleString() + ` watching now</span> / `
+        viewcountSec += `<span class="red">` + concurrentViewers.toLocaleString() + ` watching now</span> / `
             + viewCount.toLocaleString() + ` total views`;
         let startTime = new Date(video.liveStreamingDetails.actualStartTime);
         let duration = (new Date().getTime() - startTime.getTime());
@@ -34,7 +34,7 @@ function formatTitle(video, useCount, options) {
             + ` (Elapsed: ` + parseDurationHMMSS(Math.floor(duration / 1000)) + `)`;
     }
     else if (liveState == "upcoming") {
-        viewcountSec += `<span class="concurrent">Upcoming live stream</span>`;
+        viewcountSec += `<span class="red">Upcoming live stream</span>`;
         timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> `
             + parseTimestamp(video.snippet.publishedAt, options.timezone) + `<br><i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> `
             + parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone);
@@ -56,7 +56,7 @@ function formatTitle(video, useCount, options) {
         }
 
         commentCountSec += `<i class="fas fa-comment"></i> `;
-        commentCountSec += useCount ? Number(commentCount).toLocaleString() + ` comments` : ` Loading comment information...`;
+        commentCountSec += useCount ? Number(commentCount).toLocaleString() + ` comments` : ` <span class="gray">Loading comment information...</span>`;
 	}
     viewcountSec += `</div>`;
     timestampSec += `</div>`;

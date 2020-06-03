@@ -106,7 +106,7 @@ div#info {
 div.viewCount {
     display: inline-block;
 }
-span.concurrent {
+span.red {
     color: #bb0000;
 }
 .ratings {
