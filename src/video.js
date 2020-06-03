@@ -15,7 +15,6 @@ class Video {
         this._likedComments = [];
         this._indexedComments = 0; // All retrieved comments + their reply counts
         this._loadedReplies = {};
-        // this._fetchUntil = new Date(0).toISOString();
     }
 
     fetchTitle(idString, forLinked) {
@@ -27,6 +26,7 @@ class Video {
                 this.reset();
                 this._video = response.data.items[0];
                 this._commentCount = this._video.statistics.commentCount;
+                this._logToDatabase = this._commentCount >= 500;
                 this._socket.emit("videoInfo", { video:this._video, forLinked:forLinked });
                 this.fetchTestComment();
             }
@@ -45,16 +45,15 @@ class Video {
     }
 
     fetchTestComment() {
-        let count = this._video.statistics.commentCount;
         this._app.ytapi.executeTestComment(this._video.id).then(response => {
             this._commentsEnabled = true;
             // for upcoming/live streams, disregard a 0 count.
-            if (!(this._video.snippet.liveBroadcastContent != "none" && count == 0)) {
-                let beginLoad = count < 200;
-                this._graphAvailable = count >= 50 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 24*60*60*1000);
-                this._socket.emit("commentsInfo", { num: count, disabled: false,
-                    commence: beginLoad, max: (count > config.maxLoad) ? config.maxLoad : -1, graph: this._graphAvailable });
-                if (beginLoad && count > 0) {
+            if (!(this._video.snippet.liveBroadcastContent != "none" && this._commentCount == 0)) {
+                let beginLoad = this._commentCount < 200;
+                this._graphAvailable = this._commentCount >= 50 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 24*60*60*1000);
+                this._socket.emit("commentsInfo", { num: this._commentCount, disabled: false,
+                    commence: beginLoad, max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1, graph: this._graphAvailable });
+                if (beginLoad && this._commentCount > 0) {
                     this.handleLoad("dateOldest");
                 }
             }
@@ -68,8 +67,8 @@ class Video {
             }
             else if (this._video.snippet.liveBroadcastContent == "none" && err.response.data.error.errors[0].reason == "commentsDisabled") {
                 this._commentsEnabled = false;
-                this._socket.emit("commentsInfo", {num: count, disabled: true,
-                    commence: false, max: (count > config.maxLoad) ? config.maxLoad : -1, graph: false });
+                this._socket.emit("commentsInfo", {num: this._commentCount, disabled: true,
+                    commence: false, max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1, graph: false });
             }
         });
     }
@@ -78,33 +77,40 @@ class Video {
         if (this._commentsEnabled && this._commentCount < config.maxLoad && type == "dateOldest") {
             this._currentSort = type;
             this._startTime = new Date();
-            this._app.database.checkVideo(this._id, (row) => {
-                if (row) {
-                    if (row.inProgress) {
-                        // TODO: Handle
+            if (this._logToDatabase) {
+                this._app.database.checkVideo(this._id, (row) => {
+                    if (row) {
+                        if (row.inProgress) {
+                            // TODO: Handle
+                        }
+                        else {
+                            // TODO: 30-second cooldown
+                            // TODO: Determine whether records are too old & re-fetch all comments
+
+                            this.loadFromDatabase(() => {
+                                this.fetchAllComments("", true);
+                            });
+                        }
                     }
                     else {
-                        // TODO: 30-second cooldown
-                        // TODO: Determine whether records are too old & re-fetch all comments
-
-                        this.loadFromDatabase(() => {
-                            this.fetchAllComments("", true);
-                        });
+                        if (this._logToDatabase) {
+                            this._app.database.addVideo(this._id);
+                        }
+                        this.fetchAllComments("", false);
                     }
-                }
-                else {
-                    this._app.database.addVideo(this._id);
-                    this.fetchAllComments("", false);
-                }
-            });
+                });
+            }
+            else {
+                this.fetchAllComments("", false);                
+            }
         }
     }
 
     loadFromDatabase(callback) {
-        let y = new Date();
         this._app.database.getComments(this._id, (rows) => {
             let len = rows.length;
             this._indexedComments = len;
+            // TODO: Maybe there's a better way to do this especially for large sets
             for (let i = 0; i < len; i++) {
                 this._comments.push(JSON.parse(rows[i].comment));
                 this._indexedComments += this._comments[i].snippet.totalReplyCount;
@@ -115,12 +121,17 @@ class Video {
     }
 
     fetchAllComments(pageToken, appending) {
-        this._app.ytapi.executeCommentChunk(this._id, pageToken).then( response => {
-            // Array.prototype.push.apply(this._newComments, response.data.items);
-
-            let len = response.data.items.length;
+        this._app.ytapi.executeCommentChunk(this._id, pageToken).then((response) => {
             let proceed = true;
-            let a = new Date();
+            // Pinned comments always appear first regardless of their date (thanks google)
+            // If the first comment is out of place, disregard it if already stored in database.
+            if (response.data.items.length > 1 && response.data.items[0].snippet.topLevelComment.snippet.publishedAt
+                    < response.data.items[1].snippet.topLevelComment.snippet.publishedAt) {
+                if (appending && Utils.commentInArray(this._comments, response.data.items[0])) {
+                    response.data.items.shift();
+                }
+            }
+            let len = response.data.items.length;
             let i;
             for (i = 0; i < len; i++) {
                 // If appending to database-stored comments, check if current comment has passed the date
@@ -137,7 +148,7 @@ class Video {
             }
 
             // Write new comments to database
-            if (i > 0) this._app.database.writeNewComments(this._id, response.data.items.slice(0, i));
+            if (i > 0 && this._logToDatabase) this._app.database.writeNewComments(this._id, response.data.items.slice(0, i));
 
             // Send load status to client to display percentage
             this._socket.emit("loadStatus", this._indexedComments);
@@ -166,7 +177,7 @@ class Video {
                 // Send the first batch of comments
                 this.sendLoadedComments(true);
             }
-        }, err => {
+        }, (err) => {
                 console.error("Comments execute error", err.response.data.error);
                 if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
