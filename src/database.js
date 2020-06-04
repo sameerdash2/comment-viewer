@@ -4,7 +4,7 @@ class Database {
     constructor() {
         this._db = new sqlite.Database('database.sql');
 
-        this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT, retrievedAt BIGINT, inProgress BOOL)');
+        this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, retrievedAt BIGINT, inProgress BOOL)');
     }
 
     checkVideo(videoId, callback) {
@@ -12,9 +12,9 @@ class Database {
     }
 
     addVideo(videoId) {
-        this._db.run('INSERT INTO videos(id, retrievedAt, inProgress) VALUES(?, ?, ?)',
+        this._db.run('INSERT OR REPLACE INTO videos(id, retrievedAt, inProgress) VALUES(?, ?, ?)',
             [videoId, new Date().getTime(), true]);
-        this._db.run('CREATE TABLE `' + videoId + '`(timestamp TINYTEXT, comment MEDIUMTEXT)');
+        this._db.run('CREATE TABLE IF NOT EXISTS`' + videoId + '`(timestamp TINYTEXT, comment MEDIUMTEXT)');
     }
 
     getLastComment(videoId, callback) {
