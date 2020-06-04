@@ -100,6 +100,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
             else {
                 closest.disabled = true;
+                closest.innerHTML = "Loading...";
                 socket.emit("replyRequest", commentId);
             }
         }

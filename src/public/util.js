@@ -30,7 +30,7 @@ function formatTitle(video, useCount, options) {
             + viewCount.toLocaleString() + ` total views`;
         let startTime = new Date(video.liveStreamingDetails.actualStartTime);
         let duration = (new Date().getTime() - startTime.getTime());
-        timestampSec += `<strong>Stream start time:</strong> ` + parseTimestamp(startTime.toISOString(), options.timezone)
+        timestampSec += `<i class="fas fa-clock"></i> <strong>Stream start time:</strong> ` + parseTimestamp(startTime.toISOString(), options.timezone)
             + ` (Elapsed: ` + parseDurationHMMSS(Math.floor(duration / 1000)) + `)`;
     }
     else if (liveState == "upcoming") {
@@ -51,7 +51,7 @@ function formatTitle(video, useCount, options) {
         timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ` + parseTimestamp(video.snippet.publishedAt, options.timezone);
 
         if (typeof video.liveStreamingDetails !== "undefined") {
-            streamTimesSec += `<div class="streamTimes"><strong>Stream start time:</strong> `
+            streamTimesSec += `<div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> `
                 + parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone) + `</div>`;
         }
 
