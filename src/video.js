@@ -75,13 +75,19 @@ class Video {
 
     handleLoad(type) {
         if (this._commentsEnabled && this._commentCount < config.maxLoad && type == "dateOldest") {
+            let retrieveAllComments = () => this.fetchAllComments("", false);
+            let retrieveNewComments = () => this.fetchAllComments("", true);
             this._currentSort = type;
             this._startTime = new Date();
             if (this._logToDatabase) {
                 this._app.database.checkVideo(this._id, (row) => {
                     if (row) {
-                        if (row.inProgress) {
-                            // TODO: Handle this better
+                        // In-progress videos should be receiving updates every ~0.5 seconds
+                        // If no update in the last 30 seconds, it's likely stuck. Reset it
+                        if (row.inProgress && (new Date().getTime() - row.lastUpdated) > 30*1000) {
+                            this._app.database.resetVideo(this._id, retrieveAllComments);
+                        }
+                        else if (row.inProgress) {
                             this._socket.emit("loadStatus", -1);
                         }
                         else {
@@ -89,9 +95,8 @@ class Video {
 
                             // 60-second cooldown before retrieving new comments
                             this.loadFromDatabase(() => {
-                                if ((new Date().getTime() - new Date(row.retrievedAt).getTime()) > 60*1000) {
-                                    this._app.database.addVideo(this._id);
-                                    this.fetchAllComments("", true);
+                                if ((new Date().getTime() - row.lastUpdated) > 60*1000) {
+                                    this._app.database.addVideo(this._id, retrieveNewComments);
                                 }
                                 else {
                                     this._commentIndex = this._comments.length;
@@ -101,8 +106,8 @@ class Video {
                         }
                     }
                     else {
-                        this._app.database.addVideo(this._id);
-                        this.fetchAllComments("", false);
+                        // New video
+                        this._app.database.addVideo(this._id, retrieveAllComments);
                     }
                 });
             }
