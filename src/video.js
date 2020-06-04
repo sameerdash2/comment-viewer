@@ -81,7 +81,8 @@ class Video {
                 this._app.database.checkVideo(this._id, (row) => {
                     if (row) {
                         if (row.inProgress) {
-                            // TODO: Handle
+                            // TODO: Handle this better
+                            this._socket.emit("loadStatus", -1);
                         }
                         else {
                             // TODO: 30-second cooldown

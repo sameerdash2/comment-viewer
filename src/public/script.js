@@ -138,12 +138,17 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     socket.on("loadStatus", (totalCount) => {
-        let remaining = "";
-        if (session.totalExpected - totalCount > 250) {
-            remaining = ` <span class="gray">(~` + parseDurationMSS(eta(session.totalExpected - totalCount)) + ` remaining)</span>`;
+        if (totalCount == -1) {
+            loadStatus.innerHTML = `Loading is in progress. Please check back later`;
         }
-        loadStatus.innerHTML = (Math.round(totalCount / session.totalExpected * 1000) / 10).toFixed(1)
-            + "% loaded" + remaining;
+        else {
+            let remaining = "";
+            if (session.totalExpected - totalCount > 250) {
+                remaining = ` <span class="gray">(~` + parseDurationMSS(eta(session.totalExpected - totalCount)) + ` remaining)</span>`;
+            }
+            loadStatus.innerHTML = (Math.round(totalCount / session.totalExpected * 1000) / 10).toFixed(1)
+                + "% loaded" + remaining;
+        }
     });
 
     socket.on("groupComments", ({ reset, items, showMore }) => {      
