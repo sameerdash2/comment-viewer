@@ -16,14 +16,14 @@ class App {
     }
 
     createServer() {
-        io.on('connection', socket => {
+        io.on('connection', (socket) => {
             console.log('a user connected');
             this._video = new Video(this, socket);
             
             socket.on('disconnect', () => {
                 console.log('user disconnected');
             });
-            socket.on('idSent', id => {
+            socket.on('idSent', (id) => {
                 if (!this.checkSendID(id)) socket.emit("idInvalid");
             });
             socket.on("requestAll", () => {
@@ -32,10 +32,10 @@ class App {
             socket.on("showMore", () => {
                 this._video.sendLoadedComments();
             });
-            socket.on("sortRequest", type => {
+            socket.on("sortRequest", (type) => {
                 this._video.doSort(type);
             });
-            socket.on("replyRequest", id => {
+            socket.on("replyRequest", (id) => {
                 this._video.getReplies(id);
             });
             socket.on("graphRequest", () => {

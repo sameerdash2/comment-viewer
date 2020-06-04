@@ -21,7 +21,7 @@ class Video {
         // forLinked is only to tell the client whether to clear the page,
         // since linked comments may be sent before the video info (may optimize later)
         this._id = idString;
-        this._app.ytapi.executeVideo(idString).then(response => {
+        this._app.ytapi.executeVideo(idString).then((response) => {
             if (response.data.pageInfo.totalResults > 0) {
                 this.reset();
                 this._video = response.data.items[0];
@@ -33,7 +33,7 @@ class Video {
             else {
                 this._socket.emit("idInvalid");
             }
-        }, err => {
+        }, (err) => {
             console.error("Video execute error", err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
@@ -45,7 +45,7 @@ class Video {
     }
 
     fetchTestComment() {
-        this._app.ytapi.executeTestComment(this._video.id).then(response => {
+        this._app.ytapi.executeTestComment(this._video.id).then((response) => {
             this._commentsEnabled = true;
             // for upcoming/live streams, disregard a 0 count.
             if (!(this._video.snippet.liveBroadcastContent != "none" && this._commentCount == 0)) {
@@ -57,7 +57,7 @@ class Video {
                     this.handleLoad("dateOldest");
                 }
             }
-        }, err => {
+        }, (err) => {
             // console.error("Test comment execute error", err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
@@ -196,7 +196,7 @@ class Video {
     }
 
     fetchLinkedComment(idString, parentId, replyId) {
-        this._app.ytapi.executeSingleComment(parentId).then(response => {
+        this._app.ytapi.executeSingleComment(parentId).then((response) => {
             if (response.data.pageInfo.totalResults) {
                 // Linked comment found
                 let videoId = response.data.items[0].snippet.videoId;
@@ -213,19 +213,19 @@ class Video {
                 // Linked comment not found
                 this.fetchTitle(idString, false);
             }
-            }, err => {
-                console.error("Linked comment execute error", err.response.data.error);
-                if (err.response.data.error.errors[0].reason == "quotaExceeded") {
-                    this._app.ytapi.quotaExceeded();
-                }
-                else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                    setTimeout(() => { this.fetchLinkedComment(parentId) }, 10);
-                }
-            });
+        }, (err) => {
+            console.error("Linked comment execute error", err.response.data.error);
+            if (err.response.data.error.errors[0].reason == "quotaExceeded") {
+                this._app.ytapi.quotaExceeded();
+            }
+            else if (err.response.data.error.errors[0].reason == "processingFailure") {
+                setTimeout(() => { this.fetchLinkedComment(parentId) }, 10);
+            }
+        });
     }
 
     fetchLinkedReply(parent, replyId) {
-        this._app.ytapi.executeSingleReply(replyId).then(res => {
+        this._app.ytapi.executeSingleReply(replyId).then((res) => {
             this.fetchTitle(parent.snippet.videoId, true);
             if (res.data.items[0]) {
                 // Send parent comment & linked reply
@@ -235,8 +235,7 @@ class Video {
                 // Send only parent
                 this.sendLinkedComment(parent, null);
             }
-        },
-        function(err) {
+        }, (err) => {
             console.error("Linked reply execute error", err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
@@ -285,7 +284,7 @@ class Video {
 
     fetchReplies(commentId, pageToken, silent) {
         if (!this._loadedReplies[commentId]) this._loadedReplies[commentId] = [];
-        this._app.ytapi.executeReplies(commentId, pageToken).then(response => {
+        this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
             Array.prototype.push.apply(this._loadedReplies[commentId], response.data.items);
             if (response.data.nextPageToken) {
                 // Fetch next batch of replies
@@ -294,7 +293,7 @@ class Video {
             else if (!silent) {
                 this.sendReplies(commentId);
             }
-        }, err => {
+        }, (err) => {
                 console.error("Replies execute error", err);
                 if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();

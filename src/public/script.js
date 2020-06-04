@@ -29,7 +29,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     submitBtn.disabled = false;
     submitBtn.innerHTML = "Submit";
-    showMoreBtn.innerHTML = `Show ` + MAXDISPLAY + ` more comments...`;
 
     document.getElementById("videoForm").addEventListener('submit', function(event){
         event.preventDefault(); // prevents page reloading

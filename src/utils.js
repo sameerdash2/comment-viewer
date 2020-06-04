@@ -61,12 +61,6 @@ class Utils {
         }
     }
 
-    static eta(count) {
-        let seconds = Math.floor(count / 250) + 1;
-        let etaTime = (seconds > 60) ? Math.floor(seconds / 60) + " min" : seconds + " seconds";
-        return "Estimated load time: " + etaTime;
-    }
-
     static commentInArray(array, comment) {
         let len = array.length;
         for (let i = 0; i < len; i++) {
