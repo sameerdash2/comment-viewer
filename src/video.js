@@ -88,14 +88,12 @@ class Video {
                             // TODO: Determine whether records are too old & re-fetch all comments
 
                             // 60-second cooldown before retrieving new comments
-                            console.log("it has been",(new Date().getTime() - new Date(row.retrievedAt).getTime()) / 1000,"seconcds!");
                             this.loadFromDatabase(() => {
                                 if ((new Date().getTime() - new Date(row.retrievedAt).getTime()) > 60*1000) {
                                     this._app.database.addVideo(this._id);
                                     this.fetchAllComments("", true);
                                 }
                                 else {
-                                    console.log("COOLDOWN!!!!!!!!!");
                                     this._commentIndex = this._comments.length;
                                     this.sendLoadedComments(true);
                                 }
