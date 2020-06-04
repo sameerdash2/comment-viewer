@@ -85,18 +85,25 @@ class Video {
                             this._socket.emit("loadStatus", -1);
                         }
                         else {
-                            // TODO: 30-second cooldown
                             // TODO: Determine whether records are too old & re-fetch all comments
 
+                            // 60-second cooldown before retrieving new comments
+                            console.log("it has been",(new Date().getTime() - new Date(row.retrievedAt).getTime()) / 1000,"seconcds!");
                             this.loadFromDatabase(() => {
-                                this.fetchAllComments("", true);
+                                if ((new Date().getTime() - new Date(row.retrievedAt).getTime()) > 60*1000) {
+                                    this._app.database.addVideo(this._id);
+                                    this.fetchAllComments("", true);
+                                }
+                                else {
+                                    console.log("COOLDOWN!!!!!!!!!");
+                                    this._commentIndex = this._comments.length;
+                                    this.sendLoadedComments(true);
+                                }
                             });
                         }
                     }
                     else {
-                        if (this._logToDatabase) {
-                            this._app.database.addVideo(this._id);
-                        }
+                        this._app.database.addVideo(this._id);
                         this.fetchAllComments("", false);
                     }
                 });
@@ -170,7 +177,6 @@ class Video {
                 console.log("Retrieved all " + this._newComments.length + " comments in " + elapsed
                     + "ms, TRUE CPS = " + (this._newComments.length / elapsed * 1000));
                 
-                this._currentSort = "dateOldest";
                 this._commentIndex = this._comments.length;
                 // Take care of possible pinned comment at the top
                 Utils.reSort(this._comments);
