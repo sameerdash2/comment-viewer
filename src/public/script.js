@@ -1,9 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
     const socket = io();
     const ERR = "#A00";
-    const DEF = "#000";
     const LOAD = "#666";
-    const MAXDISPLAY = 100;
     const GRIDCOLOR = "rgba(0,0,0,0.1)";
 
     // Stores info specific to the currently shown video; clears upon new video.
@@ -262,20 +260,26 @@ document.addEventListener("DOMContentLoaded", function() {
         let opts = {
             width: 1000,
             height: 400,
-            tzDate: ts => uPlot.tzDate(new Date(ts * 1000), zone),
-            axes: [{
-                ...axis,
-                // custom values to hide hours/mins when zooming in
-                values: [
-                    [3600 * 24 * 365,    "{YYYY}",  7, "",         1],
-                    [3600 * 24 * 28,     "{MMM}",   7, "\n{YYYY}", 1],
-                    [3600 * 24,          "{M}/{D}", 7, "\n{YYYY}", 1],
-                    [3600,               "",        4, "{M}/{D}",  1],
-                    [60,                 "",        4, "{M}/{D}",  1],
-                    [1,                  "",        4, "{M}/{D}",  1],
-                    [0.001,              "",        4, "{M}/{D}",  1],
-                  ],
-            }, axis],
+            tzDate: (ts) => uPlot.tzDate(new Date(ts * 1000), zone),
+            scales: {
+                'y': { range: (self, min, max) => [0, Math.max(5, max * 1.02)] }
+            },
+            axes: [
+                {
+                    ...axis,
+                    // custom values to hide hours/mins when zooming in
+                    values: [
+                        [3600 * 24 * 365,    "{YYYY}",  7, "",         1],
+                        [3600 * 24 * 28,     "{MMM}",   7, "\n{YYYY}", 1],
+                        [3600 * 24,          "{M}/{D}", 7, "\n{YYYY}", 1],
+                        [3600,               "",        4, "{M}/{D}",  1],
+                        [60,                 "",        4, "{M}/{D}",  1],
+                        [1,                  "",        4, "{M}/{D}",  1],
+                        [0.001,              "",        4, "{M}/{D}",  1],
+                    ],
+                },
+                axis
+            ],
             series: [
                 {
                     // x series
