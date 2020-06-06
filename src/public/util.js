@@ -1,11 +1,10 @@
-function formatTitle(video, useCount, options) {
+function formatTitle(video, options) {
     let liveState = video.snippet.liveBroadcastContent;
 
     // casting in order to use toLocaleString()
 	let viewCount = Number(video.statistics.viewCount);
     let likeCount = Number(video.statistics.likeCount);
     let dislikeCount = Number(video.statistics.dislikeCount);
-    let commentCount = Number(video.statistics.commentCount);
 
     let thumbnailSec = ``;
     if (options.showImg) thumbnailSec += `<img class="thumbnail" src="` + video.snippet.thumbnails.medium.url + `">`;
@@ -22,7 +21,6 @@ function formatTitle(video, useCount, options) {
 
     let viewcountSec = `<div class="viewcount"><i class="fas fa-eye"></i> `;
     let timestampSec = `<div class="vidTimestamp">`;
-	let commentCountSec = `<div id="commentInfo" class="commentCount">`;
 	let streamTimesSec = ``;
     if (liveState == "live") {
         let concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
@@ -54,13 +52,9 @@ function formatTitle(video, useCount, options) {
             streamTimesSec += `<div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> `
                 + parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone) + `</div>`;
         }
-
-        commentCountSec += `<i class="fas fa-comment"></i> `;
-        commentCountSec += useCount ? Number(commentCount).toLocaleString() + ` comments` : ` <span class="gray">Loading comment information...</span>`;
 	}
     viewcountSec += `</div>`;
     timestampSec += `</div>`;
-	commentCountSec += `</div>`;
 
     let newContent = `
         ` + thumbnailSec + `
@@ -81,7 +75,7 @@ function formatTitle(video, useCount, options) {
             </div>
 		</div>
 		` + streamTimesSec + `
-        ` + commentCountSec + `
+        <div id="commentInfo" class="commentCount"><i class="fas fa-comment"></i> <span class="gray">Loading comment information...</span></div>
     `;
 	return newContent;
 }

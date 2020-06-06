@@ -108,17 +108,17 @@ document.addEventListener("DOMContentLoaded", function() {
         message.innerHTML = "Invalid video link or ID.";
         message.style.color = ERR;
     });
-    socket.on("videoInfo", ({ video, forLinked }) => {
-        if (!forLinked) {
-            resetPage();
-        }
+    socket.on("videoInfo", ({ video }) => displayVideo(video));
+    function displayVideo(video) {
+        resetPage();
         session.totalExpected = video.statistics.commentCount; // for load percentage
         session.videoId = video.id;
         session.videoPublished = video.snippet.publishedAt; // for graph bound
         session.uploaderId = video.snippet.channelId; // for highlighting OP comments
         message.innerHTML = "&nbsp;";
-        info.innerHTML = formatTitle(video, forLinked, options);
-    });
+        info.innerHTML = formatTitle(video, options);
+
+    }
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
         let commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
@@ -189,16 +189,23 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("getReplies-" + id).innerHTML = "Hide " + len + " replies";
         document.getElementById("getReplies-" + id).disabled = false;
     });
-    socket.on("linkedComment", ({parent, hasReply, reply}) => {
-        resetPage();
+    socket.on("linkedComment", ({parent, hasReply, reply, video}) => {
+        if (video == -1) {
+            resetPage();
+            message.innerHTML = "&nbsp;"
+            info.innerHTML = `<span class="gray">(No video associated with this comment)`;
+        }
+        else {
+            displayVideo(video);
+        }
         session.linkedParent = parent.id;
         session.currentLinked = hasReply ? reply.id : parent.id;
-        // uploaderId may or may not have been received, so sending a blank to be Consistent
+        
         linkedHolder.innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-            + formatComment(parent, -1, options, "", parent.snippet.videoId, !hasReply, false) + `</div></section><hr><br>`;
+            + formatComment(parent, -1, options, session.uploaderId, parent.snippet.videoId, !hasReply, false) + `</div></section><hr><br>`;
         if (hasReply) {
             document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
-                + formatComment(reply, -1, options, "", parent.snippet.videoId, true, true) + `</div>`;
+                + formatComment(reply, -1, options, session.uploaderId, parent.snippet.videoId, true, true) + `</div>`;
         }
     });
 

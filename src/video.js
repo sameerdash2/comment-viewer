@@ -17,18 +17,23 @@ class Video {
         this._loadedReplies = {};
     }
 
-    fetchTitle(idString, forLinked) {
-        // forLinked is only to tell the client whether to clear the page,
-        // since linked comments may be sent before the video info (may optimize later)
+    handleNewVideo(item) {
+        this.reset();
+        if (item != -1) {
+            this._video = item;
+            this._id = this._video.id;
+            this._commentCount = this._video.statistics.commentCount;
+            this._logToDatabase = this._commentCount >= 500;
+            this.fetchTestComment();
+        }
+    }
+
+    fetchTitle(idString) {
         this._id = idString;
-        this._app.ytapi.executeVideo(idString).then((response) => {
+        return this._app.ytapi.executeVideo(idString).then((response) => {
             if (response.data.pageInfo.totalResults > 0) {
-                this.reset();
-                this._video = response.data.items[0];
-                this._commentCount = this._video.statistics.commentCount;
-                this._logToDatabase = this._commentCount >= 500;
-                this._socket.emit("videoInfo", { video:this._video, forLinked:forLinked });
-                this.fetchTestComment();
+                this.handleNewVideo(response.data.items[0]);
+                this._socket.emit("videoInfo", { video:this._video });
             }
             else {
                 this._socket.emit("idInvalid");
@@ -202,14 +207,40 @@ class Video {
         this._app.ytapi.executeSingleComment(parentId).then((response) => {
             if (response.data.pageInfo.totalResults) {
                 // Linked comment found
+                this._linkedParent = response.data.items[0];
                 let videoId = response.data.items[0].snippet.videoId;
-                if (!replyId) {
-                    this.fetchTitle(videoId, true);
-                    // Send linked comment
-                    this.sendLinkedComment(response.data.items[0], null);
+                let getVideo = (videoId) => this._app.ytapi.executeVideo(videoId);
+                if (typeof response.data.items[0].snippet.videoId === "undefined") {
+                    // Comment isn't associated with a video; likely on a Discussion page
+                    getVideo = () => Promise.resolve(-1);
+                }
+                if (replyId) {
+                    // Fetch the video info & linked reply at the same time
+                    Promise.all([this._app.ytapi.executeSingleReply(replyId), getVideo(videoId)]).then((responses) => {
+                        let videoObject = (responses[1] == -1) ? -1 : responses[1].data.items[0];
+                        this.handleNewVideo(videoObject);
+
+                        if (responses[0].data.items[0]) {
+                            // Send parent comment & linked reply
+                            this.sendLinkedComment(this._linkedParent, responses[0].data.items[0], videoObject);
+                        }
+                        else {
+                            // Send only parent
+                            this.sendLinkedComment(this._linkedParent, null, videoObject);
+                        }
+                    }, (err) => {
+                        // not handled
+                    });
                 }
                 else {
-                    this.fetchLinkedReply(response.data.items[0], replyId);
+                    getVideo(videoId).then((res) => {
+                        let videoObject = (res == -1) ? -1 : res.data.items[0];
+                        this.handleNewVideo(videoObject);
+                        // Send linked comment
+                        this.sendLinkedComment(response.data.items[0], null, videoObject);
+                    }, (err) => {
+                        // not handled
+                    });
                 }
             }
             else {
@@ -227,30 +258,8 @@ class Video {
         });
     }
 
-    fetchLinkedReply(parent, replyId) {
-        this._app.ytapi.executeSingleReply(replyId).then((res) => {
-            this.fetchTitle(parent.snippet.videoId, true);
-            if (res.data.items[0]) {
-                // Send parent comment & linked reply
-                this.sendLinkedComment(parent, res.data.items[0]);
-            }
-            else {
-                // Send only parent
-                this.sendLinkedComment(parent, null);
-            }
-        }, (err) => {
-            console.error("Linked reply execute error", err.response.data.error);
-            if (err.response.data.error.errors[0].reason == "quotaExceeded") {
-                this._app.ytapi.quotaExceeded();
-            }
-            else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchLinkedReply(parent, replyId) }, 10);
-            }
-        });
-    }
-
-    sendLinkedComment(parent, reply) {
-        this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply});
+    sendLinkedComment(parent, reply, video) {
+        this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, video: video});
     }
 
     sendLoadedComments(newSet = false) {
