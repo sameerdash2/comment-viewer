@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (video == -1) {
             resetPage();
             message.innerHTML = "&nbsp;"
-            info.innerHTML = `<span class="gray">(No video associated with this comment)`;
+            info.innerHTML = `<span class="gray">(No video associated with this comment)</span>`;
         }
         else {
             displayVideo(video);
