@@ -90,7 +90,7 @@ class Video {
                         // In-progress videos should be receiving updates every ~0.5 seconds
                         // If no update in the last 30 seconds, it's likely stuck. Reset it
                         if (row.inProgress && (new Date().getTime() - row.lastUpdated) > 30*1000) {
-                            this._app.database.resetVideo(this._id, retrieveAllComments);
+                            this._app.database.resetVideo(this._video, retrieveAllComments);
                         }
                         else if (row.inProgress) {
                             this._socket.emit("loadStatus", -1);
@@ -101,7 +101,7 @@ class Video {
                             // 60-second cooldown before retrieving new comments
                             this.loadFromDatabase(() => {
                                 if ((new Date().getTime() - row.lastUpdated) > 60*1000) {
-                                    this._app.database.addVideo(this._id, retrieveNewComments);
+                                    this._app.database.addVideo(this._video, retrieveNewComments);
                                 }
                                 else {
                                     this._commentIndex = this._comments.length;
@@ -112,7 +112,7 @@ class Video {
                     }
                     else {
                         // New video
-                        this._app.database.addVideo(this._id, retrieveAllComments);
+                        this._app.database.addVideo(this._video, retrieveAllComments);
                     }
                 });
             }

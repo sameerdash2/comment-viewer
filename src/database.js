@@ -4,23 +4,23 @@ class Database {
     constructor() {
         this._db = new sqlite.Database('database.sql');
 
-        this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL)');
+        this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL)');
     }
 
     checkVideo(videoId, callback) {
         this._db.get('SELECT * FROM videos WHERE id = ?', videoId, (err, row) => callback(row));
     }
 
-    addVideo(videoId, callback) {
-        let now = new Date().getTime();;
-        this._db.run('INSERT OR REPLACE INTO videos(id, retrievedAt, lastUpdated, inProgress) VALUES(?, ?, ?, ?)',
-            [videoId, now, now, true]);
-        this._db.run('CREATE TABLE IF NOT EXISTS `' + videoId + '`(timestamp TINYTEXT, comment MEDIUMTEXT)', (result, err) => callback());
+    addVideo(video, callback) {
+        let now = new Date().getTime();
+        this._db.run('INSERT OR REPLACE INTO videos(id, commentCount, retrievedAt, lastUpdated, inProgress) VALUES(?, ?, ?, ?, ?)',
+            [video.id, video.statistics.commentCount, now, now, true]);
+        this._db.run('CREATE TABLE IF NOT EXISTS `' + video.id + '`(timestamp TINYTEXT, comment MEDIUMTEXT)', (result, err) => callback());
     }
 
-    resetVideo(videoId, callback) {
-        this._db.run('DELETE FROM videos WHERE id = ?', [videoId]);
-        this._db.run('DROP TABLE IF EXISTS `' + videoId + '`', (result, err) => this.addVideo(videoId, callback));
+    resetVideo(video, callback) {
+        this._db.run('DELETE FROM videos WHERE id = ?', [video.id]);
+        this._db.run('DROP TABLE IF EXISTS `' + video.id + '`', (result, err) => this.addVideo(video, callback));
     }
 
     getComments(videoId, callback) {
