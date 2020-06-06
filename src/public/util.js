@@ -21,7 +21,8 @@ function formatTitle(video, options) {
 
     let viewcountSec = `<div class="viewcount"><i class="fas fa-eye"></i> `;
     let timestampSec = `<div class="vidTimestamp">`;
-	let streamTimesSec = ``;
+    let commentCountSec = `<div id="commentInfo" class="commentCount">`;
+    let streamTimesSec = ``;
     if (liveState == "live") {
         let concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
         viewcountSec += `<span class="red">` + concurrentViewers.toLocaleString() + ` watching now</span> / `
@@ -52,9 +53,12 @@ function formatTitle(video, options) {
             streamTimesSec += `<div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> `
                 + parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone) + `</div>`;
         }
+
+        commentCountSec += `<i class="fas fa-comment"></i> Loading comment information...`;
 	}
     viewcountSec += `</div>`;
     timestampSec += `</div>`;
+    commentCountSec += `</div>`;
 
     let newContent = `
         ` + thumbnailSec + `
@@ -75,7 +79,7 @@ function formatTitle(video, options) {
             </div>
 		</div>
 		` + streamTimesSec + `
-        <div id="commentInfo" class="commentCount"><i class="fas fa-comment"></i> <span class="gray">Loading comment information...</span></div>
+        ` + commentCountSec + `
     `;
 	return newContent;
 }
