@@ -3,7 +3,7 @@
 }
 body {
     background-color: #BBDDFF;
-    font-family: 'Noto Sans TC', sans-serif;
+    font-family: 'Open Sans', 'Arial', sans-serif;
     font-size: 24px;
     min-height: 100vh;
     position: relative;
@@ -66,10 +66,7 @@ div#graphDesc {
     color: #555;
 }
 
-div.gray {
-    color: #555;
-}
-span.gray {
+div.gray, span.gray {
     color: #555;
 }
 
@@ -115,7 +112,6 @@ span.red {
 }
 .moreMeta, .vidTimestamp{
     font-size:20px;
-    /* line-height: .8em; */
 }
 
 span#options {
@@ -145,15 +141,6 @@ div.optionsHeader {
     font-weight: bold;
 }
 
-span#eta {
-    font-size: 18px;
-    color: #555;
-    font-style: italic;
-}
-
-.intro {
-    display: inline-block;
-}
 div.commentHeader {
     vertical-align: middle;
 }
@@ -161,10 +148,6 @@ div.commentHeader {
     font-size: 18px;
     vertical-align: bottom;
     display: inline-block;
-}
-p.littleLabel {
-    margin: 0px;
-    font-weight: bold;
 }
 
 button {
