@@ -254,7 +254,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function makeGraph(data) {
         let axis = {
-            font: "16px Noto Sans TC",
+            font: "16px Open Sans",
             grid: { stroke: GRIDCOLOR, },
             ticks: {
                 show: true,

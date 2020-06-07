@@ -149,7 +149,11 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
 
 	if (number > 0) numSegment += `<span class="num">#` + number + `</span>`;
 
-    if (channelId == uploaderId) opSegment += `class="authorNameCreator"`;
+    let authorClass = "authorName";
+    if (channelId == uploaderId) { 
+        opSegment += `class="authorNameCreator"`;
+        authorClass = "authorNameOp";
+    }
     
     if (options.showImg) {
         pfpSegment += `<a class="channelPfpLink" href="` + channelUrl + `" target="_blank"><img class="pfp" src="` + pfpUrl + `"></a>`;
@@ -159,7 +163,7 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
         pfpSegment
         + `<div class="` + contentClass +`">
 			<div class="commentHeader">
-				<span ` + opSegment + `><a href="` + channelUrl + `" class="authorName" target="_blank">` + displayName + `</a></span>
+				<span ` + opSegment + `><a href="` + channelUrl + `" class="` + authorClass + `" target="_blank">` + displayName + `</a></span>
 				<span>|</span>
 				<span class="timeStamp">
 					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + commentId + `" class="timeStampLink" target="_blank">

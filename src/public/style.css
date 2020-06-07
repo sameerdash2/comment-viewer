@@ -264,21 +264,19 @@ a.authorName {
 a.authorNameOp {
     text-decoration: none;
     font-weight: bold;
-    color:white;
-    
+    color:white;    
 }
 span.authorNameCreator {
-    background-color: #33bbff;
+    background-color: #03f;
     padding: 0px 3px;
     vertical-align: middle;
-    color: #fff;
 }
 a.authorName:hover, a.authorNameOp:hover {
     text-decoration: underline;
 }
 
 a.timeStampLink {
-    color: #222222;
+    color: #000;
     text-decoration: none;
 }
 a.timeStampLink:hover {
