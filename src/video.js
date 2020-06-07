@@ -96,18 +96,27 @@ class Video {
                             this._socket.emit("loadStatus", -1);
                         }
                         else {
-                            // TODO: Determine whether records are too old & re-fetch all comments
+                            // Comments exist in the database.
 
-                            // 60-second cooldown before retrieving new comments
-                            this.loadFromDatabase(() => {
-                                if ((new Date().getTime() - row.lastUpdated) > 60*1000) {
-                                    this._app.database.addVideo(this._video, retrieveNewComments);
-                                }
-                                else {
-                                    this._commentIndex = this._comments.length;
-                                    this.sendLoadedComments(true);
-                                }
-                            });
+                            // Determine whether records are too old & re-fetch all comments.
+                            // Re-fetching is necessary to account for deleted comments, number of likes changing, etc.
+                            // Current criteria: Comment count has doubled OR 6 months have passed (this will probably change)
+                            const sixMonths = 6*30*24*60*60*1000;
+                            if (row.commentCount * 2 < this._commentCount || (new Date().getTime() - row.lastUpdated) > sixMonths) {
+                                this._app.database.resetVideo(this._video, retrieveAllComments);
+                            }
+                            else {
+                                this.loadFromDatabase(() => {
+                                    // 5-minute cooldown before retrieving new comments
+                                    if ((new Date().getTime() - row.lastUpdated) > 5*60*1000) {
+                                        this._app.database.addVideo(this._video, retrieveNewComments);
+                                    }
+                                    else {
+                                        this._commentIndex = this._comments.length;
+                                        this.sendLoadedComments(true);
+                                    }
+                                });
+                            }
                         }
                     }
                     else {
@@ -141,6 +150,7 @@ class Video {
             let proceed = true;
             // Pinned comments always appear first regardless of their date (thanks google)
             // If the first comment is out of place, disregard it if already stored in database.
+            // (this also means the pinned comment can be identified as long as it isn't the newest comment; could possibly use that in future)
             if (response.data.items.length > 1 && response.data.items[0].snippet.topLevelComment.snippet.publishedAt
                     < response.data.items[1].snippet.topLevelComment.snippet.publishedAt) {
                 if (appending && Utils.commentInArray(this._comments, response.data.items[0])) {
