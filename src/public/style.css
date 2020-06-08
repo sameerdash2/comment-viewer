@@ -9,7 +9,7 @@ body {
     position: relative;
 }
 main {
-    margin-left: 24px;
+    margin: 0px 24px;
     padding-bottom: 52px;
 }
 
@@ -38,7 +38,10 @@ h1 {
 }
 
 input[type="radio"], input[type="checkbox"] {
-    margin: 0px 2px;
+    margin: 6px 2px;
+}
+hr.opt {
+    margin: 2px 0px;
 }
 
 div#message {
@@ -48,6 +51,7 @@ div#message {
 
 .mainInput {
     width: 728px;
+    max-width: 100%;
     height: 42px;
     font-family: inherit;
     font-size: inherit;
@@ -84,8 +88,11 @@ div#info {
     white-space: nowrap;
     min-height: 225px;
 }
-.metadata {
+#metadata {
     display: inline-block;
+    margin-left: 5px;
+    width: calc(100% - 325px);
+    white-space: initial;
     vertical-align: top;
     /* overflow: hidden; */
     line-height: 1.5em;
@@ -188,7 +195,7 @@ div#statsOptions {
 div.commentThreadDiv, div.linked {
     margin: 6px 0px;
     line-height: 1.5em;
-    overflow: hidden;
+    /* overflow: hidden; */
     white-space: nowrap;
 }
 
@@ -221,16 +228,16 @@ div.streamTimes {
     display:inline-block;
     white-space: normal;
     word-wrap: break-word;
-    width: 947px;
+    width: calc(100% - 53px);
+    max-width: 947px;
 }
 .commentContentFull {
-    width: 1000px;
-}
-.replyContent {
-    width: 894px;
+    width: 100%;
+    max-width: 1000px;
 }
 .replyContentFull {
-    width: 967px;
+    width: calc(100% - 32px);
+    max-width: 968px;
     margin-left: 32px;
 }
 span.num {

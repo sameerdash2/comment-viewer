@@ -60,9 +60,9 @@ function formatTitle(video, options) {
     timestampSec += `</div>`;
     commentCountSec += `</div>`;
 
-    let newContent = `
-        ` + thumbnailSec + `
-        <div class="metadata">
+    let newContent = 
+        thumbnailSec
+        + `<div id="metadata">
             <div class="vidTitle">
                 <a class="authorName" href="https://www.youtube.com/watch?v=` + video.id + `" target="_blank">
                     ` + video.snippet.title + `
