@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("enterID").focus();
     const socket = io();
     const ERR = "#A00";
     const LOAD = "#666";
