@@ -44,7 +44,7 @@ class Video {
                 this._app.ytapi.quotaExceeded();
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchTitle(idString, forLinked) }, 1);
+                setTimeout(() => { this.fetchTitle(idString) }, 1);
             }
         });
     }
@@ -181,6 +181,9 @@ class Video {
 
             // If there are more comments, and database-stored comments have not been reached, retrieve the next 100 comments
             if (response.data.nextPageToken && proceed) {
+                // Using arrow function because it needs to run in the same scope (due to the current setup).
+                // This does mean it can exceed the maximum call stack size for really large sets,
+                // but the database should still be able to save the comments. May improve in future
                 setTimeout(() => { this.fetchAllComments(response.data.nextPageToken, appending) }, 0);
             }
             else {
@@ -208,7 +211,7 @@ class Video {
                     this._app.ytapi.quotaExceeded();
                 }
                 else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                    setTimeout(() => { this.fetchAllComments(pageToken, appending) }, 10);
+                    setTimeout(() => { this.fetchAllComments(pageToken, appending) }, 1);
                 }
             });
     }
@@ -263,7 +266,7 @@ class Video {
                 this._app.ytapi.quotaExceeded();
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchLinkedComment(parentId) }, 10);
+                setTimeout(() => { this.fetchLinkedComment(idString, parentId, replyId) }, 1);
             }
         });
     }
@@ -321,7 +324,7 @@ class Video {
                     this._app.ytapi.quotaExceeded();
                 }
                 else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                    setTimeout(() => { this.fetchReplies(commentId, pageToken, silent) }, 10);
+                    setTimeout(() => { this.fetchReplies(commentId, pageToken, silent) }, 1);
                 }                                
             });
     }
