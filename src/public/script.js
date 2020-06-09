@@ -286,7 +286,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         [0.001,              "",        4, "{M}/{D}",  1],
                     ],
                 },
-                axis
+                {
+                    ...axis,
+                    size: 60
+                }
             ],
             series: [
                 {
