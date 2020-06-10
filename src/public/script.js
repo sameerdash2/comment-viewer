@@ -118,6 +118,15 @@ document.addEventListener("DOMContentLoaded", function() {
         session.uploaderId = video.snippet.channelId; // for highlighting OP comments
         message.innerHTML = "&nbsp;";
         info.innerHTML = formatTitle(video, options);
+        let metadata = document.getElementById("metadata");
+        if (document.documentElement.clientWidth < 700) {
+            metadata.style.display = "block";
+            metadata.style.width = "auto";
+        }
+        else {
+            metadata.style.display = "inline-block";
+            metadata.style.width = "calc(100% - 325px)";
+        }
 
     }
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
@@ -267,7 +276,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         let zone = options.timezone == "utc" ? "UTC" : undefined;
         let opts = {
-            width: 1000,
+            width: Math.max(500, Math.min(1000, document.documentElement.clientWidth - 64)),
             height: 400,
             tzDate: (ts) => uPlot.tzDate(new Date(ts * 1000), zone),
             scales: {
@@ -319,6 +328,7 @@ document.addEventListener("DOMContentLoaded", function() {
         };
 
         let uplot = new uPlot(opts, data, document.getElementById("graphSpace"));
+        setTimeout(() => document.getElementById("graphContainer").style.width = document.querySelector(".uplot").offsetWidth + "px", 0);
     }
 
     socket.on("resetPage", resetPage);
