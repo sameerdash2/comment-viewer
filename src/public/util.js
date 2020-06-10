@@ -180,6 +180,9 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
 
 function parseTimestamp(iso, timezone) {
     let date = new Date(iso);
+    if (isNaN(date)) {
+        return `<span class="gray">(No date)</span>`;
+    }
 
     let output;
     switch (timezone) {
