@@ -220,10 +220,6 @@ a.channelPfpLink {
     background-color: #4AA3FF;
 }
 
-div.streamTimes {
-    font-size: 20px;
-}
-
 .commentContent, .replyContent, .commentContentFull, .replyContentFull {
     display:inline-block;
     white-space: normal;

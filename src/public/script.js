@@ -139,6 +139,7 @@ document.addEventListener("DOMContentLoaded", function() {
     socket.on("loadStatus", (totalCount) => {
         if (totalCount == -1) {
             loadStatus.innerHTML = `Loading is in progress. Please check back later`;
+            submitBtn.disabled = false;
         }
         else {
             let remaining = "";

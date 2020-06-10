@@ -22,7 +22,6 @@ function formatTitle(video, options) {
     let viewcountSec = `<div class="viewcount"><i class="fas fa-eye"></i> `;
     let timestampSec = `<div class="vidTimestamp">`;
     let commentCountSec = `<div id="commentInfo" class="commentCount">`;
-    let streamTimesSec = ``;
     if (liveState == "live") {
         let concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
         viewcountSec += `<span class="red">` + concurrentViewers.toLocaleString() + ` watching now</span> / `
@@ -50,7 +49,7 @@ function formatTitle(video, options) {
         timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ` + parseTimestamp(video.snippet.publishedAt, options.timezone);
 
         if (typeof video.liveStreamingDetails !== "undefined") {
-            streamTimesSec += `<div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> `
+            timestampSec += `<br><div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> `
                 + parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone) + `</div>`;
         }
 
@@ -78,8 +77,7 @@ function formatTitle(video, options) {
                 ` + timestampSec + `
             </div>
 		</div>
-		` + streamTimesSec + `
-        ` + commentCountSec + `
+		` + commentCountSec + `
     `;
 	return newContent;
 }
