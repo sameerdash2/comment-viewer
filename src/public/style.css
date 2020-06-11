@@ -1,6 +1,12 @@
 * {
     margin: 0;
 }
+a:link, a:visited {
+   color: #00e; 
+}
+a:focus {
+    color: #f00;
+}
 body {
     background-color: #BBDDFF;
     font-family: 'Open Sans', 'Arial', sans-serif;
@@ -55,6 +61,10 @@ div#message {
     height: 42px;
     font-family: inherit;
     font-size: inherit;
+}
+
+span#options:hover {
+    cursor: default;
 }
 
 div#graphContainer {
@@ -329,7 +339,6 @@ div#terms {
     max-width: 800px;
     background-color: #e0f0ff;
     margin: 15% auto;
-    padding: 16px;
     width: 75%;
     box-shadow: 8px 8px 12px 0px rgba(0,0,0,0.2);
 }
@@ -338,13 +347,9 @@ div#terms {
     from { opacity: 0 }
     to { opacity: 1 }
 }
-@keyframes fadeout {
-    from { opacity: 1 }
-    to { opacity: 0 }
-}
 
 .terms-header {
-    padding: 2px 16px;
+    padding: 8px 16px;
     font-weight: bold;
     background-color: #bbddff;
 }
@@ -358,6 +363,7 @@ div#terms {
 .terms-footer {
     font-size: 18px;
     overflow: auto; /* for float */
+    padding: 0px 8px 8px 0px;
 }
 
 #closeTerms {
