@@ -25,9 +25,23 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let storedReplies = {};
     let viewGraph = document.getElementById("viewGraph");
+    let terms = document.getElementById("terms");
 
     submitBtn.disabled = false;
     submitBtn.innerHTML = "Submit";
+
+    document.getElementById("viewTerms").addEventListener('click', (event) => {
+        event.preventDefault();
+        terms.style.display = "block";
+    });
+    document.getElementById("closeTerms").addEventListener('click', () => {
+        terms.style.display = "none";
+    });
+    window.addEventListener('click', () => {
+        if (event.target == terms) {
+            terms.style.display = "none";
+        }
+    });
 
     document.getElementById("videoForm").addEventListener('submit', function(event){
         event.preventDefault(); // prevents page reloading
