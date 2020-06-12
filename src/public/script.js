@@ -290,11 +290,11 @@ document.addEventListener("DOMContentLoaded", function() {
             },
         }
 
-        let zone = options.timezone == "utc" ? "UTC" : undefined;
         let opts = {
             width: Math.max(500, Math.min(1000, document.documentElement.clientWidth - 64)),
             height: 400,
-            tzDate: (ts) => uPlot.tzDate(new Date(ts * 1000), zone),
+            tzDate: (ts) => options.timezone == "utc"
+                ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),
             scales: {
                 'y': { range: (self, min, max) => [0, Math.max(5, Math.ceil(max * 1.02))] }
             },
