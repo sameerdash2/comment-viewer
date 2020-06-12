@@ -87,6 +87,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         else {
             viewGraph.disabled = true;
+            viewGraph.innerHTML = "Loading...";
             socket.emit("graphRequest");
         }
 
@@ -275,6 +276,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("graphContainer").style.display = "block";
         session.graphState = 2;
         viewGraph.disabled = false;
+        viewGraph.innerHTML = "Toggle graph";
     });
 
     function makeGraph(data) {
@@ -294,7 +296,7 @@ document.addEventListener("DOMContentLoaded", function() {
             height: 400,
             tzDate: (ts) => uPlot.tzDate(new Date(ts * 1000), zone),
             scales: {
-                'y': { range: (self, min, max) => [0, Math.max(5, max * 1.02)] }
+                'y': { range: (self, min, max) => [0, Math.max(5, Math.ceil(max * 1.02))] }
             },
             axes: [
                 {
