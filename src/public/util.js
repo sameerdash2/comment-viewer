@@ -84,29 +84,14 @@ function formatTitle(video, options) {
 
 function formatComment(item, number, options, uploaderId, videoId, linked = false, reply = false) {
 	let content = "";
-	let mainComment;
-    let replyCount = -1;
 	let contentClass;
 	if (reply) {
-		mainComment = item;
 		contentClass = options.showImg ? "replyContent" : "replyContentFull";
 	}
 	else {
-		mainComment = item.snippet.topLevelComment;
 		contentClass = options.showImg ? "commentContent" : "commentContentFull";
-        replyCount = item.snippet.totalReplyCount;
 	}
-
-	let publishedAt = mainComment.snippet.publishedAt;
-	let updatedAt = mainComment.snippet.updatedAt;
-	let channelUrl = mainComment.snippet.authorChannelUrl;
-	let commentId = mainComment.id;
-	let likeCount = mainComment.snippet.likeCount;
-	let pfpUrl = mainComment.snippet.authorProfileImageUrl;
-	let displayName = mainComment.snippet.authorDisplayName;
-	let textDisplay = mainComment.snippet.textDisplay;
-	// Checking existence for this because one time it was left out for some reason
-	let channelId = mainComment.snippet.authorChannelId ? mainComment.snippet.authorChannelId.value : "";
+	let channelUrl = "https://www.youtube.com/channel/" + item.authorChannelId;
 	    
     let linkedSegment = "";
     let replySegment = "";
@@ -115,31 +100,31 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
     let opSegment = "";
     let pfpSegment = "";
 
-    let timeString = parseTimestamp(publishedAt, options.timezone);
-    if (publishedAt != updatedAt) {
-        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseTimestamp(updatedAt, options.timezone) + `)`;
+    let timeString = parseTimestamp(item.publishedAt, options.timezone);
+    if (item.publishedAt != item.updatedAt) {
+        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseTimestamp(item.updatedAt, options.timezone) + `)`;
 	}
 	
     if (linked) linkedSegment = `<span class="linkedComment">• LINKED COMMENT</span>`;
     
     // second condition included for safety
-    if (replyCount > 0 && !reply) {
+    if (item.totalReplyCount > 0 && !reply) {
         replySegment = `
-            <div id="replies-` + commentId + `" class="commentRepliesDiv">
+            <div id="replies-` + item.id + `" class="commentRepliesDiv">
                 <div class="repliesExpanderCollapsed">
-                    <button id="getReplies-` + commentId + `" class="showHideButton" type="button">
-                        Load ` + replyCount + ` replies
+                    <button id="getReplies-` + item.id + `" class="showHideButton" type="button">
+                        Load ` + item.totalReplyCount + ` replies
                     </button>
                 </div>
-                <div id="repliesEE-` + commentId + `" class="repliesExpanderExpanded">
+                <div id="repliesEE-` + item.id + `" class="repliesExpanderExpanded">
                     
                 </div>
             </div>
         `;
     }
     
-    if (likeCount) {
-        likeSegment += `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ` + likeCount.toLocaleString() + `</div>`;
+    if (item.likeCount) {
+        likeSegment += `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ` + item.likeCount.toLocaleString() + `</div>`;
     }
     else {
         likeSegment += `<div class="commentFooter"></div>`;
@@ -148,29 +133,29 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
 	if (number > 0) numSegment += `<span class="num">#` + number + `</span>`;
 
     let authorClass = "authorName";
-    if (channelId == uploaderId) { 
+    if (item.authorChannelId == uploaderId) { 
         opSegment += `class="authorNameCreator"`;
         authorClass = "authorNameOp";
     }
     
     if (options.showImg) {
-        pfpSegment += `<a class="channelPfpLink" href="` + channelUrl + `" target="_blank"><img class="pfp" src="` + pfpUrl + `"></a>`;
+        pfpSegment += `<a class="channelPfpLink" href="` + channelUrl + `" target="_blank"><img class="pfp" src="` + item.authorProfileImageUrl + `"></a>`;
     }
 
     content += 
         pfpSegment
         + `<div class="` + contentClass +`">
 			<div class="commentHeader">
-				<span ` + opSegment + `><a href="` + channelUrl + `" class="` + authorClass + `" target="_blank">` + displayName + `</a></span>
+				<span ` + opSegment + `><a href="` + channelUrl + `" class="` + authorClass + `" target="_blank">` + item.authorDisplayName + `</a></span>
 				<span>|</span>
 				<span class="timeStamp">
-					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + commentId + `" class="timeStampLink" target="_blank">
+					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id + `" class="timeStampLink" target="_blank">
 						` + timeString + `
 					</a>
 				</span>
 				` + linkedSegment + numSegment + `
 			</div>
-			<div class="commentText">` + textDisplay + `</div>
+			<div class="commentText">` + item.textDisplay + `</div>
 			` + likeSegment + replySegment + `
 		</div>
     `;

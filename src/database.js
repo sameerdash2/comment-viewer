@@ -15,7 +15,9 @@ class Database {
         let now = new Date().getTime();
         this._db.run('INSERT OR REPLACE INTO videos(id, commentCount, retrievedAt, lastUpdated, inProgress) VALUES(?, ?, ?, ?, ?)',
             [video.id, video.statistics.commentCount, now, now, true]);
-        this._db.run('CREATE TABLE IF NOT EXISTS `' + video.id + '`(timestamp TINYTEXT, comment MEDIUMTEXT)', (result, err) => callback());
+        this._db.run('CREATE TABLE IF NOT EXISTS `' + video.id + '`(id TINYTEXT, textDisplay TEXT, authorDisplayName TEXT, '
+            + 'authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT, '
+            + 'totalReplyCount SMALLINT)', (result, err) => callback());
     }
 
     resetVideo(video, callback) {
@@ -24,17 +26,19 @@ class Database {
     }
 
     getComments(videoId, callback) {
-        this._db.all('SELECT comment FROM `' + videoId + '` ORDER BY timestamp DESC', (err, rows) => callback(rows));
+        this._db.all('SELECT * FROM `' + videoId + '` ORDER BY publishedAt DESC', (err, rows) => callback(rows));
     }
 
     writeNewComments(videoId, comments) {
         let insert = [];
-        for (let i = 0; i < comments.length; i++) {            
-            insert.push(comments[i].snippet.topLevelComment.snippet.publishedAt, JSON.stringify(comments[i]));
+        for (let i = 0; i < comments.length; i++) { 
+            insert.push(comments[i].id, comments[i].textDisplay, comments[i].authorDisplayName, comments[i].authorProfileImageUrl,
+                comments[i].authorChannelId, comments[i].likeCount, comments[i].publishedAt, comments[i].updatedAt, comments[i].totalReplyCount);
         }
-        let placeholders = comments.map((elem) => '(?,?)').join(',');
+        let placeholders = comments.map((elem) => '(?,?,?,?,?,?,?,?,?)').join(',');
 
-        let statement = this._db.prepare('INSERT INTO `' + videoId + '`(timestamp, comment) VALUES ' + placeholders);
+        let statement = this._db.prepare('INSERT INTO `' + videoId + '`(id, textDisplay, authorDisplayName, authorProfileImageUrl, '
+            + 'authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount) VALUES ' + placeholders);
         statement.run(insert);
         statement.finalize();
 

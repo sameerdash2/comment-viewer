@@ -13,7 +13,7 @@ function merge(arr, l, m, r) {
     j = 0;
     k = l;
     while (i < n1 && j < n2) {
-        if (left[i].snippet.topLevelComment.snippet.likeCount > right[j].snippet.topLevelComment.snippet.likeCount)
+        if (left[i].likeCount > right[j].likeCount)
             arr[k++] = left[i++];
         else
             arr[k++] = right[j++];
@@ -40,17 +40,17 @@ class Utils {
     static reSort(comments) {
         // If there is a pinned comment, it always appears at the top regardless of date
         // Move it to its correct position w/ binary search
-        if (comments.length > 1 && comments[0].snippet.topLevelComment.snippet.publishedAt < comments[1].snippet.topLevelComment.snippet.publishedAt) {
-            let key = comments[0].snippet.topLevelComment.snippet.publishedAt;
+        if (comments.length > 1 && comments[0].publishedAt < comments[1].publishedAt) {
+            let key = comments[0].publishedAt;
             let l = 0;
             let r = comments.length - 1;
             let m;
             while (l <= r) {
                 m = l + Math.floor((r-l)/2);
-                if (comments[m].snippet.topLevelComment.snippet.publishedAt > key) {
+                if (comments[m].publishedAt > key) {
                     l = m + 1;
                 }
-                else if (comments[m].snippet.topLevelComment.snippet.publishedAt < key) {
+                else if (comments[m].publishedAt < key) {
                     r = m - 1;
                 }
                 else {
@@ -61,10 +61,28 @@ class Utils {
         }
     }
 
-    static commentInArray(array, comment) {
+    static convertComment(object, isReply = false) {
+        let comment = isReply ? object : object.snippet.topLevelComment;
+        let replyCount = isReply ? 0 : object.snippet.totalReplyCount;
+        // Channel ID is sometimes randomly left out
+        let channelId = comment.snippet.authorChannelId ? comment.snippet.authorChannelId.value : "";
+        return ({
+            id: comment.id,
+            textDisplay: comment.snippet.textDisplay,
+            authorDisplayName: comment.snippet.authorDisplayName,
+            authorProfileImageUrl: comment.snippet.authorProfileImageUrl,
+            authorChannelId: channelId,
+            likeCount: comment.snippet.likeCount,
+            publishedAt: new Date(comment.snippet.publishedAt).getTime(),
+            updatedAt: new Date(comment.snippet.updatedAt).getTime(),
+            totalReplyCount: replyCount
+        });
+    }
+
+    static commentInArray(array, commentId) {
         let len = array.length;
         for (let i = 0; i < len; i++) {
-            if (array[i].id == comment.id)
+            if (array[i].id == commentId)
                 return true;
         }
         return false;

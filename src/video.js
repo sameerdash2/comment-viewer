@@ -135,10 +135,20 @@ class Video {
         this._app.database.getComments(this._id, (rows) => {
             let len = rows.length;
             this._indexedComments = len;
-            // TODO: Maybe there's a better way to do this especially for large sets
+            
             for (let i = 0; i < len; i++) {
-                this._comments.push(JSON.parse(rows[i].comment));
-                this._indexedComments += this._comments[i].snippet.totalReplyCount;
+                this._comments.push({
+                    id: rows[i].id,
+                    textDisplay: rows[i].textDisplay,
+                    authorDisplayName: rows[i].authorDisplayName,
+                    authorProfileImageUrl: rows[i].authorProfileImageUrl,
+                    authorChannelId: rows[i].authorChannelId,
+                    likeCount: rows[i].likeCount,
+                    publishedAt: rows[i].publishedAt,
+                    updatedAt: rows[i].updatedAt,
+                    totalReplyCount: rows[i].totalReplyCount
+                });
+                this._indexedComments += this._comments[i].totalReplyCount;
             }
 
             callback();
@@ -153,28 +163,31 @@ class Video {
             // (this also means the pinned comment can be identified as long as it isn't the newest comment; could possibly use that in future)
             if (response.data.items.length > 1 && response.data.items[0].snippet.topLevelComment.snippet.publishedAt
                     < response.data.items[1].snippet.topLevelComment.snippet.publishedAt) {
-                if (appending && Utils.commentInArray(this._comments, response.data.items[0])) {
+                if (appending && Utils.commentInArray(this._comments, response.data.items[0].id)) {
                     response.data.items.shift();
                 }
             }
             let len = response.data.items.length;
-            let i;
-            for (i = 0; i < len; i++) {
+            let convertedComments = [];
+            for (let i = 0; i < len; i++) {
+                let commentThread = response.data.items[i];
                 // If appending to database-stored comments, check if current comment has passed the date
                 // of the newest stored comment.
                 // Then make sure the current comment is actually stored (for equal timestamps, rare case)
-                if (appending && response.data.items[i].snippet.topLevelComment.snippet.publishedAt
-                        <= this._comments[0].snippet.topLevelComment.snippet.publishedAt
-                        && Utils.commentInArray(this._comments, response.data.items[i])) {
+                if (appending && new Date(commentThread.snippet.topLevelComment.snippet.publishedAt).getTime() <= this._comments[0].publishedAt
+                        && Utils.commentInArray(this._comments, commentThread.id)) {
                     proceed = false;
                     break;
                 }
-                this._newComments.push(response.data.items[i]);
-                this._indexedComments += 1 + response.data.items[i].snippet.totalReplyCount;
+                convertedComments.push(Utils.convertComment(commentThread));
+                this._indexedComments += 1 + commentThread.snippet.totalReplyCount;
             }
 
             // Write new comments to database
-            if (i > 0 && this._logToDatabase) this._app.database.writeNewComments(this._id, response.data.items.slice(0, i));
+            if (convertedComments.length > 0 && this._logToDatabase) this._app.database.writeNewComments(this._id, convertedComments);
+
+            // Concatenate
+            Array.prototype.push.apply(this._newComments, convertedComments);
 
             // Send load status to client to display percentage
             this._socket.emit("loadStatus", this._indexedComments);
@@ -235,11 +248,11 @@ class Video {
 
                         if (responses[0].data.items[0]) {
                             // Send parent comment & linked reply
-                            this.sendLinkedComment(this._linkedParent, responses[0].data.items[0], videoObject);
+                            this.sendLinkedComment(Utils.convertComment(this._linkedParent), Utils.convertComment(responses[0].data.items[0], true), videoObject);
                         }
                         else {
                             // Send only parent
-                            this.sendLinkedComment(this._linkedParent, null, videoObject);
+                            this.sendLinkedComment(Utils.convertComment(this._linkedParent), null, videoObject);
                         }
                     }, (err) => {
                         // not handled
@@ -250,7 +263,7 @@ class Video {
                         let videoObject = (res == -1) ? -1 : res.data.items[0];
                         this.handleNewVideo(videoObject);
                         // Send linked comment
-                        this.sendLinkedComment(response.data.items[0], null, videoObject);
+                        this.sendLinkedComment(Utils.convertComment(response.data.items[0]), null, videoObject);
                     }, (err) => {
                         // not handled
                     });
@@ -310,7 +323,9 @@ class Video {
     fetchReplies(commentId, pageToken, silent) {
         if (!this._loadedReplies[commentId]) this._loadedReplies[commentId] = [];
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
-            Array.prototype.push.apply(this._loadedReplies[commentId], response.data.items);
+            for (let i = 0; i < response.data.items.length; i++) {
+                this._loadedReplies[commentId].push(Utils.convertComment(response.data.items[i], true));
+            }
             if (response.data.nextPageToken) {
                 // Fetch next batch of replies
                 setTimeout(() => { this.fetchReplies(commentId, response.data.nextPageToken, silent) }, 0);
@@ -355,11 +370,11 @@ class Video {
 
     makeGraph() {
         if (this._graphAvailable) {
-            // Send array of ISO dates to client
+            // Send array of dates to client
             let len = this._comments.length;
             let dates = [];
             for (let i = 0; i < len; i++) {
-                dates.push(this._comments[i].snippet.topLevelComment.snippet.publishedAt);
+                dates.push(this._comments[i].publishedAt);
             }
             
             this._socket.emit("graphData", dates);

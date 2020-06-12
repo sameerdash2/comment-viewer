@@ -227,10 +227,10 @@ document.addEventListener("DOMContentLoaded", function() {
         session.currentLinked = hasReply ? reply.id : parent.id;
         
         linkedHolder.innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-            + formatComment(parent, -1, options, session.uploaderId, parent.snippet.videoId, !hasReply, false) + `</div></section><hr><br>`;
+            + formatComment(parent, -1, options, session.uploaderId, video.id, !hasReply, false) + `</div></section><hr><br>`;
         if (hasReply) {
             document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
-                + formatComment(reply, -1, options, session.uploaderId, parent.snippet.videoId, true, true) + `</div>`;
+                + formatComment(reply, -1, options, session.uploaderId, video.id, true, true) + `</div>`;
         }
     });
 
