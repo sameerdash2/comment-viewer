@@ -109,7 +109,7 @@ class Video {
                                 this._indexedComments = row.commentCount;                                
                                 // 5-minute cooldown before retrieving new comments
                                 if ((new Date().getTime() - row.lastUpdated) > 5*60*1000) {
-                                    this._app.database.addVideo(this._video, () => {
+                                    this._app.database.reAddVideo(this._video, () => {
                                         this._app.database.getLastDate(this._id, (row) => {
                                             this._lastDate = row.publishedAt;
                                             retrieveNewComments();
