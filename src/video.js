@@ -12,7 +12,6 @@ class Video {
     reset() {
         this._indexedComments = 0; // All retrieved comments + their reply counts
         this._newComments = 0;
-        this._loadedReplies = {};
     }
 
     handleNewVideo(item) {
@@ -288,26 +287,20 @@ class Video {
     }
 
     getReplies(commentId) {
-        if (this._loadedReplies[commentId]) {
-            this.sendReplies(commentId);
-        }
-        else {
-            this.fetchReplies(commentId, "", false);
-        }
+        this.fetchReplies(commentId, "", false);
     }
 
-    fetchReplies(commentId, pageToken, silent) {
-        if (!this._loadedReplies[commentId]) this._loadedReplies[commentId] = [];
+    fetchReplies(commentId, pageToken, silent, replies = []) {
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
             for (let i = 0; i < response.data.items.length; i++) {
-                this._loadedReplies[commentId].push(Utils.convertComment(response.data.items[i], true));
+                replies.push(Utils.convertComment(response.data.items[i], true));
             }
             if (response.data.nextPageToken) {
                 // Fetch next batch of replies
-                setTimeout(() => { this.fetchReplies(commentId, response.data.nextPageToken, silent) }, 0);
+                setTimeout(() => { this.fetchReplies(commentId, response.data.nextPageToken, silent, replies) }, 0);
             }
             else if (!silent) {
-                this.sendReplies(commentId);
+                this.sendReplies(commentId, replies);
             }
         }, (err) => {
                 console.error("Replies execute error", err);
@@ -320,8 +313,8 @@ class Video {
             });
     }
 
-    sendReplies(commentId) {
-        this._socket.emit("newReplies", { items: this._loadedReplies[commentId], id: commentId});
+    sendReplies(commentId, items) {
+        this._socket.emit("newReplies", { items: items, id: commentId});
     }
 
     doSort(order) {
