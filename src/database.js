@@ -15,7 +15,7 @@ class Database {
         let now = new Date().getTime();
         this._db.run('INSERT OR REPLACE INTO videos(id, commentCount, retrievedAt, lastUpdated, inProgress) VALUES(?, ?, ?, ?, ?)',
             [video.id, video.statistics.commentCount, now, now, true]);
-        this._db.run('CREATE TABLE IF NOT EXISTS `' + video.id + '`(id TINYTEXT, textDisplay TEXT, authorDisplayName TEXT, '
+        this._db.run('CREATE TABLE IF NOT EXISTS `' + video.id + '`(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT, '
             + 'authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT, '
             + 'totalReplyCount SMALLINT)', (result, err) => callback());
     }
@@ -25,8 +25,16 @@ class Database {
         this._db.run('DROP TABLE IF EXISTS `' + video.id + '`', (result, err) => this.addVideo(video, callback));
     }
 
-    getComments(videoId, callback) {
-        this._db.all('SELECT * FROM `' + videoId + '` ORDER BY publishedAt DESC', (err, rows) => callback(rows));
+    getComments(videoId, number, offset, sortBy, callback) {
+        this._db.all(`SELECT * FROM \`${videoId}\` ORDER BY ${sortBy} LIMIT ${number} OFFSET ${offset}`, (err, rows) => callback(rows));
+    }
+
+    getLastDate(videoId, callback) {
+        this._db.get(`SELECT publishedAt FROM \`${videoId}\` ORDER BY publishedAt DESC LIMIT 1`, (err, row) => callback(row));
+    }
+
+    getAllDates(videoId, callback) {
+        this._db.all(`SELECT publishedAt FROM \`${videoId}\` ORDER BY publishedAt DESC`, (err, rows) => callback(rows));
     }
 
     writeNewComments(videoId, comments) {
@@ -37,7 +45,7 @@ class Database {
         }
         let placeholders = comments.map((elem) => '(?,?,?,?,?,?,?,?,?)').join(',');
 
-        let statement = this._db.prepare('INSERT INTO `' + videoId + '`(id, textDisplay, authorDisplayName, authorProfileImageUrl, '
+        let statement = this._db.prepare('INSERT OR REPLACE INTO `' + videoId + '`(id, textDisplay, authorDisplayName, authorProfileImageUrl, '
             + 'authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount) VALUES ' + placeholders);
         statement.run(insert);
         statement.finalize();

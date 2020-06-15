@@ -10,10 +10,8 @@ class Video {
     }
 
     reset() {
-        this._comments = [];
-        this._newComments = [];
-        this._likedComments = [];
         this._indexedComments = 0; // All retrieved comments + their reply counts
+        this._newComments = 0;
         this._loadedReplies = {};
     }
 
@@ -23,7 +21,8 @@ class Video {
             this._video = item;
             this._id = this._video.id;
             this._commentCount = this._video.statistics.commentCount;
-            this._logToDatabase = this._commentCount >= 500;
+            // this._logToDatabase = this._commentCount >= 500;
+            this._logToDatabase = true; // Currently needed as comments are only sent from database
             this.fetchTestComment();
         }
     }
@@ -83,6 +82,7 @@ class Video {
             let retrieveAllComments = () => this.fetchAllComments("", false);
             let retrieveNewComments = () => this.fetchAllComments("", true);
             this._currentSort = type;
+            this._newComments = 0;
             this._startTime = new Date();
             if (this._logToDatabase) {
                 this._app.database.checkVideo(this._id, (row) => {
@@ -106,16 +106,19 @@ class Video {
                                 this._app.database.resetVideo(this._video, retrieveAllComments);
                             }
                             else {
-                                this.loadFromDatabase(() => {
-                                    // 5-minute cooldown before retrieving new comments
-                                    if ((new Date().getTime() - row.lastUpdated) > 5*60*1000) {
-                                        this._app.database.addVideo(this._video, retrieveNewComments);
-                                    }
-                                    else {
-                                        this._commentIndex = this._comments.length;
-                                        this.sendLoadedComments(true);
-                                    }
-                                });
+                                this._indexedComments = row.commentCount;                                
+                                // 5-minute cooldown before retrieving new comments
+                                if ((new Date().getTime() - row.lastUpdated) > 5*60*1000) {
+                                    this._app.database.addVideo(this._video, () => {
+                                        this._app.database.getLastDate(this._id, (row) => {
+                                            this._lastDate = row.publishedAt;
+                                            retrieveNewComments();
+                                        });
+                                    });
+                                }
+                                else {
+                                    this.sendLoadedComments(true);
+                                }
                             }
                         }
                     }
@@ -131,41 +134,15 @@ class Video {
         }
     }
 
-    loadFromDatabase(callback) {
-        this._app.database.getComments(this._id, (rows) => {
-            let len = rows.length;
-            this._indexedComments = len;
-            
-            for (let i = 0; i < len; i++) {
-                this._comments.push({
-                    id: rows[i].id,
-                    textDisplay: rows[i].textDisplay,
-                    authorDisplayName: rows[i].authorDisplayName,
-                    authorProfileImageUrl: rows[i].authorProfileImageUrl,
-                    authorChannelId: rows[i].authorChannelId,
-                    likeCount: rows[i].likeCount,
-                    publishedAt: rows[i].publishedAt,
-                    updatedAt: rows[i].updatedAt,
-                    totalReplyCount: rows[i].totalReplyCount
-                });
-                this._indexedComments += this._comments[i].totalReplyCount;
-            }
-
-            callback();
-        });
-    }
-
     fetchAllComments(pageToken, appending) {
         this._app.ytapi.executeCommentChunk(this._id, pageToken).then((response) => {
             let proceed = true;
             // Pinned comments always appear first regardless of their date (thanks google)
-            // If the first comment is out of place, disregard it if already stored in database.
             // (this also means the pinned comment can be identified as long as it isn't the newest comment; could possibly use that in future)
+            let firstPinned = false;
             if (response.data.items.length > 1 && response.data.items[0].snippet.topLevelComment.snippet.publishedAt
                     < response.data.items[1].snippet.topLevelComment.snippet.publishedAt) {
-                if (appending && Utils.commentInArray(this._comments, response.data.items[0].id)) {
-                    response.data.items.shift();
-                }
+                firstPinned = true;
             }
             let len = response.data.items.length;
             let convertedComments = [];
@@ -173,21 +150,23 @@ class Video {
                 let commentThread = response.data.items[i];
                 // If appending to database-stored comments, check if current comment has passed the date
                 // of the newest stored comment.
-                // Then make sure the current comment is actually stored (for equal timestamps, rare case)
-                if (appending && new Date(commentThread.snippet.topLevelComment.snippet.publishedAt).getTime() <= this._comments[0].publishedAt
-                        && Utils.commentInArray(this._comments, commentThread.id)) {
-                    proceed = false;
-                    break;
+                // Equal timestamps will slip through, but they should be taken care of by database.
+                if (appending && new Date(commentThread.snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastDate) {
+                    // Make sure it's not just a pinned comment out of place
+                    if ( !(i == 0 && firstPinned) ) {
+                        proceed = false;
+                        break;
+                    }
                 }
                 convertedComments.push(Utils.convertComment(commentThread));
                 this._indexedComments += 1 + commentThread.snippet.totalReplyCount;
+                this._newComments += 1 + commentThread.snippet.totalReplyCount;
             }
 
-            // Write new comments to database
-            if (convertedComments.length > 0 && this._logToDatabase) this._app.database.writeNewComments(this._id, convertedComments);
-
-            // Concatenate
-            Array.prototype.push.apply(this._newComments, convertedComments);
+            if (convertedComments.length > 0 && this._logToDatabase) {
+                // Write new comments to database
+                this._app.database.writeNewComments(this._id, convertedComments);
+            }
 
             // Send load status to client to display percentage
             this._socket.emit("loadStatus", this._indexedComments);
@@ -203,17 +182,9 @@ class Video {
                 // Finished retrieving all comment threads.
                 this._app.database.markVideoComplete(this._id);
 
-                // Add new comments to beginning of database-stored ones
-                // (If new video, it adds to the empty array)
-                Array.prototype.unshift.apply(this._comments, this._newComments);
-
                 let elapsed = new Date().getTime() - this._startTime.getTime();
-                console.log("Retrieved all " + this._newComments.length + " comments in " + elapsed
-                    + "ms, TRUE CPS = " + (this._newComments.length / elapsed * 1000));
-                
-                this._commentIndex = this._comments.length;
-                // Take care of possible pinned comment at the top
-                Utils.reSort(this._comments);
+                console.log("Retrieved all " + this._newComments + " comments in " + elapsed
+                    + "ms, CPS = " + (this._newComments / elapsed * 1000));
                 
                 // Send the first batch of comments
                 this.sendLoadedComments(true);
@@ -289,26 +260,31 @@ class Video {
     }
 
     sendLoadedComments(newSet = false) {
-        let library = (this._currentSort == "likesMost" || this._currentSort == "likesLeast") ? this._likedComments : this._comments;
-        let len = this._comments.length;
-        let more = false;
-    
-        let goal;
-        let subset;
-        if (this._currentSort == "dateOldest" || this._currentSort == "likesLeast") {
-            // end to start of array
-            goal = Math.max(this._commentIndex - config.maxDisplay, 0);
-            more = goal != 0;
-            subset = library.slice(goal, this._commentIndex).reverse();
-        }
-        else {
-            // start to end of array
-            goal = Math.min(this._commentIndex + config.maxDisplay, len - 1);
-            more = goal != len - 1;
-            subset = library.slice(this._commentIndex + 1, goal + 1);
-        }
-        this._commentIndex = goal;
-        this._socket.emit("groupComments", { reset: newSet, items: subset, showMore: more });
+        if (newSet) this._commentIndex = 0;
+        
+        // will make this less ugly later
+        let sortBy = (this._currentSort == "likesMost" || this._currentSort == "likesLeast") ? "likeCount" : "publishedAt";
+        sortBy += (this._currentSort == "dateOldest" || this._currentSort == "likesLeast") ? " ASC" : " DESC";
+
+        this._app.database.getComments(this._id, config.maxDisplay, this._commentIndex, sortBy, (rows) => {
+            this._commentIndex += rows.length;
+            let more = rows.length == config.maxDisplay;
+            let subset = [];
+            for (let i = 0; i < rows.length; i++) {
+                subset.push({
+                    id: rows[i].id,
+                    textDisplay: rows[i].textDisplay,
+                    authorDisplayName: rows[i].authorDisplayName,
+                    authorProfileImageUrl: rows[i].authorProfileImageUrl,
+                    authorChannelId: rows[i].authorChannelId,
+                    likeCount: rows[i].likeCount,
+                    publishedAt: rows[i].publishedAt,
+                    updatedAt: rows[i].updatedAt,
+                    totalReplyCount: rows[i].totalReplyCount
+                });
+            }
+            this._socket.emit("groupComments", { reset: newSet, items: subset, showMore: more });
+        });
     }
 
     getReplies(commentId) {
@@ -351,19 +327,6 @@ class Video {
     doSort(order) {
         if (order != this._currentSort) {
             this._currentSort = order;
-            if ((order == "likesMost" || order == "likesLeast") && this._likedComments.length != this._comments.length) {
-                let thing = new Date();
-                this._likedComments = this._comments.slice();
-                let len = this._likedComments.length;
-                Utils.mergeSort(this._likedComments, 0, len - 1);
-                console.log("Finished mergesort on " + len + " comments in " + (new Date().getTime() - thing.getTime()) + "ms");
-            }
-            if (order == "dateOldest" || order == "likesLeast") {
-                this._commentIndex = this._comments.length;
-            }
-            else {
-                this._commentIndex = -1;
-            }
             this.sendLoadedComments(true);
         }
     }
@@ -371,13 +334,13 @@ class Video {
     makeGraph() {
         if (this._graphAvailable) {
             // Send array of dates to client
-            let len = this._comments.length;
-            let dates = [];
-            for (let i = 0; i < len; i++) {
-                dates.push(this._comments[i].publishedAt);
-            }
-            
-            this._socket.emit("graphData", dates);
+            this._app.database.getAllDates(this._id, (rows) => {
+                let dates = [];
+                for (let i = 0; i < rows.length; i++) {
+                    dates.push(rows[i].publishedAt);
+                }
+                this._socket.emit("graphData", dates);
+            });
         }
     }
 
