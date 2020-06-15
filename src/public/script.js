@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         let opts = {
-            width: Math.max(500, Math.min(1000, document.documentElement.clientWidth - 64)),
+            width: Math.max(500, Math.min(996, document.documentElement.clientWidth - 64)),
             height: 400,
             tzDate: (ts) => options.timezone == "utc"
                 ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),

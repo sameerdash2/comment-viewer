@@ -69,7 +69,7 @@ span#options:hover {
 
 div#graphContainer {
     display: none;
-    width: 1000px;
+    width: 996px;
     border: 2px solid black;
     padding: 5px 0px;
 }
@@ -305,14 +305,14 @@ a.authorLink:hover {
 }
 
 hr {
-    height: 0px;
-    color: #000;
-    border: 1px solid black;
+    height: 2px;
+    background-color: #000;
+    border: 0px;
     max-width: 1000px;
     margin:0px;
 }
 hr.sect {
-    border: 2px solid;
+    height: 4px;
     margin: 15px 0px;
 }
 
