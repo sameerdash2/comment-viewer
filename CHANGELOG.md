@@ -1,3 +1,12 @@
+**2.1.0** (16 June 2020)
+- Switched to columns instead of raw JSON for storing comments. (75% space decrease!)
+- Server no longer retains comments in memory; they are only served from the database.
+- Scaled down font size on main page
+- Added scheduled database pruning (to be improved)
+- Added Google Analytics
+- Fixed videos being added as fresh entries, resulting in the cached comments never updating
+- Fixed crashing due to client socket timeout
+
 **2.0.0** (11 June 2020)
 - Comments are now cached in a database, greatly reducing load times and quota usage. Any video with over 500 comments will be cached.
 - Visual changes to support small/mobile displays

@@ -1,6 +1,6 @@
 {
   "name": "commentviewer",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "View and analyze YouTube comments easily.",
   "main": "index.js",
   "engines": {
@@ -11,11 +11,10 @@
     "googleapis": "^52.0.0",
     "socket.io": "^2.3.0",
     "sqlite3": "^4.2.0",
-    "uplot": "^1.0.10"
+    "uplot": "^1.0.11"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
   "author": "FrozenKite",
