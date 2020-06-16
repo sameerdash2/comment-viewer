@@ -2,7 +2,11 @@
     margin: 0;
 }
 a:link, a:visited {
-   color: #00e; 
+   color: #00e;
+   text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
 }
 a:focus {
     color: #f00;
@@ -341,7 +345,7 @@ div#terms {
     max-width: 800px;
     background-color: #e0f0ff;
     margin: 15% auto;
-    width: 75%;
+    width: 90%;
     box-shadow: 8px 8px 12px 0px rgba(0,0,0,0.2);
 }
 
