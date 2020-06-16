@@ -31,7 +31,7 @@ class Database {
     }
 
     getComments(videoId, number, offset, sortBy, callback) {
-        this._db.all(`SELECT * FROM \`${videoId}\` ORDER BY ${sortBy} LIMIT ${number} OFFSET ${offset}`, (err, rows) => callback(rows));
+        this._db.all(`SELECT * FROM \`${videoId}\` ORDER BY ${sortBy} LIMIT ${number} OFFSET ${offset}`, (err, rows) => callback(err, rows));
     }
 
     getLastDate(videoId, callback) {

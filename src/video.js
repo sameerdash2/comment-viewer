@@ -260,29 +260,35 @@ class Video {
 
     sendLoadedComments(newSet = false) {
         if (newSet) this._commentIndex = 0;
+        if (!this._id) return;
         
         // will make this less ugly later
         let sortBy = (this._currentSort == "likesMost" || this._currentSort == "likesLeast") ? "likeCount" : "publishedAt";
         sortBy += (this._currentSort == "dateOldest" || this._currentSort == "likesLeast") ? " ASC" : " DESC";
 
-        this._app.database.getComments(this._id, config.maxDisplay, this._commentIndex, sortBy, (rows) => {
-            this._commentIndex += rows.length;
-            let more = rows.length == config.maxDisplay;
-            let subset = [];
-            for (let i = 0; i < rows.length; i++) {
-                subset.push({
-                    id: rows[i].id,
-                    textDisplay: rows[i].textDisplay,
-                    authorDisplayName: rows[i].authorDisplayName,
-                    authorProfileImageUrl: rows[i].authorProfileImageUrl,
-                    authorChannelId: rows[i].authorChannelId,
-                    likeCount: rows[i].likeCount,
-                    publishedAt: rows[i].publishedAt,
-                    updatedAt: rows[i].updatedAt,
-                    totalReplyCount: rows[i].totalReplyCount
-                });
+        this._app.database.getComments(this._id, config.maxDisplay, this._commentIndex, sortBy, (err, rows) => {
+            if (err) {
+                console.log(err);
             }
-            this._socket.emit("groupComments", { reset: newSet, items: subset, showMore: more });
+            else {
+                this._commentIndex += rows.length;
+                let more = rows.length == config.maxDisplay;
+                let subset = [];
+                for (let i = 0; i < rows.length; i++) {
+                    subset.push({
+                        id: rows[i].id,
+                        textDisplay: rows[i].textDisplay,
+                        authorDisplayName: rows[i].authorDisplayName,
+                        authorProfileImageUrl: rows[i].authorProfileImageUrl,
+                        authorChannelId: rows[i].authorChannelId,
+                        likeCount: rows[i].likeCount,
+                        publishedAt: rows[i].publishedAt,
+                        updatedAt: rows[i].updatedAt,
+                        totalReplyCount: rows[i].totalReplyCount
+                    });
+                }
+                this._socket.emit("groupComments", { reset: newSet, items: subset, showMore: more });
+            }
         });
     }
 
