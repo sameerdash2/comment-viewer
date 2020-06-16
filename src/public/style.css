@@ -57,6 +57,7 @@ hr.opt {
 div#message {
     color: #977;
     font-size: 80%;
+    margin-top: 5px;
 }
 
 .mainInput {
@@ -319,7 +320,7 @@ hr {
 }
 hr.sect {
     height: 4px;
-    margin: 15px 0px;
+    margin: 10px 0px;
 }
 
 li {
