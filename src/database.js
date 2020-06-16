@@ -5,7 +5,7 @@ class Database {
         this._db = new sqlite.Database('database.sql');
 
         this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL)');
-        setInterval(this.cleanup(), 24*60*60*1000);
+        setInterval(this.cleanup, 24*60*60*1000);
     }
 
     checkVideo(videoId, callback) {
