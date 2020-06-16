@@ -9,28 +9,30 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <base target="_blank">
     </head>
-    
+
     <body>
         <main>
             <h1>Comment Viewer</h1>
             <div id="intro">
                 <form id="videoForm" autocomplete="off">
                     Enter a YouTube video link, video ID, or direct link to a comment: <br>
-                    <input class="mainInput" type="text" id="enterID"/>
-                    <button id="submit" class="send" disabled>Loading...</button>
-                    <span id="options"> Options <span id="arrow">▼</span>
-                        <div id="optionsContent">
-                            <div class="optionsHeader">Time zone</div>
-                            <input type="radio" id="selectLocal" name="timezone" value="local" checked>
-                            <label for="selectLocal" id="localLabel">Local time</label>
-                            <br>
-                            <input type="radio" id="selectUtc" name="timezone" value="utc">
-                            <label for="selectUtc" id="utcLabel">UTC</label>
-                            <br><hr class="opt">
-                            <input type="checkbox" id="noImg" value="Bike">
-                            <label for="noImg">Don't load images</label>
-                        </div>
-                    </span>
+                    <div id="inputRow">
+                        <input class="mainInput" type="text" id="enterID"/>
+                        <button id="submit" class="send" disabled>Loading...</button>
+                        <span id="options"> Options <span id="arrow">▼</span>
+                            <div id="optionsContent">
+                                <div class="optionsHeader">Time zone</div>
+                                <input type="radio" id="selectLocal" name="timezone" value="local" checked>
+                                <label for="selectLocal" id="localLabel">Local time</label>
+                                <br>
+                                <input type="radio" id="selectUtc" name="timezone" value="utc">
+                                <label for="selectUtc" id="utcLabel">UTC</label>
+                                <br><hr class="opt">
+                                <input type="checkbox" id="noImg" value="Bike">
+                                <label for="noImg">Don't load images</label>
+                            </div>
+                        </span>
+                    </div>
                 </form>
             </div>
             <div id="message">&nbsp;</div>

@@ -10,7 +10,7 @@ a:focus {
 body {
     background-color: #BBDDFF;
     font-family: 'Open Sans', 'Arial', sans-serif;
-    font-size: 24px;
+    font-size: 20px;
     min-height: 100vh;
     position: relative;
 }
@@ -56,11 +56,15 @@ div#message {
 }
 
 .mainInput {
-    width: 728px;
-    max-width: 100%;
-    height: 42px;
+    width: 700px;
+    min-width: 100px;
+    max-width: calc(100% - 200px);
+    height: 36px;
     font-family: inherit;
     font-size: inherit;
+}
+div#inputRow {
+    margin-top: 5px;
 }
 
 span#options:hover {
@@ -103,18 +107,15 @@ div#info {
     width: calc(100% - 325px);
     white-space: initial;
     vertical-align: top;
-    /* overflow: hidden; */
-    line-height: 1.5em;
+    line-height: 1.75em;
 }
 .vidTitle {
-    font-size: 28px;
-    vertical-align: top;
-    font-weight: bolder;
-}
-.author {
+    font-size: 1.25em;
     vertical-align: top;
     font-weight: bold;
-    font-size: 22px;
+}
+.author {
+    font-weight: bold;
 }
 div.viewCount {
     display: inline-block;
@@ -124,16 +125,11 @@ span.red {
 }
 .ratings {
     display: inline-block;
-    text-align: right;
-}
-.moreMeta, .vidTimestamp{
-    font-size:20px;
 }
 
 span#options {
   position: relative;
   display: inline-block;
-  font-size: 20px;
 }
 span#arrow {
     font-size: 16px;
@@ -142,6 +138,7 @@ span#arrow {
   display: none;
   font-size: 16px;
   position: absolute;
+  right: 0;
   background-color: #f7f7f7;
   min-width: 160px;
   width: max-content;
@@ -171,7 +168,7 @@ button {
     font-size: inherit;
 }
 button.send {
-    height: 48px;
+    height: 42px;
 }
 button.sendSort {
     height: 35px;
@@ -193,7 +190,6 @@ div#chooseLoad {
 }
 div#sortLoaded {
     display: none;
-    font-size: 20px;
 }
 div#statsOptions {
     display: none;
@@ -267,6 +263,12 @@ img.thumbnail {
 }
 #showMoreDiv {
     display: none;
+}
+#showMoreBtn {
+    height: 56px;
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 10px;
 }
 
 a.authorName {
