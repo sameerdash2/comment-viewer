@@ -314,7 +314,7 @@ class Video {
                     this._app.ytapi.quotaExceeded();
                 }
                 else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                    setTimeout(() => { this.fetchReplies(commentId, pageToken, silent) }, 1);
+                    setTimeout(() => { this.fetchReplies(commentId, pageToken, silent, replies) }, 1);
                 }                                
             });
     }
