@@ -31,7 +31,6 @@ export class Video {
     updateLoadStatus(count) {
         if (count == -1) {
             document.getElementById("loadStatus").innerHTML = `Loading is in progress. Please check back later`;
-            submitBtn.disabled = false;
         }
         else {
             let remaining = "";
@@ -135,7 +134,7 @@ export class Video {
         }
         else {
             metadata.style.display = "inline-block";
-            metadata.style.width = "calc(100% - 325px)";
+            metadata.style.width = this.options.showImg ? "calc(100% - 325px)" :  "100%";
         }
 
         if (this._metadataResizeTimeout) {

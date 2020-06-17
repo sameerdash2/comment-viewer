@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("enterID").focus();
     const video = new Video(socket);
 
-    let submitBtn = document.getElementById("submit");
     let message = document.getElementById("message");
     let commentsSection = document.getElementById("commentsSection");
     let loadStatus = document.getElementById("loadStatus");
@@ -16,9 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let showMoreBtn = document.getElementById("showMoreBtn");
     let linkedHolder = document.getElementById("linkedHolder");
     let terms = document.getElementById("terms");
-
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = "Submit";
 
     document.getElementById("viewTerms").addEventListener('click', (event) => {
         event.preventDefault();
@@ -48,7 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("submitAll").addEventListener('click', () => {
         document.getElementById("chooseLoad").style.display = "none";
-        submitBtn.disabled = true;
         loadStatus.innerHTML = "Initializing...";
         
         socket.emit("requestAll");
@@ -109,7 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("groupComments", ({ reset, items, showMore }) => {      
         message.innerHTML = "&nbsp;";
         if (reset) {
-            submitBtn.disabled = false;
             commentsSection.innerHTML = "";
             loadStatus.innerHTML = "";
             document.getElementById("sortLoaded").style.display = "block";

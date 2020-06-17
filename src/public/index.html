@@ -23,25 +23,24 @@
     <body>
         <main>
             <h1>Comment Viewer</h1>
-            <div id="intro">
-                Sort and graph YouTube comments <br>
+            <div id="intro">Sort and graph YouTube comments 
+                <span id="options"> Options <span id="arrow">▼</span>
+                    <div id="optionsContent">
+                        <div class="optionsHeader">Time zone</div>
+                        <input type="radio" id="selectLocal" name="timezone" value="local" checked>
+                        <label for="selectLocal" id="localLabel">Local time</label>
+                        <br>
+                        <input type="radio" id="selectUtc" name="timezone" value="utc">
+                        <label for="selectUtc" id="utcLabel">UTC</label>
+                        <br><hr class="opt">
+                        <input type="checkbox" id="noImg" value="Bike">
+                        <label for="noImg">Don't load images</label>
+                    </div>
+                </span>
+                <br>
                 <form id="videoForm" autocomplete="off">
                     <div id="inputRow">
                         <input class="mainInput" type="text" id="enterID" placeholder="Enter video or comment URL"/>
-                        <button id="submit" class="send" disabled>Loading...</button>
-                        <span id="options"> Options <span id="arrow">▼</span>
-                            <div id="optionsContent">
-                                <div class="optionsHeader">Time zone</div>
-                                <input type="radio" id="selectLocal" name="timezone" value="local" checked>
-                                <label for="selectLocal" id="localLabel">Local time</label>
-                                <br>
-                                <input type="radio" id="selectUtc" name="timezone" value="utc">
-                                <label for="selectUtc" id="utcLabel">UTC</label>
-                                <br><hr class="opt">
-                                <input type="checkbox" id="noImg" value="Bike">
-                                <label for="noImg">Don't load images</label>
-                            </div>
-                        </span>
                     </div>
                 </form>
             </div>

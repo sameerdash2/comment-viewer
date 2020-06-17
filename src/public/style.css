@@ -60,16 +60,17 @@ div#message {
     margin-top: 5px;
 }
 
+div#intro{
+    max-width: 1000px;
+}
+
 .mainInput {
-    width: 700px;
-    min-width: 100px;
-    max-width: calc(100% - 200px);
-    height: 36px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 42px;
+    padding: 0px 4px;
     font-family: inherit;
     font-size: inherit;
-}
-div#inputRow {
-    margin-top: 5px;
 }
 
 span#options:hover {
@@ -133,27 +134,28 @@ span.red {
 }
 
 span#options {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    float: right;
+    margin: 0px 0px 5px 5px;
 }
 span#arrow {
     font-size: 16px;
 }
 #optionsContent {
-  display: none;
-  font-size: 16px;
-  position: absolute;
-  right: 0;
-  background-color: #f7f7f7;
-  min-width: 160px;
-  width: max-content;
-  box-shadow: 8px 8px 12px 0px rgba(0,0,0,0.2);
-  padding: 8px;
-  z-index: 1;
+    display: none;
+    font-size: 16px;
+    position: absolute;
+    right: 0;
+    background-color: #f7f7f7;
+    min-width: 160px;
+    width: max-content;
+    box-shadow: 8px 8px 12px 0px rgba(0,0,0,0.2);
+    padding: 8px;
+    z-index: 1;
 }
 
 #options:hover #optionsContent {
-  display: block;
+    display: block;
 }
 div.optionsHeader {
     font-weight: bold;
