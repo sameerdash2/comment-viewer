@@ -1,13 +1,16 @@
+import { Graph } from "./graph.js";
 import { formatTitle, formatComment, eta, parseDurationMSS } from './util.js';
 
 export class Video {
     constructor(socket) {
         this._socket = socket;
+        this._graph = new Graph(this, socket);
         this.reset();
     }
-    reset() {        
+    reset() {
+        this._graph.reset();
         this._commentNum = 0;
-        this._options = {
+        this.options = {
             timezone: document.querySelector('input[name="timezone"]:checked').value,
             showImg: !document.getElementById("noImg").checked,
         };
@@ -21,7 +24,8 @@ export class Video {
         this.videoPublished = video.snippet.publishedAt; // for graph bound
         this._uploaderId = video.snippet.channelId; // for highlighting OP comments
         document.getElementById("message").innerHTML = "&nbsp;";
-        document.getElementById("info").innerHTML = formatTitle(video, this._options);
+        document.getElementById("info").innerHTML = formatTitle(video, this.options);
+        this.resizeMetadata();
     }
 
     updateLoadStatus(count) {
@@ -51,7 +55,7 @@ export class Video {
             if (this._linkedParent == items[i].id) continue;
     
             add += `<hr><div class="commentThreadDiv">`
-                + formatComment(items[i], this._commentNum, this._options, this._uploaderId, this._videoId, false, false) + `</div>`;		
+                + formatComment(items[i], this._commentNum, this.options, this._uploaderId, this._videoId, false, false) + `</div>`;		
         }
         document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
     }
@@ -65,7 +69,7 @@ export class Video {
             isLinked = items[i].id == this._currentLinked;
             className = isLinked ? "linked" : "commentThreadDiv";
             newContent +=`<div class="` + className + `">`
-                + formatComment(items[i], len - i, this._options, this._uploaderId, this._videoId, isLinked, true) + `</div>`;
+                + formatComment(items[i], len - i, this.options, this._uploaderId, this._videoId, isLinked, true) + `</div>`;
         }
         document.getElementById("repliesEE-" + id).style.display = "block";
         document.getElementById("repliesEE-" + id).innerHTML = newContent;
@@ -101,10 +105,42 @@ export class Video {
         this._currentLinked = reply ? reply.id : parent.id;
         
         document.getElementById("linkedHolder").innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-            + formatComment(parent, -1, this._options, this._uploaderId, videoObject.id, !hasReply, false) + `</div></section><hr><br>`;
+            + formatComment(parent, -1, this.options, this._uploaderId, videoObject.id, !hasReply, false) + `</div></section><hr><br>`;
         if (reply) {
             document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
-                + formatComment(reply, -1, this._options, this._uploaderId, videoObject.id, true, true) + `</div>`;
+                + formatComment(reply, -1, this.options, this._uploaderId, videoObject.id, true, true) + `</div>`;
         }
+    }
+
+    handleWindowResize() {
+        this.adjustMetadataElement();
+        this._graph.requestResize();
+    }
+
+    adjustMetadataElement() {
+        if (document.getElementById("metadata")) {
+            // Set timeout to resize only after a pause in window resize events, prevents CPU overload
+            if (this._metadataResizeTimeout) {
+                clearTimeout(this._metadataResizeTimeout);
+            }
+            this._metadataResizeTimeout = setTimeout(this.resizeMetadata, 100);
+        }
+    }
+
+    resizeMetadata = () => {
+        let metadata = document.getElementById("metadata");
+        if (document.documentElement.clientWidth < 700) {
+            metadata.style.display = "block";
+            metadata.style.width = "auto";
+        }
+        else {
+            metadata.style.display = "inline-block";
+            metadata.style.width = "calc(100% - 325px)";
+        }
+
+        if (this._metadataResizeTimeout) {
+            clearTimeout(this._metadataResizeTimeout);
+        }
+        this._metadataResizeTimeout = undefined;
     }
 }

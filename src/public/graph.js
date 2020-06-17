@@ -1,12 +1,28 @@
 const GRIDCOLOR = "rgba(0,0,0,0.1)";
 
 export class Graph {
-    constructor(socket) {
+    constructor(video, socket) {
+        this._video = video;
         this._socket = socket;
-        this._graphDisplayState = 0; //0=none, 1=loaded, 2=shown
-    }    
+        this.reset();
 
-    handleGraphButton() {       
+        document.getElementById("viewGraph").addEventListener('click', () => this.handleGraphButton());
+
+        this._socket.on("graphData", (dates) => this.constructGraph(dates));
+    }
+    reset() {
+        this._graphDisplayState = 0; //0=none, 1=loaded, 2=shown
+        this._graphInstance = undefined;
+    }
+
+    getGraphSize = () => {
+        return {
+            width: Math.max(250, Math.min(996, document.documentElement.clientWidth - 48 - 4)),
+            height: 400
+        };
+    }
+
+    handleGraphButton() {
         if (this._graphDisplayState == 2) {
             document.getElementById("graphContainer").style.display = "none";
             this._graphDisplayState = 1;
@@ -22,12 +38,12 @@ export class Graph {
         }
     }
 
-    constructGraph(dates, videoPublished) {
+    constructGraph(dates) {
         // Object to keep count 
         let dictionary = {}, len = dates.length;
-        let startDate = new Date(Math.min( new Date(videoPublished), new Date(dates[len - 1]) ));
+        let startDate = new Date(Math.min( new Date(this._video.videoPublished), new Date(dates[len - 1]) ));
         let endDate = new Date();
-        if (options.timezone == "utc") {
+        if (this._video.options.timezone == "utc") {
             startDate.setUTCHours(0,0,0,0);
             endDate.setUTCHours(0,0,0,0);
         }
@@ -39,7 +55,7 @@ export class Graph {
         // One key for each day, represented as unix time milliseconds
 		while (currentDate <= endDate) {
             dictionary[new Date(currentDate).getTime()] = 0;
-            if (options.timezone == "utc") {
+            if (this._video.options.timezone == "utc") {
                 currentDate.setUTCDate(currentDate.getUTCDate() + 1);
             }
             else {
@@ -49,7 +65,7 @@ export class Graph {
         // Populate date counts from comments
         let floorDate;
         for (let i = 0; i < len; i++) {
-            floorDate = (options.timezone == "utc") ? new Date(dates[i]).setUTCHours(0,0,0,0) : new Date(dates[i]).setHours(0,0,0,0);
+            floorDate = (this._video.options.timezone == "utc") ? new Date(dates[i]).setUTCHours(0,0,0,0) : new Date(dates[i]).setHours(0,0,0,0);
             dictionary[floorDate]++;
         }
         let data = [[], []];
@@ -78,9 +94,8 @@ export class Graph {
         }
 
         let opts = {
-            width: Math.max(250, Math.min(996, document.documentElement.clientWidth - 64)),
-            height: 400,
-            tzDate: (ts) => options.timezone == "utc"
+            ...this.getGraphSize(),
+            tzDate: (ts) => this._video.options.timezone == "utc"
                 ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),
             scales: {
                 'y': { range: (self, min, max) => [0, Math.max(5, Math.ceil(max * 1.02))] }
@@ -108,10 +123,8 @@ export class Graph {
                 {
                     // x series
                     label: "Date",
-                    value: (self, rawValue) => {
-                        return options.timezone == "utc"
-                            ? new Date(rawValue*1000).toISOString().substring(0, 10) : new Date(rawValue*1000).toLocaleDateString()
-                    },
+                    value: (self, rawValue) =>  this._video.options.timezone == "utc"
+                        ? new Date(rawValue*1000).toISOString().substring(0, 10) : new Date(rawValue*1000).toLocaleDateString(),
                 },
                 {
                     // y series
@@ -131,6 +144,29 @@ export class Graph {
         };
 
         this._graphInstance = new uPlot(opts, data, document.getElementById("graphSpace"));
-        setTimeout(() => document.getElementById("graphContainer").style.width = document.querySelector(".uplot").offsetWidth + "px", 0);
+        this.resizeGraphContainer();
+    }
+
+    requestResize() {
+        // Set timeout to resize only after a pause in window resize events, prevents CPU overload
+        if (this._graphInstance) {
+            if (this._resizeRequestTimeout) {
+                clearTimeout(this._resizeRequestTimeout); 
+            }
+            this._resizeRequestTimeout = setTimeout(this.resize, 100);
+        }
+    }
+    
+    resize = () => {
+        this._graphInstance.setSize(this.getGraphSize());
+        this.resizeGraphContainer();
+        if (this._resizeRequestTimeout) {
+            clearTimeout(this._resizeRequestTimeout);
+        }
+        this._resizeRequestTimeout = undefined;
+    }
+
+    resizeGraphContainer = () => {
+        document.getElementById("graphContainer").style.width = this.getGraphSize().width + "px";
     }
 }

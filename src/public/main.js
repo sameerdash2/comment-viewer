@@ -1,5 +1,4 @@
 import { Video } from "./video.js";
-import { Graph } from "./graph.js";
 
 const ERR = "#A00";
 const LOAD = "#666";
@@ -8,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const socket = io();
     document.getElementById("enterID").focus();
     const video = new Video(socket);
-    const graph = new Graph(socket);
 
     let submitBtn = document.getElementById("submit");
     let message = document.getElementById("message");
@@ -17,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let info = document.getElementById("info");
     let showMoreBtn = document.getElementById("showMoreBtn");
     let linkedHolder = document.getElementById("linkedHolder");
-    let viewGraph = document.getElementById("viewGraph");
     let terms = document.getElementById("terms");
 
     submitBtn.disabled = false;
@@ -34,6 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (event.target == terms) {
             terms.style.display = "none";
         }
+    });
+
+    window.addEventListener('resize', () => {
+        video.handleWindowResize();
     });
 
     document.getElementById("videoForm").addEventListener('submit', (event) => {
@@ -69,8 +70,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    viewGraph.addEventListener('click', () => graph.handleGraphButton());
-
     commentsSection.addEventListener('click', repliesButton);
     linkedHolder.addEventListener('click', repliesButton);
     function repliesButton(event) {
@@ -92,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
         let commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
-        viewGraph.style.display = graph ? "block" : "none";
+        document.getElementById("viewGraph").style.display = graph ? "block" : "none";
         if (disabled) {
             commentInfo.innerHTML = `<i class="fas fa-comment"></i> <span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
@@ -134,8 +133,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         video.handleLinkedComment(parent, hasReply ? reply : null);
     });
-
-    socket.on("graphData", (dates) => graph.constructGraph(dates, video.videoPublished));
 
     socket.on("resetPage", resetPage);
     function resetPage() {
