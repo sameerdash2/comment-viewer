@@ -104,10 +104,10 @@ export class Video {
         this._currentLinked = reply ? reply.id : parent.id;
         
         document.getElementById("linkedHolder").innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-            + formatComment(parent, -1, this.options, this._uploaderId, videoObject.id, !hasReply, false) + `</div></section><hr><br>`;
+            + formatComment(parent, -1, this.options, this._uploaderId, this._videoId, reply, false) + `</div></section><hr><br>`;
         if (reply) {
             document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
-                + formatComment(reply, -1, this.options, this._uploaderId, videoObject.id, true, true) + `</div>`;
+                + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, true, true) + `</div>`;
         }
     }
 
