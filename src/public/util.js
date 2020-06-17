@@ -68,7 +68,7 @@ export function formatTitle(video, options) {
                 </a>
             </div>
             <div class="author">
-				<a class="authorLink" href="https://www.youtube.com/channel/` + video.snippet.channelId
+				<a class="noColor" href="https://www.youtube.com/channel/` + video.snippet.channelId
 					+ `" target="_blank">` + video.snippet.channelTitle + `</a>
             </div>
             <div class="moreMeta">
