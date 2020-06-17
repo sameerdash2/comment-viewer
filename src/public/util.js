@@ -150,7 +150,7 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
         pfpSegment
         + `<div class="` + contentClass +`">
 			<div class="commentHeader">
-				<span ` + opSegment + `><a href="` + channelUrl + `" class="` + authorClass + `" target="_blank">` + item.authorDisplayName + `</a></span>
+				<span dir="auto"` + opSegment + `><a href="` + channelUrl + `" class="` + authorClass + `" target="_blank">` + item.authorDisplayName + `</a></span>
 				<span>|</span>
 				<span class="timeStamp">
 					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id + `" class="noColor" target="_blank">
@@ -159,7 +159,7 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
 				</span>
 				` + linkedSegment + numSegment + `
 			</div>
-			<div class="commentText">` + item.textDisplay + `</div>
+			<div class="commentText" dir="auto">` + item.textDisplay + `</div>
 			` + likeSegment + replySegment + `
 		</div>
     `;

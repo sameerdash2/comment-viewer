@@ -207,7 +207,7 @@ div#statsOptions {
 div.commentThreadDiv, div.linked {
     margin: 6px 0px;
     line-height: 1.5em;
-    /* overflow: hidden; */
+    text-align: left;
     white-space: nowrap;
 }
 
