@@ -144,9 +144,11 @@ class Video {
                 firstPinned = true;
             }
             let len = response.data.items.length;
+            let commentThread, newIndexed;
             let convertedComments = [];
             for (let i = 0; i < len; i++) {
-                let commentThread = response.data.items[i];
+                commentThread = response.data.items[i];
+                newIndexed = 1 + commentThread.snippet.totalReplyCount;
                 // If appending to database-stored comments, check if current comment has passed the date
                 // of the newest stored comment.
                 // Equal timestamps will slip through, but they should be taken care of by database.
@@ -156,10 +158,14 @@ class Video {
                         proceed = false;
                         break;
                     }
+                    else {
+                        // Don't count it since it's already been stored
+                        newIndexed = 0;
+                    }
                 }
                 convertedComments.push(Utils.convertComment(commentThread));
-                this._indexedComments += 1 + commentThread.snippet.totalReplyCount;
-                this._newComments += 1 + commentThread.snippet.totalReplyCount;
+                this._indexedComments += newIndexed;
+                this._newComments += newIndexed;
             }
 
             if (convertedComments.length > 0 && this._logToDatabase) {
