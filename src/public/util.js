@@ -130,7 +130,11 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
         likeSegment += `<div class="commentFooter"></div>`;
 	}
 
-	if (number > 0) numSegment += `<span class="num">#` + number + `</span>`;
+    if (number > 0) {
+        numSegment +=
+            `<span class="num"><a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id
+            + `" class="noColor" target="_blank">#` + number + `</a></span>`;
+    }
 
     let authorClass = "authorName";
     if (item.authorChannelId == uploaderId) { 
@@ -149,7 +153,7 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
 				<span ` + opSegment + `><a href="` + channelUrl + `" class="` + authorClass + `" target="_blank">` + item.authorDisplayName + `</a></span>
 				<span>|</span>
 				<span class="timeStamp">
-					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id + `" class="timeStampLink" target="_blank">
+					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id + `" class="noColor" target="_blank">
 						` + timeString + `
 					</a>
 				</span>

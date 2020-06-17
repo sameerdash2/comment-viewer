@@ -297,14 +297,6 @@ a.authorName:hover, a.authorNameOp:hover {
     text-decoration: underline;
 }
 
-a.timeStampLink {
-    color: #000;
-    text-decoration: none;
-}
-a.timeStampLink:hover {
-    text-decoration: underline;
-}
-
 a.noColor {
     color: inherit;
     text-decoration: none;
