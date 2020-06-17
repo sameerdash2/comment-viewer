@@ -1,4 +1,4 @@
-function formatTitle(video, options) {
+export function formatTitle(video, options) {
     let liveState = video.snippet.liveBroadcastContent;
 
     // casting in order to use toLocaleString()
@@ -82,7 +82,7 @@ function formatTitle(video, options) {
 	return newContent;
 }
 
-function formatComment(item, number, options, uploaderId, videoId, linked = false, reply = false) {
+export function formatComment(item, number, options, uploaderId, videoId, linked = false, reply = false) {
 	let content = "";
 	let contentClass;
 	if (reply) {
@@ -163,7 +163,7 @@ function formatComment(item, number, options, uploaderId, videoId, linked = fals
     return content;
 }
 
-function parseTimestamp(iso, timezone) {
+export function parseTimestamp(iso, timezone) {
     let date = new Date(iso);
     if (isNaN(date)) {
         return `<span class="gray">(No date)</span>`;
@@ -181,20 +181,20 @@ function parseTimestamp(iso, timezone) {
     return output;
 }
 
-function parseDurationMSS(timeSeconds) {
+export function parseDurationMSS(timeSeconds) {
     let minutes = Math.floor(timeSeconds / 60);
     let seconds = timeSeconds % 60;
     return minutes + ':' + ('0' + seconds).slice(-2);
 }
 
-function parseDurationHMMSS(timeSeconds) {
+export function parseDurationHMMSS(timeSeconds) {
     let hours = Math.floor(timeSeconds / 60 / 60);
     let minutes = Math.floor(timeSeconds / 60) % 60;
     let seconds = timeSeconds % 60;
     return hours + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
 }
 
-function eta(x) {
+export function eta(x) {
     // Estimates number of seconds to load x comments
     return Math.floor(x / 250) + 1;
 }

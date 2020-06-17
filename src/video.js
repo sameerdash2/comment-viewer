@@ -31,7 +31,7 @@ class Video {
         return this._app.ytapi.executeVideo(idString).then((response) => {
             if (response.data.pageInfo.totalResults > 0) {
                 this.handleNewVideo(response.data.items[0]);
-                this._socket.emit("videoInfo", { video:this._video });
+                this._socket.emit("videoInfo", { videoObject:this._video });
             }
             else {
                 this._socket.emit("idInvalid");
@@ -255,7 +255,7 @@ class Video {
     }
 
     sendLinkedComment(parent, reply, video) {
-        this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, video: video});
+        this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
     sendLoadedComments(newSet = false) {
