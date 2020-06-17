@@ -101,7 +101,7 @@ class Video {
                             // Re-fetching is necessary to account for deleted comments, number of likes changing, etc.
                             // Current criteria: Comment count has doubled OR 6 months have passed (this will probably change)
                             const sixMonths = 6*30*24*60*60*1000;
-                            if (row.commentCount * 2 < this._commentCount || (new Date().getTime() - row.lastUpdated) > sixMonths) {
+                            if (row.initialCommentCount * 2 < this._commentCount || (new Date().getTime() - row.lastUpdated) > sixMonths) {
                                 this._app.database.resetVideo(this._video, retrieveAllComments);
                             }
                             else {

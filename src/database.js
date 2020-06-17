@@ -4,7 +4,8 @@ class Database {
     constructor() {
         this._db = new sqlite.Database('database.sql');
 
-        this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL)');
+        this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT, '
+            + 'commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL)');
         setInterval(this.cleanup, 24*60*60*1000);
     }
 
@@ -14,16 +15,17 @@ class Database {
 
     addVideo(video, callback) {
         let now = new Date().getTime();
-        this._db.run('INSERT OR REPLACE INTO videos(id, commentCount, retrievedAt, lastUpdated, inProgress) VALUES(?, ?, ?, ?, true)',
-            [video.id, video.statistics.commentCount, now, now]);
+        this._db.run('INSERT OR REPLACE INTO videos(id, initialCommentCount, commentCount, '
+            + 'retrievedAt, lastUpdated, inProgress) VALUES(?, ?, ?, ?, ?, true)',
+            [video.id, video.statistics.commentCount, video.statistics.commentCount, now, now]);
         this._db.run('CREATE TABLE IF NOT EXISTS `' + video.id + '`(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT, '
             + 'authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT, '
             + 'totalReplyCount SMALLINT)', (result, err) => callback());
     }
 
     reAddVideo(video, callback) {
-        this._db.run('UPDATE videos SET lastUpdated = ?, inProgress = true WHERE id = ?',
-            [new Date().getTime(), video.id], (result, err) => callback());
+        this._db.run('UPDATE videos SET commentCount = ?, lastUpdated = ?, inProgress = true WHERE id = ?',
+            [video.statistics.commentCount, new Date().getTime(), video.id], (result, err) => callback());
     }
 
     resetVideo(video, callback) {
