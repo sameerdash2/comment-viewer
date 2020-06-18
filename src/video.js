@@ -188,7 +188,7 @@ class Video {
                 this._app.database.markVideoComplete(this._id);
 
                 let elapsed = new Date().getTime() - this._startTime.getTime();
-                console.log("Retrieved all " + this._newComments + " comments in " + elapsed
+                console.log("Retrieved: Video " + this._id + ", " + this._newComments + " comments in " + elapsed
                     + "ms, CPS = " + (this._newComments / elapsed * 1000));
                 
                 // Send the first batch of comments
@@ -340,11 +340,25 @@ class Video {
         if (this._graphAvailable) {
             // Send array of dates to client
             this._app.database.getAllDates(this._id, (rows) => {
-                let dates = [];
-                for (let i = 0; i < rows.length; i++) {
-                    dates.push(rows[i].publishedAt);
+                let dates = new Array(rows.length);
+
+                // Populate dates array in chunks of 1000 to ease CPU load                    
+                let i = 0;
+                let processChunk = () => {
+                    let count = 0;
+                    while (count++ < 1000 && i < rows.length) {
+                        dates[i] = rows[i].publishedAt;
+                        i++;
+                    }
+                    if (i < rows.length) {
+                        setTimeout(processChunk, 5);
+                    }
+                    else {
+                        this._socket.emit("graphData", dates);
+                        dates = undefined;
+                    }
                 }
-                this._socket.emit("graphData", dates);
+                processChunk();
             });
         }
     }

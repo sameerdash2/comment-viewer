@@ -17,12 +17,8 @@ class App {
 
     createServer() {
         io.on('connection', (socket) => {
-            console.log('a user connected');
             let videoInstance = new Video(this, socket);
             
-            socket.on('disconnect', () => {
-                console.log('user disconnected');
-            });
             socket.on('idSent', (id) => {
                 if (!checkSendID(id)) socket.emit("idInvalid");
             });
