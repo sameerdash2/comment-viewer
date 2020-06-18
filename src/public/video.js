@@ -60,35 +60,20 @@ export class Video {
     }
 
     handleNewReplies(id, items) {
-        let len = items.length;
         this._storedReplies[id] = items;
-        let newContent = "";
-        let isLinked, className;
-        for (let i = len - 1; i >= 0; i--) {
-            isLinked = items[i].id == this._currentLinked;
-            className = isLinked ? "linked" : "commentThreadDiv";
-            newContent +=`<div class="` + className + `">`
-                + formatComment(items[i], len - i, this.options, this._uploaderId, this._videoId, isLinked, true) + `</div>`;
-        }
-        document.getElementById("repliesEE-" + id).style.display = "block";
-        document.getElementById("repliesEE-" + id).innerHTML = newContent;
-        this._displayedReplies.add(id);
-        document.getElementById("getReplies-" + id).innerHTML = "Hide " + len + " replies";
-        document.getElementById("getReplies-" + id).disabled = false;
+        this.populateReplies(id);
     }
 
     handleRepliesButton(button) {
         let commentId = button.id.substring(11);
         if (this._storedReplies[commentId]) {
-            let expanded = document.getElementById("repliesEE-" + commentId);
             if (this._displayedReplies.has(commentId)) {
-                expanded.style.display = "none";
+                document.getElementById("repliesEE-" + commentId).style.display = "none";
                 button.innerHTML = "Show " + this._storedReplies[commentId].length + " replies";
                 this._displayedReplies.delete(commentId);
             }
             else {
-                expanded.style.display = "block";
-                button.innerHTML = "Hide " + this._storedReplies[commentId].length + " replies";
+                this.populateReplies(commentId);
                 this._displayedReplies.add(commentId);
             }
         }
@@ -97,6 +82,23 @@ export class Video {
             button.innerHTML = "Loading...";
             this._socket.emit("replyRequest", commentId);
         }
+    }
+
+    populateReplies(commentId) {
+        let len = this._storedReplies[commentId].length;
+        let newContent = "";
+        let isLinked, className;
+        for (let i = len - 1; i >= 0; i--) {
+            isLinked = this._storedReplies[commentId][i].id == this._currentLinked;
+            className = isLinked ? "linked" : "commentThreadDiv";
+            newContent +=`<div class="` + className + `">`
+                + formatComment(this._storedReplies[commentId][i], len - i, this.options, this._uploaderId, this._videoId, isLinked, true) + `</div>`;
+        }
+        document.getElementById("repliesEE-" + commentId).style.display = "block";
+        document.getElementById("repliesEE-" + commentId).innerHTML = newContent;
+        this._displayedReplies.add(commentId);
+        document.getElementById("getReplies-" + commentId).innerHTML = "Hide " + len + " replies";
+        document.getElementById("getReplies-" + commentId).disabled = false;
     }
 
     handleLinkedComment(parent, reply) {
