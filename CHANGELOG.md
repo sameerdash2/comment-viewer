@@ -1,3 +1,12 @@
+**2.1.1** (17 June 2020)
+- Better dynamic resizing on window resize
+- Added comment permalink on the comment numbers
+- Updated home page to hide input box after enter
+- Organized frontend code into different files
+- Server now loads graph data in chunks of 1000 to ease CPU load
+- Fixed load progress showing over 100% due to pinned comment & its replies being recounted
+- Fixed RTL text not displaying properly
+
 **2.1.0** (16 June 2020)
 - Switched to columns instead of raw JSON for storing comments. (75% space decrease!)
 - Server no longer retains comments in memory; they are only served from the database.
