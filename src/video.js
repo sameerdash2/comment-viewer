@@ -105,12 +105,12 @@ class Video {
                                 this._app.database.resetVideo(this._video, retrieveAllComments);
                             }
                             else {
-                                this._indexedComments = row.commentCount;                                
+                                this._indexedComments = row.commentCount;
                                 // 5-minute cooldown before retrieving new comments
                                 if ((new Date().getTime() - row.lastUpdated) > 5*60*1000) {
                                     this._app.database.reAddVideo(this._video, () => {
                                         this._app.database.getLastDate(this._id, (row) => {
-                                            this._lastDate = row.publishedAt;
+                                            this._lastDate = row['MAX(publishedAt)'];
                                             retrieveNewComments();
                                         });
                                     });
@@ -272,7 +272,9 @@ class Video {
         let sortBy = (this._currentSort == "likesMost" || this._currentSort == "likesLeast") ? "likeCount" : "publishedAt";
         sortBy += (this._currentSort == "dateOldest" || this._currentSort == "likesLeast") ? " ASC" : " DESC";
 
+        let a = new Date();
         this._app.database.getComments(this._id, config.maxDisplay, this._commentIndex, sortBy, (err, rows) => {
+            console.log("reading sort",sortBy,"offset",this._commentIndex,"took",new Date()-a,"ms");
             if (err) {
                 console.log(err);
             }
@@ -339,7 +341,10 @@ class Video {
     makeGraph() {
         if (this._graphAvailable) {
             // Send array of dates to client
+            let a = new Date();
             this._app.database.getAllDates(this._id, (rows) => {
+                let b = new Date();
+                console.log("db dates took",b-a,"ms");
                 let dates = new Array(rows.length);
 
                 // Populate dates array in chunks of 1000 to ease CPU load                    
@@ -355,6 +360,8 @@ class Video {
                     }
                     else {
                         this._socket.emit("graphData", dates);
+                        let c = new Date();
+                        console.log("dates array (all chunks) took",c-b,"ms");
                         dates = undefined;
                     }
                 }
