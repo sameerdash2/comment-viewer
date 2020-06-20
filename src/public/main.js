@@ -4,7 +4,10 @@ const ERR = "#A00";
 const LOAD = "#666";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const socket = io();
+    const socket = io(undefined, {
+        reconnectionDelayMax: 30000,
+        randomizationFactor: 0
+    });
     document.getElementById("enterID").focus();
     const video = new Video(socket);
 
