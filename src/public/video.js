@@ -45,6 +45,7 @@ export class Video {
     handleGroupComments(reset, items) {
         if (reset) {
             this._commentNum = 0;
+            this._storedReplies = {};
             this._displayedReplies = new Set();
         }
         let add = "";
@@ -73,7 +74,8 @@ export class Video {
                 this._displayedReplies.delete(commentId);
             }
             else {
-                this.populateReplies(commentId);
+                document.getElementById("repliesEE-" + commentId).style.display = "block";
+                button.innerHTML = "Hide " + this._storedReplies[commentId].length + " replies";
                 this._displayedReplies.add(commentId);
             }
         }
