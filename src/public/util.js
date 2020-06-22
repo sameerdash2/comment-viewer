@@ -185,6 +185,38 @@ export function parseTimestamp(iso, timezone) {
     return output;
 }
 
+export function incrementDate(date, unit, isUtc) {
+    switch (unit) {
+        case "year":
+            isUtc ? date.setUTCFullYear(date.getUTCFullYear() + 1) : date.setFullYear(date.getFullYear() + 1);
+            break;
+        case "month":
+            isUtc ? date.setUTCMonth(date.getUTCMonth() + 1) : date.setMonth(date.getMonth() + 1);
+            break;
+        case "day":
+            isUtc ? date.setUTCDate(date.getUTCDate() + 1) : date.setDate(date.getDate() + 1);
+            break;
+        case "hour":
+            isUtc ? date.setUTCHours(date.getUTCHours() + 1) : date.setHours(date.getHours() + 1);
+            break;
+    }
+}
+
+export function floorDate(date, unit, isUtc) {
+    switch (unit) {
+        // No breaks, because each date needs to be floored down to the smallest unit.
+        case "year":
+            isUtc ? date.setUTCMonth(0) : date.setMonth(0);
+        case "month":
+            isUtc ? date.setUTCDate(1) : date.setDate(1);
+        case "day":
+            isUtc ? date.setUTCHours(0) : date.setHours(0);
+        case "hour":
+            isUtc ? date.setUTCMinutes(0, 0, 0) : date.setMinutes(0, 0, 0);
+    }
+    return date;
+}
+
 export function parseDurationMSS(timeSeconds) {
     let minutes = Math.floor(timeSeconds / 60);
     let seconds = timeSeconds % 60;

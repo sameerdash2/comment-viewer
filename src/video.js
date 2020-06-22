@@ -53,7 +53,8 @@ class Video {
             // for upcoming/live streams, disregard a 0 count.
             if (!(this._video.snippet.liveBroadcastContent != "none" && this._commentCount == 0)) {
                 let beginLoad = this._commentCount < 200;
-                this._graphAvailable = this._commentCount >= 50 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 24*60*60*1000);
+                // Make graph available if 1 hour has passed, to ensure at least 2 points on the graph
+                this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 60*60*1000);
                 this._socket.emit("commentsInfo", { num: this._commentCount, disabled: false,
                     commence: beginLoad, max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1, graph: this._graphAvailable });
                 if (beginLoad && this._commentCount > 0) {

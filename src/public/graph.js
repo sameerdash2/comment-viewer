@@ -1,4 +1,8 @@
+import { incrementDate, floorDate } from './util.js';
+
 const GRIDCOLOR = "rgba(0,0,0,0.1)";
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const HOUR = 60*60*1000, DAY = 24 * HOUR, MONTH = 30 * DAY, YEAR = 365 * DAY;
 
 export class Graph {
     constructor(video, socket) {
@@ -7,12 +11,33 @@ export class Graph {
         this.reset();
 
         document.getElementById("viewGraph").addEventListener('click', () => this.handleGraphButton());
+        document.getElementById("intervalSelect").onchange = () => this.intervalChange();
 
         this._socket.on("graphData", (dates) => this.constructGraph(dates));
     }
     reset() {
         this._graphDisplayState = 0; //0=none, 1=loaded, 2=shown
         this._graphInstance = undefined;
+        this._rawDates = [];
+        this._leftBound = undefined;
+        this._interval = undefined;
+        this._datasets = {
+            "hour": undefined,
+            "day": undefined,
+            "month": undefined,
+            "year": undefined
+        };
+    }
+
+    intervalChange() {
+        let interval = document.getElementById("intervalSelect").value;
+        if (interval != this._interval) {
+            this._interval = interval;
+            if (!this._datasets[this._interval]) {
+                this.buildDataArray(this._interval);
+            }
+            this._graphInstance.setData(this._datasets[this._interval]);
+        }
     }
 
     getGraphSize = () => {
@@ -38,51 +63,90 @@ export class Graph {
         }
     }
 
-    constructGraph(dates) {
-        // Object to keep count 
-        let dictionary = {}, len = dates.length;
-        let startDate = new Date(Math.min( new Date(this._video.videoPublished), new Date(dates[len - 1]) ));
-        let endDate = new Date();
-        if (this._video.options.timezone == "utc") {
-            startDate.setUTCHours(0,0,0,0);
-            endDate.setUTCHours(0,0,0,0);
-        }
-        else {
-            startDate.setHours(0,0,0,0);
-            endDate.setHours(0,0,0,0);
-        }
+    buildDataArray(interval) {
+        let dateMap = {};
+        let isUtc = this._video.options.timezone == "utc";
+        
+        let startDate = floorDate(new Date(this._leftBound), interval, isUtc);
+        let endDate = floorDate(new Date(), interval, isUtc);
+
         let currentDate = startDate;
-        // One key for each day, represented as unix time milliseconds
-		while (currentDate <= endDate) {
-            dictionary[new Date(currentDate).getTime()] = 0;
-            if (this._video.options.timezone == "utc") {
-                currentDate.setUTCDate(currentDate.getUTCDate() + 1);
-            }
-            else {
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-		}
-        // Populate date counts from comments
-        let floorDate;
-        for (let i = 0; i < len; i++) {
-            floorDate = (this._video.options.timezone == "utc") ? new Date(dates[i]).setUTCHours(0,0,0,0) : new Date(dates[i]).setHours(0,0,0,0);
-            dictionary[floorDate]++;
-        }
-        let data = [[], []];
-        for (let key in dictionary) {
-            // Graph requires seconds. All comments have 000 ms, but flooring to be safe
-            data[0].push(Math.floor(key / 1000));
-            data[1].push(dictionary[key]);
+        // One key for each unit
+        while (currentDate <= endDate) {
+            dateMap[new Date(currentDate).getTime()] = 0;
+            incrementDate(currentDate, interval, isUtc);
         }
 
-        this.drawGraph(data);
+        // Populate date counts from comments
+        for (let i = 0; i < this._rawDates.length; i++) {
+            dateMap[floorDate(new Date(this._rawDates[i]), interval, isUtc).getTime()]++;
+        }
+
+        // Build dataset for graph
+        let data = [[], []];
+        for (let key in dateMap) {
+            data[0].push(Math.floor(key / 1000));
+            data[1].push(dateMap[key]);
+        }
+        this._datasets[interval] = data;
+    }
+
+    constructGraph(dates) {
+        this._rawDates = dates;
+
+        // Begin from video publish date, or the first comment if its date precedes the video's
+        this._leftBound = Math.min( new Date(this._video.videoPublished), new Date(this._rawDates[this._rawDates.length - 1]) );
+        let graphDomainLength = new Date().getTime() - new Date(this._leftBound).getTime();
+
+        // Graph's x-axis breaks if there's only one point (may be a side effect of distr: 2).
+        // Make available only the intervals that result in the graph having more than 1 point
+        document.getElementById("optHour").disabled = graphDomainLength < 1 * HOUR;
+        document.getElementById("optDay").disabled = graphDomainLength < 1 * DAY;
+        document.getElementById("optMonth").disabled = graphDomainLength < 1 * MONTH;
+        document.getElementById("optYear").disabled = graphDomainLength < 1 * YEAR;
+
+        // Pick an interval based on the graph domain length
+        this._interval = "hour";
+        if (graphDomainLength > 2 * DAY) this._interval = "day";
+        if (graphDomainLength > 1 * YEAR) this._interval = "month";
+        if (graphDomainLength > 10 * YEAR) this._interval = "year";
+
+        document.getElementById("intervalSelect").value = this._interval;
+        this.buildDataArray(this._interval);
+
+        this.drawGraph(this._interval);
         document.getElementById("graphContainer").style.display = "block";
         this._graphDisplayState = 2;
         document.getElementById("viewGraph").disabled = false;
         document.getElementById("viewGraph").innerHTML = "Toggle graph";
     }
 
-    drawGraph(data) {
+    makeLabel(rawValue, isUtc) {
+        let output = "";
+        let date = new Date(rawValue*1000);
+        switch (this._interval) {
+            case "year":
+                output = isUtc ? date.getUTCFullYear() : date.getFullYear();
+                break;
+            case "month":
+                output = isUtc ? MONTHS[date.getUTCMonth()] + " " + date.getUTCFullYear()
+                    : MONTHS[date.getMonth()] + " " + date.getFullYear();
+                break;
+            case "day":
+                output = isUtc ? date.toISOString().substring(0, 10) : date.toLocaleDateString();
+                break;
+            case "hour":
+                output = isUtc ? date.toISOString().replace("T", " ").substring(0, 16)
+                    : date.toLocaleDateString(undefined, { hour: "numeric", hour12: true });
+                break;
+        }
+        return output;
+    }
+
+    drawGraph(interval) {
+        if (this._graphInstance) this._graphInstance.destroy();
+
+        let isUtc = this._video.options.timezone == "utc";
         let axis = {
             font: "16px Open Sans",
             grid: { stroke: GRIDCOLOR, },
@@ -95,25 +159,13 @@ export class Graph {
 
         let opts = {
             ...this.getGraphSize(),
-            tzDate: (ts) => this._video.options.timezone == "utc"
-                ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),
+            tzDate: (ts) => isUtc ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),
             scales: {
-                'y': { range: (self, min, max) => [0, Math.max(5, Math.ceil(max * 1.02))] }
+                'x': { distr: 2 },
+                'y': { range: (_self, _min, max) => [0, Math.max(5, Math.ceil(max * 1.02))] }
             },
             axes: [
-                {
-                    ...axis,
-                    // custom values to hide hours/mins when zooming in
-                    values: [
-                        [3600 * 24 * 365,    "{YYYY}",  7, "",         1],
-                        [3600 * 24 * 28,     "{MMM}",   7, "\n{YYYY}", 1],
-                        [3600 * 24,          "{M}/{D}", 7, "\n{YYYY}", 1],
-                        [3600,               "",        4, "{M}/{D}",  1],
-                        [60,                 "",        4, "{M}/{D}",  1],
-                        [1,                  "",        4, "{M}/{D}",  1],
-                        [0.001,              "",        4, "{M}/{D}",  1],
-                    ],
-                },
+                axis,
                 {
                     ...axis,
                     size: 60
@@ -123,13 +175,12 @@ export class Graph {
                 {
                     // x series
                     label: "Date",
-                    value: (self, rawValue) =>  this._video.options.timezone == "utc"
-                        ? new Date(rawValue*1000).toISOString().substring(0, 10) : new Date(rawValue*1000).toLocaleDateString(),
+                    value: (_self, rawValue) => this.makeLabel(rawValue, isUtc),
                 },
                 {
                     // y series
                     label: "Comments",
-                    value: (self, rawValue) => rawValue.toLocaleString(),
+                    value: (_self, rawValue) => rawValue.toLocaleString(),
                     stroke: "blue",
                     width: 2,
                     points: {
@@ -143,7 +194,7 @@ export class Graph {
             },
         };
 
-        this._graphInstance = new uPlot(opts, data, document.getElementById("graphSpace"));
+        this._graphInstance = new uPlot(opts, this._datasets[interval], document.getElementById("graphSpace"));
         this.resizeGraphContainer();
     }
 

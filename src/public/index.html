@@ -67,14 +67,21 @@
             </div>
             <div id="graphContainer">
                 <div id="graphSpace"></div>
-                <div id="graphDesc">Drag to zoom, double-click to reset</div>
+                <div id="graphFooter">
+                    <span id="graphDesc">Drag to zoom, double-click to reset</span>
+                    <span id="interval">Aggregate by:
+                        <select name="interval" id="intervalSelect">
+                            <option id="optHour" value="hour">Hour</option>
+                            <option id="optDay" value="day">Day</option>
+                            <option id="optMonth" value="month">Month</option>
+                            <option id="optYear" value="year">Year</option>
+                        </select>
+                    </span>
+                </div>
             </div>
             <br>
             <div id="linkedHolder" class="commentsList"></div>
             <div id="chooseLoad" class="choose">
-                <!-- <div>Load comments by:</div> -->
-                <!-- <button id="submitDesc" class="send" onclick="handleLoad('time', false)">Date (newest first)</button>
-                <button id="submitRel" class="send" onclick="handleLoad('relevance', false)">Relevance</button> -->
                 <button id="submitAll" class="send">Load all comments</button>
             </div>
             <div id="sortLoaded" class="choose">
