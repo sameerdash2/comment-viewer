@@ -1,4 +1,4 @@
-import { incrementDate, floorDate } from './util.js';
+import { shiftDate, floorDate } from './util.js';
 
 const GRIDCOLOR = "rgba(0,0,0,0.1)";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -30,13 +30,48 @@ export class Graph {
     }
 
     intervalChange() {
-        let interval = document.getElementById("intervalSelect").value;
-        if (interval != this._interval) {
-            this._interval = interval;
-            if (!this._datasets[this._interval]) {
-                this.buildDataArray(this._interval);
+        let newInterval = document.getElementById("intervalSelect").value;
+        if (newInterval != this._interval) {
+            let isUtc = this._video.options.timezone == "utc";
+
+            // Save the left & right graph bounds to keep the zoomed space.
+            let leftBound = this._graphInstance.series[0].min;
+
+            let xMax = new Date(this._graphInstance.series[0].max * 1000);
+            // Increment the right bound to make sure the entire range is spanned.
+            // Example: interval is "month" & right bound is June 2020 (6/1/2020, 12:00 AM)
+            // When switching to "day", the resulting range would only go until June 1 (not June 30 as expected)
+            // Solve this by incrementing the right bound to July 2020 (7/1/2020 12:00 AM)
+            shiftDate(xMax, this._interval, 1, isUtc);
+            // Now "day" would cover until July 1, an extra day past June 30
+            // Solve this by decrementing using the new interval
+            shiftDate(xMax, newInterval, -1, isUtc);
+            let rightBound = xMax.getTime() / 1000;
+
+            // Build the graph data array if needed
+            if (!this._datasets[newInterval]) {
+                this.buildDataArray(newInterval);
             }
-            this._graphInstance.setData(this._datasets[this._interval]);
+            this._graphInstance.setData(this._datasets[newInterval]);
+
+            // Determine new left & right indexes based on the bounds
+            let len = this._datasets[newInterval][0].length;
+            let leftIndex = len - 1, rightIndex = 0;
+            while (rightIndex < len - 1 && this._datasets[newInterval][0][rightIndex] < rightBound) {
+                rightIndex++;
+            }
+            while (leftIndex > 0 && this._datasets[newInterval][0][leftIndex] > leftBound) {
+                leftIndex--;
+            }
+            if (leftIndex == rightIndex) {
+                // Due to distr: 2, the graph can't show only one data point
+                // Widen the range by 1 on each side if possible
+                leftIndex = Math.max(0, leftIndex - 1);
+                rightIndex = Math.min(len - 1, rightIndex + 1);
+            }
+
+            this._graphInstance.setScale("x", { min:leftIndex, max:rightIndex });
+            this._interval = newInterval;
         }
     }
 
@@ -74,7 +109,7 @@ export class Graph {
         // One key for each unit
         while (currentDate <= endDate) {
             dateMap[new Date(currentDate).getTime()] = 0;
-            incrementDate(currentDate, interval, isUtc);
+            shiftDate(currentDate, interval, 1, isUtc);
         }
 
         // Populate date counts from comments

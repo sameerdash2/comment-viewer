@@ -185,19 +185,19 @@ export function parseTimestamp(iso, timezone) {
     return output;
 }
 
-export function incrementDate(date, unit, isUtc) {
+export function shiftDate(date, unit, amt, isUtc) {
     switch (unit) {
         case "year":
-            isUtc ? date.setUTCFullYear(date.getUTCFullYear() + 1) : date.setFullYear(date.getFullYear() + 1);
+            isUtc ? date.setUTCFullYear(date.getUTCFullYear() + amt) : date.setFullYear(date.getFullYear() + amt);
             break;
         case "month":
-            isUtc ? date.setUTCMonth(date.getUTCMonth() + 1) : date.setMonth(date.getMonth() + 1);
+            isUtc ? date.setUTCMonth(date.getUTCMonth() + amt) : date.setMonth(date.getMonth() + amt);
             break;
         case "day":
-            isUtc ? date.setUTCDate(date.getUTCDate() + 1) : date.setDate(date.getDate() + 1);
+            isUtc ? date.setUTCDate(date.getUTCDate() + amt) : date.setDate(date.getDate() + amt);
             break;
         case "hour":
-            isUtc ? date.setUTCHours(date.getUTCHours() + 1) : date.setHours(date.getHours() + 1);
+            isUtc ? date.setUTCHours(date.getUTCHours() + amt) : date.setHours(date.getHours() + amt);
             break;
     }
 }
