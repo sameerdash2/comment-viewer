@@ -134,7 +134,7 @@ class Video {
         }
     }
 
-    fetchAllComments(pageToken, appending) {
+    fetchAllComments(pageToken, appending, consecutiveErrors = 0) {
         this._app.ytapi.executeCommentChunk(this._id, pageToken).then((response) => {
             let proceed = true;
             // Pinned comments always appear first regardless of their date (thanks google)
@@ -196,12 +196,19 @@ class Video {
                 this.sendLoadedComments(true);
             }
         }, (err) => {
-                console.error("Comments execute error", err.response.data.error);
-                if (err.response.data.error.errors[0].reason == "quotaExceeded") {
-                    this._app.ytapi.quotaExceeded();
+                console.error(new Date().toISOString(),"Comments execute error", err.response.data.error);
+                if (consecutiveErrors < 20) {
+                    let error = err.response.data.error.errors[0];
+                    if (error.reason == "quotaExceeded") {
+                        this._app.ytapi.quotaExceeded();
+                    }
+                    else {
+                        // Retry
+                        setTimeout(() => this.fetchAllComments(pageToken, appending, ++consecutiveErrors), 1);
+                    }
                 }
-                else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                    setTimeout(() => { this.fetchAllComments(pageToken, appending) }, 1);
+                else {
+                    console.log("Ending fetch process on " + this._id + " due to " + consecutiveErrors + " consecutive errors.");
                 }
             });
     }
