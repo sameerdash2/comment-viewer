@@ -142,8 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
         linkedHolder.innerHTML = "";
         commentsSection.innerHTML = "";
         document.getElementById("limitMessage").innerHTML = "";
-        document.getElementById("statusComments").innerHTML = "0";
-        document.getElementById("statusEta").innerHTML = '--';
+        document.getElementById("loadPercentage").innerHTML = "0.0%";
+        document.getElementById("loadEta").innerHTML = '--';
         document.getElementById("progressGreen").style.width = "0%";
         
         document.getElementById("chooseLoad").style.display = "none";

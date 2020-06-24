@@ -30,12 +30,14 @@ export class Video {
 
     updateLoadStatus(count) {
         if (count == -1) {
-            document.getElementById("limitMessage").innerHTML = `Loading is in progress. Please check back later`;
+            document.getElementById("limitMessage").innerHTML =
+                `Loading is in progress. Please check back later`;
         }
         else {
             let percent = (Math.round(count / this._totalExpected * 1000) / 10).toFixed(1) + '%';
-            document.getElementById("statusComments").innerHTML = count.toLocaleString() + ' (' + percent + ')';
-            document.getElementById("statusEta").innerHTML = '~' + parseDurationMSS(Math.max(0, eta(this._totalExpected - count)));
+            document.getElementById("loadPercentage").innerHTML = percent;
+            document.getElementById("loadEta").innerHTML = '~'
+                + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
             document.getElementById("progressGreen").style.width = percent;
         }
     }
@@ -92,7 +94,8 @@ export class Video {
             isLinked = this._storedReplies[commentId][i].id == this._currentLinked;
             className = isLinked ? "linked" : "commentThreadDiv";
             newContent +=`<div class="` + className + `">`
-                + formatComment(this._storedReplies[commentId][i], len - i, this.options, this._uploaderId, this._videoId, isLinked, true) + `</div>`;
+                + formatComment(this._storedReplies[commentId][i], len - i, this.options,
+                    this._uploaderId, this._videoId, isLinked, true) + `</div>`;
         }
         document.getElementById("repliesEE-" + commentId).style.display = "block";
         document.getElementById("repliesEE-" + commentId).innerHTML = newContent;
@@ -105,11 +108,15 @@ export class Video {
         this._linkedParent = parent.id;
         this._currentLinked = reply ? reply.id : parent.id;
         
-        document.getElementById("linkedHolder").innerHTML = `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-            + formatComment(parent, -1, this.options, this._uploaderId, this._videoId, !reply, false) + `</div></section><hr><br>`;
+        document.getElementById("linkedHolder").innerHTML =
+            `<hr><section class="linkedSec"><div class="commentThreadDiv">`
+            + formatComment(parent, -1, this.options, this._uploaderId, this._videoId,!reply, false)
+            + `</div></section><hr><br>`;
         if (reply) {
-            document.getElementById("repliesEE-" + parent.id).innerHTML = `<div class="linked">`
-                + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, true, true) + `</div>`;
+            document.getElementById("repliesEE-" + parent.id).innerHTML =
+                `<div class="linked">`
+                + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, true, true)
+                + `</div>`;
         }
     }
 

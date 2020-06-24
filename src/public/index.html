@@ -91,21 +91,9 @@
                 <button id="b_dateOldest" class="sendSort">Date (oldest first)</button>
             </div>
             <div id="loadStatus" class="loadStatus">
-                <table id="loadStatusTable">
-                    <thead>
-                        <tr><th colspan="2">Load Status</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Comments:</td>
-                            <td id="statusComments">0 (0.0%)</td>
-                        </tr>
-                        <tr>
-                            <td>Time remaining:</td>
-                            <td id="statusEta">--</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div id="loadHeader">Loading comments...</div>
+                <span id="loadPercentage">0.0%</span>
+                <span id="loadEta"></span>
                 <div id="progressBar">
                     <div id="progressGreen"></div>
                 </div>

@@ -203,32 +203,30 @@ button.moreBtn {
 }
 div#loadStatus {
     display: none;
-    margin: 10px 0px;
-    font-size: 18px;
-}
-table#loadStatusTable {
-    border-collapse: collapse;
-    border-style: hidden;
-}
-th {
-    text-align: left;
-}
-td#statusComments, td#statusEta {
-    color: #080;
-}
-div#progressBar {
+    font-size: 16px;
     width: 400px;
     max-width: 100%;
-    background-color: #9EBAD6;
+}
+div#loadHeader {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+span#loadEta {
+    float: right;
+}
+div#progressBar {
+    background-color: #ACC8E5;
     border-radius: 4px;
+    border: 1px solid black;
     overflow: hidden;
     margin-top: 8px;
 }
 div#progressGreen {
     width: 0%;
     height: 24px;
-    background-color: #0a0;
-    transition: width 0.25s;
+    background-color: #0b0;
+    transition: width 0.1s;
 }
 td:nth-child(2) {
     padding-left: 8px;
