@@ -184,11 +184,11 @@ export class Graph {
         let isUtc = this._video.options.timezone == "utc";
         let axis = {
             font: "16px Open Sans",
-            grid: { stroke: GRIDCOLOR, },
+            grid: { stroke: GRIDCOLOR },
             ticks: {
                 show: true,
                 size: 5,
-                stroke: GRIDCOLOR,
+                stroke: GRIDCOLOR
             },
         }
 
@@ -203,7 +203,7 @@ export class Graph {
                 axis,
                 {
                     ...axis,
-                    size: 60
+                    size: 65
                 }
             ],
             series: [
@@ -218,9 +218,7 @@ export class Graph {
                     value: (_self, rawValue) => rawValue.toLocaleString(),
                     stroke: "blue",
                     width: 2,
-                    points: {
-                        show: false,
-                    }
+                    points: { show: false }
                 },
             ],
             cursor: {
