@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("submitAll").addEventListener('click', () => {
         document.getElementById("chooseLoad").style.display = "none";
-        loadStatus.innerHTML = "Initializing...";
+        loadStatus.style.display = "block";
         
         socket.emit("requestAll");
     });
@@ -100,7 +100,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         else {
             commentInfo.innerHTML = `<i class="fas fa-comment"></i> ` + Number(num).toLocaleString() + ` comments`;
-            if (max > 0) loadStatus.innerHTML = "Videos with over " + max.toLocaleString() + " comments are not supported.";
+            if (max > 0) {
+                document.getElementById("limitMessage").innerHTML =
+                    `Videos with over ${max.toLocaleString()} comments are not currently supported.<br>
+                    (Stay tuned for the future!)`;
+            }
         }
     });
 
@@ -110,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
         message.innerHTML = "&nbsp;";
         if (reset) {
             commentsSection.innerHTML = "";
-            loadStatus.innerHTML = "";
+            loadStatus.style.display = "none";
             document.getElementById("sortLoaded").style.display = "block";
             document.getElementById("statsOptions").style.display = "block";
         }
@@ -137,7 +141,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function resetPage() {
         linkedHolder.innerHTML = "";
         commentsSection.innerHTML = "";
-        loadStatus.innerHTML = "";
+        document.getElementById("limitMessage").innerHTML = "";
+        document.getElementById("statusComments").innerHTML = "0";
+        document.getElementById("statusEta").innerHTML = '--';
+        document.getElementById("progressGreen").style.width = "0%";
+        
         document.getElementById("chooseLoad").style.display = "none";
         document.getElementById("sortLoaded").style.display = "none";
         document.getElementById("statsOptions").style.display = "none";

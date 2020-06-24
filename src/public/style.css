@@ -202,7 +202,36 @@ button.moreBtn {
     font-size:16px;
 }
 div#loadStatus {
+    display: none;
     margin: 10px 0px;
+    font-size: 18px;
+}
+table#loadStatusTable {
+    border-collapse: collapse;
+    border-style: hidden;
+}
+th {
+    text-align: left;
+}
+td#statusComments, td#statusEta {
+    color: #080;
+}
+div#progressBar {
+    width: 400px;
+    max-width: 100%;
+    background-color: #9EBAD6;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+div#progressGreen {
+    width: 0%;
+    height: 24px;
+    background-color: #0a0;
+    transition: width 0.25s;
+}
+td:nth-child(2) {
+    padding-left: 8px;
 }
 
 div#chooseLoad {
@@ -210,11 +239,15 @@ div#chooseLoad {
 }
 div#sortLoaded {
     display: none;
+    margin-bottom: 8px;
 }
 div#statsOptions {
     display: none;
     font-size: 18px;
     margin-bottom: 5px;
+}
+div#limitMessage {
+    font-size: 18px;
 }
 
 div.commentThreadDiv, div.linked {
@@ -277,9 +310,6 @@ img.thumbnail {
     width: 320px;
     height: 180px;
     margin-right: 5px;
-}
-#moreDiv {
-    display: none;
 }
 #showMoreDiv {
     display: none;

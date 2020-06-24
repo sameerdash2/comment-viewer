@@ -30,15 +30,13 @@ export class Video {
 
     updateLoadStatus(count) {
         if (count == -1) {
-            document.getElementById("loadStatus").innerHTML = `Loading is in progress. Please check back later`;
+            document.getElementById("limitMessage").innerHTML = `Loading is in progress. Please check back later`;
         }
         else {
-            let remaining = "";
-            if (this._totalExpected - count > 250) {
-                remaining = ` <span class="gray">(~` + parseDurationMSS(eta(this._totalExpected - count)) + ` remaining)</span>`;
-            }
-            document.getElementById("loadStatus").innerHTML = (Math.round(count / this._totalExpected * 1000) / 10).toFixed(1)
-                + "% loaded" + remaining;
+            let percent = (Math.round(count / this._totalExpected * 1000) / 10).toFixed(1) + '%';
+            document.getElementById("statusComments").innerHTML = count.toLocaleString() + ' (' + percent + ')';
+            document.getElementById("statusEta").innerHTML = '~' + parseDurationMSS(Math.max(0, eta(this._totalExpected - count)));
+            document.getElementById("progressGreen").style.width = percent;
         }
     }
 
