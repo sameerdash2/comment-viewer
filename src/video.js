@@ -80,7 +80,6 @@ class Video {
 
     handleLoad(type) {
         if (this._commentsEnabled && this._commentCount < config.maxLoad && type == "dateOldest") {
-            this._currentSort = type;
             this._newComments = 0;
 
             this._startTime = new Date();
@@ -118,7 +117,7 @@ class Video {
                                     });
                                 }
                                 else {
-                                    this.sendLoadedComments(0, false);
+                                    this.sendLoadedComments("dateOldest", 0, false);
                                 }
                             }
                         }
@@ -136,7 +135,6 @@ class Video {
     }
 
     startFetchProcess = (appendToDatabase) => {
-        console.log("joining", this._id);
         // Join a room so load status can be broadcast to multiple users
         this._socket.join('video-' + this._id);
 
@@ -199,7 +197,7 @@ class Video {
                     + "ms, CPS = " + (this._newComments / elapsed * 1000));
                 
                 // Send the first batch of comments
-                this.sendLoadedComments(0, true);
+                this.sendLoadedComments("dateOldest", 0, true);
 
                 // Clear out the room
                 setTimeout(() => {
@@ -285,13 +283,13 @@ class Video {
         this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
-    sendLoadedComments(commentIndex, broadcast) {
+    sendLoadedComments(sort, commentIndex, broadcast) {
         if (!this._id) return;
         let newSet = commentIndex == 0;
         
         // will make this less ugly later
-        let sortBy = (this._currentSort == "likesMost" || this._currentSort == "likesLeast") ? "likeCount" : "publishedAt";
-        sortBy += (this._currentSort == "dateOldest" || this._currentSort == "likesLeast") ? " ASC" : " DESC";
+        let sortBy = (sort == "likesMost" || sort == "likesLeast") ? "likeCount" : "publishedAt";
+        sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC" : " DESC";
 
         this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, (err, rows) => {
             if (err) {
@@ -353,13 +351,6 @@ class Video {
 
     sendReplies(commentId, items) {
         this._socket.emit("newReplies", { items: items, id: commentId});
-    }
-
-    doSort(order) {
-        if (order != this._currentSort) {
-            this._currentSort = order;
-            this.sendLoadedComments(0, false);
-        }
     }
 
     makeGraph() {

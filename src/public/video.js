@@ -10,6 +10,7 @@ export class Video {
     reset() {
         this._graph.reset();
         this.commentNum = 0;
+        this.currentSort = "dateOldest";
         this.options = {
             timezone: document.querySelector('input[name="timezone"]:checked').value,
             showImg: !document.getElementById("noImg").checked,

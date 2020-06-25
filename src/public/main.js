@@ -53,18 +53,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     showMoreBtn.addEventListener('click', () => {
         showMoreBtn.disabled = true;
-        socket.emit("showMore", video.commentNum);
+        socket.emit("showMore", {sort: video.currentSort, commentNum: video.commentNum});
     });
     
     document.getElementById("sortLoaded").addEventListener('click', (event) => {
         let closest = event.target.closest(".sendSort");
         if (closest) {
+            video.currentSort = closest.id.substring(2);
             // Enable all except the clicked button
             let items = document.querySelectorAll(".sendSort");
             items.forEach((elem) => {
                 elem.disabled = (elem.id == closest.id);
             });
-            socket.emit("sortRequest", closest.id.substring(2));
+
+            // Lower opacity to indicate loading
+            commentsSection.classList.add("fade");
+
+            // Send request
+            socket.emit("showMore", {sort: video.currentSort, commentNum: 0});
         }
     });
 
@@ -114,6 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
         message.innerHTML = "&nbsp;";
         if (reset) {
             commentsSection.innerHTML = "";
+            commentsSection.classList.remove("fade");
             loadStatus.style.display = "none";
             document.getElementById("sortLoaded").style.display = "block";
             document.getElementById("statsOptions").style.display = "block";

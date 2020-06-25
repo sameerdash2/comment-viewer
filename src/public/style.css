@@ -201,6 +201,10 @@ button.moreBtn {
 .commentsList {
     font-size:16px;
 }
+.commentsList.fade {
+    opacity: 0.5;
+    transition: opacity 0.25s;
+}
 div#loadStatus {
     display: none;
     font-size: 16px;
