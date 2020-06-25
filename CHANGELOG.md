@@ -1,3 +1,13 @@
+**2.2.0** (25 June 2020)
+- Added options for different intervals on the graph. Aggregate comments by hour, day, month, or year.
+- Made optimizations on the comments fetch process. Loading over 1 million comments should (theoretically) be possible.
+- Multiple users can now track the same video's load progress
+- New fancy progress bar when loading
+- Switched database schema to single table for all comments
+- Switched to Cloudflare CDN for Font Awesome icons
+- Fixed reply buttons not working after changing sort order
+- Fixed "Linked Comment" indicator not showing up
+
 **2.1.1** (17 June 2020)
 - Better dynamic resizing on window resize
 - Added comment permalink on the comment numbers

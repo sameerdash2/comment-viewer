@@ -1,10 +1,14 @@
 {
   "name": "commentviewer",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "View and analyze YouTube comments easily.",
   "main": "index.js",
   "engines": {
     "node": "12.16.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FrozenKite/comment-viewer"
   },
   "dependencies": {
     "express": "^4.17.1",
