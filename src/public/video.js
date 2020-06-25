@@ -9,7 +9,7 @@ export class Video {
     }
     reset() {
         this._graph.reset();
-        this._commentNum = 0;
+        this.commentNum = 0;
         this.options = {
             timezone: document.querySelector('input[name="timezone"]:checked').value,
             showImg: !document.getElementById("noImg").checked,
@@ -44,18 +44,18 @@ export class Video {
 
     handleGroupComments(reset, items) {
         if (reset) {
-            this._commentNum = 0;
+            this.commentNum = 0;
             this._storedReplies = {};
             this._displayedReplies = new Set();
         }
         let add = "";
         for (let i = 0; i < items.length; i++) {
-            this._commentNum++;
+            this.commentNum++;
             // Skip comment if it's the linked one.
             if (this._linkedParent == items[i].id) continue;
     
             add += `<hr><div class="commentThreadDiv">`
-                + formatComment(items[i], this._commentNum, this.options, this._uploaderId, this._videoId, false, false) + `</div>`;		
+                + formatComment(items[i], this.commentNum, this.options, this._uploaderId, this._videoId, false, false) + `</div>`;		
         }
         document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
     }

@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     showMoreBtn.addEventListener('click', () => {
         showMoreBtn.disabled = true;
-        socket.emit("showMore");
+        socket.emit("showMore", video.commentNum);
     });
     
     document.getElementById("sortLoaded").addEventListener('click', (event) => {

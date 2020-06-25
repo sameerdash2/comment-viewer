@@ -17,7 +17,7 @@ class App {
 
     createServer() {
         io.on('connection', (socket) => {
-            let videoInstance = new Video(this, socket);
+            let videoInstance = new Video(this, io, socket);
             
             socket.on('idSent', (id) => {
                 if (!checkSendID(id)) socket.emit("idInvalid");
@@ -25,8 +25,8 @@ class App {
             socket.on("requestAll", () => {
                 videoInstance.handleLoad("dateOldest");
             })
-            socket.on("showMore", () => {
-                videoInstance.sendLoadedComments();
+            socket.on("showMore", (commentNum) => {
+                videoInstance.sendLoadedComments(commentNum, false);
             });
             socket.on("sortRequest", (type) => {
                 videoInstance.doSort(type);

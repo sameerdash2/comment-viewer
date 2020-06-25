@@ -2,8 +2,9 @@ const config = require('../config.json');
 const Utils = require('./utils');
 
 class Video {
-    constructor(app, socket) {
+    constructor(app, io, socket) {
         this._app = app;
+        this._io = io;
         this._socket = socket;
 
         this.reset();
@@ -79,31 +80,31 @@ class Video {
 
     handleLoad(type) {
         if (this._commentsEnabled && this._commentCount < config.maxLoad && type == "dateOldest") {
-            let retrieveAllComments = () => this.fetchAllComments("", false);
-            let retrieveNewComments = () => this.fetchAllComments("", true);
             this._currentSort = type;
             this._newComments = 0;
+
             this._startTime = new Date();
             if (this._logToDatabase) {
                 this._app.database.checkVideo(this._id, (row) => {
                     if (row) {
-                        // In-progress videos should be receiving updates every ~0.5 seconds
-                        // If no update in the last 30 seconds, it's likely stuck. Reset it
-                        if (row.inProgress && (new Date().getTime() - row.lastUpdated) > 30*1000) {
-                            this._app.database.resetVideo(this._video, retrieveAllComments);
-                        }
-                        else if (row.inProgress) {
-                            this._socket.emit("loadStatus", -1);
+                        // Comments exist in the database.
+                        if (row.inProgress) {
+                            // In-progress videos should be receiving updates every ~0.5 seconds
+                            // If no update in the last 30 seconds, it's likely stuck. Reset it
+                            if ((new Date().getTime() - row.lastUpdated) > 30*1000) {
+                                this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
+                            }
+                            else {
+                                this._socket.join('video-' + this._id);
+                            }
                         }
                         else {
-                            // Comments exist in the database.
-
                             // Determine whether records are too old & re-fetch all comments.
                             // Re-fetching is necessary to account for deleted comments, number of likes changing, etc.
                             // Current criteria: Comment count has doubled OR 6 months have passed (this will probably change)
                             const sixMonths = 6*30*24*60*60*1000;
                             if (row.initialCommentCount * 2 < this._commentCount || (new Date().getTime() - row.lastUpdated) > sixMonths) {
-                                this._app.database.resetVideo(this._video, retrieveAllComments);
+                                this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
                             }
                             else {
                                 this._indexedComments = row.commentCount;
@@ -112,26 +113,34 @@ class Video {
                                     this._app.database.reAddVideo(this._video, () => {
                                         this._app.database.getLastDate(this._id, (row) => {
                                             this._lastDate = row['MAX(publishedAt)'];
-                                            retrieveNewComments();
+                                            this.startFetchProcess(true);
                                         });
                                     });
                                 }
                                 else {
-                                    this.sendLoadedComments(true);
+                                    this.sendLoadedComments(0, false);
                                 }
                             }
                         }
                     }
                     else {
                         // New video
-                        this._app.database.addVideo(this._video, retrieveAllComments);
+                        this._app.database.addVideo(this._video, () => this.startFetchProcess(false));
                     }
                 });
             }
             else {
-                this.fetchAllComments("", false);                
+                this.startFetchProcess(false);
             }
         }
+    }
+
+    startFetchProcess = (appendToDatabase) => {
+        console.log("joining", this._id);
+        // Join a room so load status can be broadcast to multiple users
+        this._socket.join('video-' + this._id);
+
+        this.fetchAllComments("", appendToDatabase);
     }
 
     fetchAllComments(pageToken, appending, consecutiveErrors = 0) {
@@ -174,14 +183,11 @@ class Video {
                 this._app.database.writeNewComments(this._id, convertedComments);
             }
 
-            // Send load status to client to display percentage
-            this._socket.emit("loadStatus", this._indexedComments);
+            // Broadcast load status to clients to display percentage
+            this._io.to('video-' + this._id).emit("loadStatus", this._indexedComments);
 
             // If there are more comments, and database-stored comments have not been reached, retrieve the next 100 comments
             if (response.data.nextPageToken && proceed) {
-                // Using arrow function because it needs to run in the same scope (due to the current setup).
-                // This does mean it can exceed the maximum call stack size for really large sets,
-                // but the database should still be able to save the comments. May improve in future
                 setTimeout(() => { this.fetchAllComments(response.data.nextPageToken, appending) }, 0);
             }
             else {
@@ -193,7 +199,14 @@ class Video {
                     + "ms, CPS = " + (this._newComments / elapsed * 1000));
                 
                 // Send the first batch of comments
-                this.sendLoadedComments(true);
+                this.sendLoadedComments(0, true);
+
+                // Clear out the room
+                setTimeout(() => {
+                    this._io.of('/').in('video-' + this._id).clients( (_error, clientIds) => {
+                        clientIds.forEach((clientId) => this._io.sockets.sockets[clientId].leave('video-' + this._id));
+                    });
+                }, 1000);
             }
         }, (err) => {
                 console.error(new Date().toISOString(),"Comments execute error", err.response.data.error);
@@ -272,21 +285,19 @@ class Video {
         this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
-    sendLoadedComments(newSet = false) {
-        if (newSet) this._commentIndex = 0;
+    sendLoadedComments(commentIndex, broadcast) {
         if (!this._id) return;
+        let newSet = commentIndex == 0;
         
         // will make this less ugly later
         let sortBy = (this._currentSort == "likesMost" || this._currentSort == "likesLeast") ? "likeCount" : "publishedAt";
         sortBy += (this._currentSort == "dateOldest" || this._currentSort == "likesLeast") ? " ASC" : " DESC";
 
-        let a = new Date();
-        this._app.database.getComments(this._id, config.maxDisplay, this._commentIndex, sortBy, (err, rows) => {
+        this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, (err, rows) => {
             if (err) {
                 console.log(err);
             }
             else {
-                this._commentIndex += rows.length;
                 let more = rows.length == config.maxDisplay;
                 let subset = [];
                 for (let i = 0; i < rows.length; i++) {
@@ -302,7 +313,13 @@ class Video {
                         totalReplyCount: rows[i].totalReplyCount
                     });
                 }
-                this._socket.emit("groupComments", { reset: newSet, items: subset, showMore: more });
+
+                if (broadcast) {
+                    this._io.to('video-' + this._id).emit("groupComments", { reset: newSet, items: subset, showMore: more });
+                }
+                else {
+                    this._socket.emit("groupComments", { reset: newSet, items: subset, showMore: more });
+                }
             }
         });
     }
@@ -341,7 +358,7 @@ class Video {
     doSort(order) {
         if (order != this._currentSort) {
             this._currentSort = order;
-            this.sendLoadedComments(true);
+            this.sendLoadedComments(0, false);
         }
     }
 
