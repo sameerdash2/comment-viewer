@@ -14,7 +14,7 @@ a:focus {
 body {
     background-color: #BBDDFF;
     font-family: 'Open Sans', 'Arial', sans-serif;
-    font-size: 20px;
+    font-size: 16px;
     min-height: 100vh;
     position: relative;
 }
@@ -25,7 +25,6 @@ main {
 
 footer {
     background-color: #ddeeff;
-    font-size: 16px;
     padding: 5px;
     position: absolute;
     bottom: 0;
@@ -62,6 +61,8 @@ div#message {
 
 div#intro{
     max-width: 1000px;
+    font-size: 20px;
+    margin-top: 10px;
 }
 
 .mainInput {
@@ -93,7 +94,6 @@ span#graphDesc {
 }
 span#interval {
     padding-right: 5px;
-    font-size: 16px;
     float: right;
 }
 select {
@@ -119,7 +119,6 @@ section.singleCommentThead, section.linkedSec {
 div#info {    
     margin: 10px 0px;
     white-space: nowrap;
-    min-height: 225px;
 }
 #metadata {
     display: inline-block;
@@ -188,26 +187,19 @@ button {
     font-size: inherit;
 }
 button.send {
-    height: 42px;
+    font-size: 18px;
+    padding: 8px;
 }
 button.sendSort {
-    height: 35px;
-}
-button.moreBtn {
-    height: 60px;
-    max-width: 1050px;
+    padding: 2px 8px;
 }
 
-.commentsList {
-    font-size:16px;
-}
 .commentsList.fade {
     opacity: 0.5;
     transition: opacity 0.25s;
 }
 div#loadStatus {
     display: none;
-    font-size: 16px;
     width: 400px;
     max-width: 100%;
 }
@@ -232,20 +224,17 @@ div#progressGreen {
     background-color: #0b0;
     transition: width 0.1s;
 }
-td:nth-child(2) {
-    padding-left: 8px;
-}
 
 div#chooseLoad {
     display: none;
 }
 div#sortLoaded {
     display: none;
+    font-size: 18px;
     margin-bottom: 8px;
 }
 div#statsOptions {
     display: none;
-    font-size: 18px;
     margin-bottom: 5px;
 }
 div#limitMessage {
@@ -261,12 +250,6 @@ div.commentThreadDiv, div.linked {
 
 div.linked {
     background-color: #DDEEFF;
-}
-
-input.enterBounds {
-    height: 25px;
-    width: 95px;
-    font: inherit;
 }
 
 a.channelPfpLink {
@@ -309,14 +292,15 @@ img.pfp {
     width: 48px;
 }
 img.thumbnail {
-    width: 320px;
-    height: 180px;
+    width: 256px;
+    height: 144px;
     margin-right: 5px;
 }
 #showMoreDiv {
     display: none;
 }
 #showMoreBtn {
+    font-size: 20px;
     height: 56px;
     width: 100%;
     max-width: 1000px;
@@ -357,10 +341,6 @@ hr {
     max-width: 1000px;
     margin:0px;
 }
-hr.sect {
-    height: 4px;
-    margin: 10px 0px;
-}
 
 li {
     margin-left: 2px;
@@ -397,11 +377,11 @@ div#terms {
 .terms-header {
     padding: 8px 16px;
     font-weight: bold;
+    font-size: 20px;
     background-color: #bbddff;
 }
 
 .terms-body {
-    font-size: 16px;
     margin-top: 20px;
     padding: 0px 16px;
 }

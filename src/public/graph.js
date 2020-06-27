@@ -183,7 +183,7 @@ export class Graph {
 
         let isUtc = this._video.options.timezone == "utc";
         let axis = {
-            font: "16px Open Sans",
+            font: "14px Open Sans",
             grid: { stroke: GRIDCOLOR },
             ticks: {
                 show: true,
@@ -203,7 +203,7 @@ export class Graph {
                 axis,
                 {
                     ...axis,
-                    size: 65
+                    size: 60
                 }
             ],
             series: [

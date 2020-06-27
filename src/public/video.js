@@ -138,7 +138,7 @@ export class Video {
 
     resizeMetadata = () => {
         let metadata = document.getElementById("metadata");
-        if (document.documentElement.clientWidth < 700) {
+        if (document.documentElement.clientWidth < 550) {
             metadata.style.display = "block";
             metadata.style.width = "auto";
         }

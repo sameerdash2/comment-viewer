@@ -90,8 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("videoInfo", ({ videoObject }) => displayVideo(videoObject));
     function displayVideo(videoObject) {
         resetPage();
-        document.getElementById("inputRow").style.display = "none";
-        document.getElementById("options").style.display = "none";
+        document.getElementById("intro").style.display = "none";
         video.display(videoObject);
     }
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
