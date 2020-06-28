@@ -243,7 +243,8 @@ class Video {
 
                         if (responses[0].data.items[0]) {
                             // Send parent comment & linked reply
-                            this.sendLinkedComment(Utils.convertComment(this._linkedParent), Utils.convertComment(responses[0].data.items[0], true), videoObject);
+                            this.sendLinkedComment(Utils.convertComment(this._linkedParent),
+                                Utils.convertComment(responses[0].data.items[0], true), videoObject);
                         }
                         else {
                             // Send only parent
@@ -298,6 +299,7 @@ class Video {
             else {
                 let more = rows.length == config.maxDisplay;
                 let subset = [];
+                let repliesPromises = [];
                 for (let i = 0; i < rows.length; i++) {
                     subset.push({
                         id: rows[i].id,
@@ -310,14 +312,33 @@ class Video {
                         updatedAt: rows[i].updatedAt,
                         totalReplyCount: rows[i].totalReplyCount
                     });
-                }
 
-                if (broadcast) {
-                    this._io.to('video-' + this._id).emit("groupComments", { reset: newSet, items: subset, showMore: more });
+                    if (rows[i].totalReplyCount > 0 && config.maxDisplayedReplies > 0) {
+                        repliesPromises.push(this._app.ytapi.executeMinReplies(rows[i].id));
+                    }
                 }
-                else {
-                    this._socket.emit("groupComments", { reset: newSet, items: subset, showMore: more });
-                }
+                
+                // Fetch a subset of the replies for each comment
+                let replies = {};
+                Promise.allSettled(repliesPromises).then((results) => {
+                    results.forEach((result) => {
+                        if (result.status == "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
+                            let id = result.value.data.items[0].id;
+                            let receivedReplies = result.value.data.items[0].replies.comments;
+                            replies[id] = [];
+                            for (let i = 0; i < config.maxDisplayedReplies && i < receivedReplies.length; i++) {
+                                replies[id].push(Utils.convertComment(receivedReplies[i], true));
+                            }
+                        }
+                    });
+
+                    if (broadcast) {
+                        this._io.to('video-' + this._id).emit("groupComments", { reset: newSet, items: subset, replies: replies, showMore: more });
+                    }
+                    else {
+                        this._socket.emit("groupComments", { reset: newSet, items: subset, replies: replies, showMore: more });
+                    }
+                });
             }
         });
     }

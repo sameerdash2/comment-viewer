@@ -15,6 +15,7 @@ export class Video {
             timezone: document.querySelector('input[name="timezone"]:checked').value,
             showImg: !document.getElementById("noImg").checked,
         };
+        this._replyCounts = {};
         this._storedReplies = {};
         this._displayedReplies = new Set();
     }
@@ -52,6 +53,7 @@ export class Video {
         let add = "";
         for (let i = 0; i < items.length; i++) {
             this.commentNum++;
+            this._replyCounts[items[i].id] = items[i].totalReplyCount;
             // Skip comment if it's the linked one.
             if (this._linkedParent == items[i].id) continue;
     
@@ -59,6 +61,24 @@ export class Video {
                 + formatComment(items[i], this.commentNum, this.options, this._uploaderId, this._videoId, false, false) + `</div>`;		
         }
         document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
+    }
+
+    handleMinReplies(allReplies) {
+        let content;
+        for (let id in allReplies) {
+            content = "";
+            allReplies[id].forEach((reply) => {
+                content +=`<div class="commentThreadDiv">`
+                    + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, false, true) + `</div>`
+            });
+            document.getElementById("repliesEE-" + id).innerHTML = content;
+
+            // Remove reply button if all replies are shown
+            let replyButton = document.getElementById("getReplies-" + id);
+            if (replyButton !== null && allReplies[id].length >= this._replyCounts[id]) {
+                replyButton.parentNode.removeChild(replyButton);
+            }
+        }
     }
 
     handleNewReplies(id, items) {
@@ -98,7 +118,6 @@ export class Video {
                 + formatComment(this._storedReplies[commentId][i], len - i, this.options,
                     this._uploaderId, this._videoId, isLinked, true) + `</div>`;
         }
-        document.getElementById("repliesEE-" + commentId).style.display = "block";
         document.getElementById("repliesEE-" + commentId).innerHTML = newContent;
         this._displayedReplies.add(commentId);
         document.getElementById("getReplies-" + commentId).innerHTML = "Hide " + len + " replies";
