@@ -144,7 +144,7 @@ export class Video {
         }
         else {
             metadata.style.display = "inline-block";
-            metadata.style.width = this.options.showImg ? "calc(100% - 325px)" :  "100%";
+            metadata.style.width = this.options.showImg ? "calc(100% - 261px)" :  "100%";
         }
 
         if (this._metadataResizeTimeout) {

@@ -122,7 +122,7 @@ div#info {
 }
 #metadata {
     display: inline-block;
-    width: calc(100% - 325px);
+    width: calc(100% - 261px);
     white-space: initial;
     vertical-align: top;
     line-height: 1.75em;
