@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("submitAll").addEventListener('click', () => {
         document.getElementById("chooseLoad").style.display = "none";
-        loadStatus.style.display = "block";
+        video.prepareLoadStatus();
         
         socket.emit("requestAll");
     });
@@ -111,6 +111,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     (Stay tuned for the future!)`;
             }
         }
+
+        if (commence) video.prepareLoadStatus();
     });
 
     socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));

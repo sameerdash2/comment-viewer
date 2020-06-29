@@ -29,6 +29,11 @@ export class Video {
         this.resizeMetadata();
     }
 
+    prepareLoadStatus() {
+        document.getElementById("loadPercentage").innerHTML = "Initializing...";
+        document.getElementById("loadStatus").style.display = "block";
+    }
+
     updateLoadStatus(count) {
         if (count == -1) {
             document.getElementById("limitMessage").innerHTML =
