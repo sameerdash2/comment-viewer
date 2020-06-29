@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     showMoreBtn.addEventListener('click', () => {
         showMoreBtn.disabled = true;
+        showMoreBtn.innerHTML = "Loading..."
         socket.emit("showMore", {sort: video.currentSort, commentNum: video.commentNum});
     });
     
@@ -129,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         video.handleGroupComments(reset, items);
         video.handleMinReplies(replies);
         document.getElementById("showMoreDiv").style.display = showMore ? "block" : "none";
+        showMoreBtn.innerHTML = "Show more comments...";
         showMoreBtn.disabled = false;
     });
 
