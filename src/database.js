@@ -1,5 +1,7 @@
 const sqlite = require('sqlite3');
 
+const DAY = 24*60*60*1000;
+
 class Database {
     constructor() {
         this._db = new sqlite.Database('database.sql');
@@ -14,7 +16,7 @@ class Database {
             this._db.run('CREATE INDEX IF NOT EXISTS comment_index ON comments(videoId, publishedAt, likeCount)');
         });
 
-        setInterval(() => this.cleanup(), 24*60*60*1000);
+        setInterval(() => this.cleanup(), 1 * DAY);
     }
 
     checkVideo(videoId, callback) {
@@ -74,12 +76,27 @@ class Database {
     }
 
     cleanup() {
-        // Remove any videos over 1 week old that a) have under 5000 comments or b) are stuck in progress 
-        let time = new Date().getTime() - 7*24*60*60*1000;
+        // Remove any videos with:
+        // - under 1,000 comments   & > 1 day untouched
+        // - under 10,000 comments  & > 7 days untouched
+        // - under 100,000 comments & > 60 days untouched
+
+        let now = new Date();
+        console.log(now.toISOString(),"cleanup");
         this._db.serialize(() => {
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 5000 OR inProgress = true)', [time]);
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000 OR inProgress = true)', [now.getTime() - 1*DAY], deleteCallback);
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000)', [now.getTime() - 7*DAY], deleteCallback);
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 100000)', [now.getTime() - 60*DAY], deleteCallback);
+
             this._db.run('VACUUM');
         });
+
+        function deleteCallback(err) {
+            if (err)
+                console.log(err);
+            else
+                console.log("Deleted rows:", this.changes);
+        }
     }
 }
 
