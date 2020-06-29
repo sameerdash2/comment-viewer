@@ -18,6 +18,8 @@ export class Graph {
     reset() {
         this._graphDisplayState = 0; //0=none, 1=loaded, 2=shown
         this._graphInstance = undefined;
+        this._loadingDots = 3;
+        this._loadingInterval = undefined;
         this._rawDates = [];
         this._leftBound = undefined;
         this._interval = undefined;
@@ -94,6 +96,10 @@ export class Graph {
         else {
             document.getElementById("viewGraph").disabled = true;
             document.getElementById("viewGraph").innerHTML = "Loading...";
+            this._loadingInterval = setInterval(() => {
+                this._loadingDots = ++this._loadingDots % 4;
+                document.getElementById("viewGraph").innerHTML = "Loading" + '.'.repeat(this._loadingDots);
+            }, 200);
             this._socket.emit("graphRequest");
         }
     }
@@ -147,11 +153,14 @@ export class Graph {
         if (graphDomainLength > 10 * YEAR) this._interval = "year";
 
         document.getElementById("intervalSelect").value = this._interval;
+
         this.buildDataArray(this._interval);
 
         this.drawGraph(this._interval);
+
         document.getElementById("graphContainer").style.display = "block";
         this._graphDisplayState = 2;
+        clearInterval(this._loadingInterval);
         document.getElementById("viewGraph").disabled = false;
         document.getElementById("viewGraph").innerHTML = "Toggle graph";
     }

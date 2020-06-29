@@ -78,6 +78,9 @@ span#options:hover {
     cursor: default;
 }
 
+button#viewGraph {
+    width: 125px;
+}
 div#graphContainer {
     display: none;
     width: 996px;
