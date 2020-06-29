@@ -80,6 +80,7 @@ span#options:hover {
 
 button#viewGraph {
     width: 125px;
+    padding: 2px 0px;
 }
 div#graphContainer {
     display: none;
@@ -186,8 +187,19 @@ div.commentHeader {
 }
 
 button {
-    font-family:inherit;
-    font-size: inherit;
+    font: inherit;
+    border: 1px solid rgba(0,0,0,0.5);
+    outline: none;
+    background-color: #eee;
+}
+button:hover {
+    cursor: pointer;
+    background-color: #e4e4e4;
+}
+button:disabled {
+    cursor: inherit;
+    background-color: #eee9;
+    border-color: rgba(0,0,0,0.25);
 }
 button.send {
     font-size: 18px;
