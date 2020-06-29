@@ -119,6 +119,7 @@ export class Graph {
         }
 
         // Populate date counts from comments
+        // TODO: This is intensive for large arrays, optimize by possibly splitting into chunks
         for (let i = 0; i < this._rawDates.length; i++) {
             dateMap[floorDate(new Date(this._rawDates[i]), interval, isUtc).getTime()]++;
         }

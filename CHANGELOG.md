@@ -1,3 +1,9 @@
+**2.3.0** (29 June 2020)
+- All comments now initially show a subset of their replies
+- Load percentage now shows as many decimal points as necessary
+- More loading indicators & responsive, restyled buttons
+- Scaled down size of most elements
+
 **2.2.0** (25 June 2020)
 - Added options for different intervals on the graph. Aggregate comments by hour, day, month, or year.
 - Made optimizations on the comments fetch process. Loading over 1 million comments should (theoretically) be possible.
