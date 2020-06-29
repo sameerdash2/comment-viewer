@@ -43,6 +43,16 @@ class YouTubeAPI {
         });
     }
 
+    executeMinReplies(parentId) {
+        // Usually returns the first 5 replies to a commentThread.
+        // The normal comments.list returns replies in reverse order, not optimal
+        // for getting the first few of 500 replies
+        return this._youtube.commentThreads.list({
+            "part": "replies",
+            "id": parentId,
+        });
+    }
+
     executeSingleComment(commentId) {
         return this._youtube.commentThreads.list({
             "part": "snippet",

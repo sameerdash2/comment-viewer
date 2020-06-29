@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));
 
-    socket.on("groupComments", ({ reset, items, showMore }) => {      
+    socket.on("groupComments", ({ reset, items, replies, showMore }) => {      
         message.innerHTML = "&nbsp;";
         if (reset) {
             commentsSection.innerHTML = "";
@@ -127,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("statsOptions").style.display = "block";
         }
         video.handleGroupComments(reset, items);
+        video.handleMinReplies(replies);
         document.getElementById("showMoreDiv").style.display = showMore ? "block" : "none";
         showMoreBtn.disabled = false;
     });
