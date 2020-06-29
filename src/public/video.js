@@ -40,11 +40,14 @@ export class Video {
                 `Loading is in progress. Please check back later`;
         }
         else {
-            let percent = (Math.round(count / this._totalExpected * 1000) / 10).toFixed(1) + '%';
-            document.getElementById("loadPercentage").innerHTML = percent;
+            // Determine percentage precision based on total comment count
+            const precision = Math.max(0, Math.floor(Math.log10(this._totalExpected)) - 3);
+            const percentage = (count / this._totalExpected * 100).toFixed(precision) + '%';
+
+            document.getElementById("loadPercentage").innerHTML = percentage;
             document.getElementById("loadEta").innerHTML = '~'
                 + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
-            document.getElementById("progressGreen").style.width = percent;
+            document.getElementById("progressGreen").style.width = percentage;
         }
     }
 
