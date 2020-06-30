@@ -1,41 +1,49 @@
 export function formatTitle(video, options) {
-    let liveState = video.snippet.liveBroadcastContent;
+    const liveState = video.snippet.liveBroadcastContent;
 
-    // casting in order to use toLocaleString()
-	let viewCount = Number(video.statistics.viewCount);
-    let likeCount = Number(video.statistics.likeCount);
-    let dislikeCount = Number(video.statistics.dislikeCount);
+    // casting in order to use toLocaleString
+	const viewCount = Number(video.statistics.viewCount);
+    const likeCount = Number(video.statistics.likeCount);
+    const dislikeCount = Number(video.statistics.dislikeCount);
 
-    let thumbnailSec = ``;
-    if (options.showImg) thumbnailSec += `<img class="thumbnail" src="` + video.snippet.thumbnails.medium.url + `">`;
-
-    let ratingsSec = `<div class="ratings">`;
-    if (typeof video.statistics.likeCount === "undefined") {
-        ratingsSec += `<i class="fas fa-thumbs-up"></i> <span class="gray">Ratings have been hidden.</span>`;
+    if (options.showImg) {
+        document.getElementById("thumb").style.display = "inline-block";
+        document.getElementById("thumb").src = video.snippet.thumbnails.medium.url;
     }
     else {
-        ratingsSec += `<i class="fas fa-thumbs-up"></i> ` + likeCount.toLocaleString() + 
-            `&nbsp;&nbsp;&nbsp;&nbsp;<i class="fas fa-thumbs-down"></i> ` + dislikeCount.toLocaleString();
+        document.getElementById("thumb").style.display = "none";
     }
-    ratingsSec += `</div>`;
 
-    let viewcountSec = `<div class="viewcount"><i class="fas fa-eye"></i> `;
-    let timestampSec = `<div class="vidTimestamp">`;
-    let commentCountSec = `<div id="commentInfo" class="commentCount">`;
+    document.getElementById("videoTitle").textContent = video.snippet.title;
+    document.getElementById("videoTitle").href = `https://www.youtube.com/watch?v=${video.id}`;
+
+    document.getElementById("uploader").textContent = video.snippet.channelTitle;
+    document.getElementById("uploader").href = `https://www.youtube.com/channel/${video.snippet.channelId}`;
+
+    if (typeof video.statistics.likeCount === "undefined") {
+        document.getElementById("ratings").innerHTML = `<i class="fas fa-thumbs-up"></i> <span class="gray">Ratings have been hidden.</span>`;
+    }
+    else {
+        document.getElementById("ratings").innerHTML = 
+            `<i class="fas fa-thumbs-up"></i> ${likeCount.toLocaleString()}&nbsp;&nbsp;&nbsp;&nbsp;
+            <i class="fas fa-thumbs-down"></i> ${dislikeCount.toLocaleString()}`;
+    }
+
+    let viewcountSec = `<i class="fas fa-eye"></i> `;
+    let timestampSec = ``;
     if (liveState == "live") {
-        let concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
-        viewcountSec += `<span class="red">` + concurrentViewers.toLocaleString() + ` watching now</span> / `
-            + viewCount.toLocaleString() + ` total views`;
-        let startTime = new Date(video.liveStreamingDetails.actualStartTime);
-        let duration = (new Date().getTime() - startTime.getTime());
-        timestampSec += `<i class="fas fa-clock"></i> <strong>Stream start time:</strong> ` + parseTimestamp(startTime.toISOString(), options.timezone)
-            + ` (Elapsed: ` + parseDurationHMMSS(Math.floor(duration / 1000)) + `)`;
+        const concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
+        viewcountSec += `<span class="red">${concurrentViewers.toLocaleString()} watching now</span> / ${viewCount.toLocaleString()} total views`;
+
+        const startTime = new Date(video.liveStreamingDetails.actualStartTime);
+        const duration = (new Date().getTime() - startTime.getTime());
+        timestampSec += `<i class="fas fa-clock"></i> <strong>Stream start time:</strong> ${parseTimestamp(startTime.toISOString(), options.timezone)}
+            (Elapsed: ${parseDurationHMMSS(Math.floor(duration / 1000))})`;
     }
     else if (liveState == "upcoming") {
         viewcountSec += `<span class="red">Upcoming live stream</span>`;
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> `
-            + parseTimestamp(video.snippet.publishedAt, options.timezone) + `<br><i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> `
-            + parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone);
+        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
+            <i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
     }
     else {
 		// YT premium shows don't return viewcount
@@ -43,43 +51,22 @@ export function formatTitle(video, options) {
 			viewcountSec += ` <span class="gray">View count unavailable</span>`;
 		}
 		else {
-			viewcountSec += viewCount.toLocaleString() + ` views`;
+			viewcountSec += `${viewCount.toLocaleString()} views`;
 		}
         
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ` + parseTimestamp(video.snippet.publishedAt, options.timezone);
+        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
 
         if (typeof video.liveStreamingDetails !== "undefined") {
-            timestampSec += `<br><div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> `
-                + parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone) + `</div>`;
+            timestampSec += `<br><div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> 
+                ${parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)}</div>`;
         }
 
-        commentCountSec += `<i class="fas fa-comment"></i> Loading comment information...`;
-	}
-    viewcountSec += `</div>`;
-    timestampSec += `</div>`;
-    commentCountSec += `</div>`;
+        document.getElementById("commentInfo").innerHTML = `<i class="fas fa-comment"></i> <span class="gray">Loading comment information...</span>`;
+    }
+    document.getElementById("viewcount").innerHTML = viewcountSec;
+    document.getElementById("vidTimestamp").innerHTML = timestampSec;
 
-    let newContent = 
-        thumbnailSec
-        + `<div id="metadata">
-            <div class="vidTitle">
-                <a class="authorName" href="https://www.youtube.com/watch?v=` + video.id + `" target="_blank">
-                    ` + video.snippet.title + `
-                </a>
-            </div>
-            <div class="author">
-				<a class="noColor" href="https://www.youtube.com/channel/` + video.snippet.channelId
-					+ `" target="_blank">` + video.snippet.channelTitle + `</a>
-            </div>
-            <div class="moreMeta">
-                ` + viewcountSec + `
-                ` + ratingsSec + `
-                ` + timestampSec + `
-            </div>
-		</div>
-		` + commentCountSec + `
-    `;
-	return newContent;
+    document.getElementById("info").style.display = "block";
 }
 
 export function formatComment(item, number, options, uploaderId, videoId, linked = false, reply = false) {

@@ -120,7 +120,9 @@ section.singleCommentThead, section.linkedSec {
     font-weight: bold;
     vertical-align: top; /* not sure why 'top' becomes middle */
 }
-div#info {    
+div#info {
+    display: none;
+    font-size: 0px;
     margin: 10px 0px;
     white-space: nowrap;
 }
@@ -131,6 +133,12 @@ div#info {
     vertical-align: top;
     line-height: 1.75em;
 }
+#metadata, #commentInfo {
+    font-size: 1rem;
+}
+#commentInfo {
+    margin-top: 5px;
+}
 .vidTitle {
     font-size: 1.25em;
     vertical-align: top;
@@ -139,14 +147,11 @@ div#info {
 .author {
     font-weight: bold;
 }
-div.viewCount {
+div#viewCount, div#ratings {
     display: inline-block;
 }
 span.red {
     color: #bb0000;
-}
-.ratings {
-    display: inline-block;
 }
 
 span#options {

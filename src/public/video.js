@@ -26,7 +26,7 @@ export class Video {
         this.videoPublished = video.snippet.publishedAt; // for graph bound
         this._uploaderId = video.snippet.channelId; // for highlighting OP comments
         document.getElementById("message").innerHTML = "&nbsp;";
-        document.getElementById("info").innerHTML = formatTitle(video, this.options);
+        formatTitle(video, this.options);
         this.resizeMetadata();
     }
 
