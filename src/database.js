@@ -1,4 +1,5 @@
 const sqlite = require('sqlite3');
+const logger = require('./logger');
 
 const DAY = 24*60*60*1000;
 
