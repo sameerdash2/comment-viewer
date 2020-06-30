@@ -15,7 +15,8 @@
     "googleapis": "^52.0.0",
     "socket.io": "^2.3.0",
     "sqlite3": "^4.2.0",
-    "uplot": "^1.0.11"
+    "uplot": "^1.0.11",
+    "winston": "^3.3.3"
   },
   "devDependencies": {},
   "scripts": {

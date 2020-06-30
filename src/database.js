@@ -82,7 +82,7 @@ class Database {
         // - under 100,000 comments & > 60 days untouched
 
         let now = new Date();
-        console.log(now.toISOString(),"cleanup");
+        logger.log('info', "Starting database cleanup");
         this._db.serialize(() => {
             this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000 OR inProgress = true)', [now.getTime() - 1*DAY], deleteCallback);
             this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000)', [now.getTime() - 7*DAY], deleteCallback);
@@ -93,9 +93,9 @@ class Database {
 
         function deleteCallback(err) {
             if (err)
-                console.log(err);
+                logger.log('error', "Database delete error: %o", err);
             else
-                console.log("Deleted rows:", this.changes);
+                logger.log('info', "Deleted rows: %d", this.changes);
         }
     }
 }

@@ -1,6 +1,7 @@
 const YouTubeAPI = require('./src/gapi');
 const Video = require('./src/video');
 const Database = require('./src/database');
+const logger = require('./src/logger');
 const express = require('express');
 const application = express();
 const http = require('http').createServer(application);
@@ -83,8 +84,8 @@ class App {
         if (port == null || port == "") {
             port = 8000;
         }
-        http.listen(port, function () {
-            console.log('listening on', port);
+        http.listen(port, () => {
+            logger.log('info', 'Listening on %s', port);
         });
     }
 

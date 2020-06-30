@@ -1,5 +1,6 @@
 const config = require('../config.json');
 const Utils = require('./utils');
+const logger = require('./logger');
 
 class Video {
     constructor(app, io, socket) {
@@ -38,7 +39,7 @@ class Video {
                 this._socket.emit("idInvalid");
             }
         }, (err) => {
-            console.error("Video execute error", err.response.data.error);
+            logger.log('error', "Video execute error on %s: %o", this._id, err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
             }
@@ -63,7 +64,6 @@ class Video {
                 }
             }
         }, (err) => {
-            // console.error("Test comment execute error", err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
             }
@@ -193,8 +193,8 @@ class Video {
                 this._app.database.markVideoComplete(this._id);
 
                 let elapsed = new Date().getTime() - this._startTime.getTime();
-                console.log("Retrieved: Video " + this._id + ", " + this._newComments + " comments in " + elapsed
-                    + "ms, CPS = " + (this._newComments / elapsed * 1000));
+                logger.log('info', "Retrieved video %s, %d comments in %dms, CPS = %d",
+                    this._id, this._newComments, elapsed, (this._newComments / elapsed * 1000));
                 
                 // Send the first batch of comments
                 this.sendLoadedComments("dateOldest", 0, true);
@@ -207,7 +207,7 @@ class Video {
                 }, 1000);
             }
         }, (err) => {
-                console.error(new Date().toISOString(),"Comments execute error", err.response.data.error);
+                logger.log('error', "Comments execute error on %s: %o", this._id, err.response.data.error);
                 if (consecutiveErrors < 20) {
                     let error = err.response.data.error.errors[0];
                     if (error.reason == "quotaExceeded") {
@@ -219,7 +219,7 @@ class Video {
                     }
                 }
                 else {
-                    console.log("Ending fetch process on " + this._id + " due to " + consecutiveErrors + " consecutive errors.");
+                    logger.log('warn', "Ending fetch process on %s due to %d consecutive errors.", this._id, consecutiveErrors);
                 }
             });
     }
@@ -270,7 +270,7 @@ class Video {
                 this.fetchTitle(idString, false);
             }
         }, (err) => {
-            console.error("Linked comment execute error", err.response.data.error);
+            logger.log('error', "Linked comment execute error on %s: %o", parentId, err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
             }
@@ -294,7 +294,7 @@ class Video {
 
         this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, (err, rows) => {
             if (err) {
-                console.log(err);
+                logger.log('error', "Database getComments error: %o", err);
             }
             else {
                 let more = rows.length == config.maxDisplay;
@@ -360,7 +360,7 @@ class Video {
                 this.sendReplies(commentId, replies);
             }
         }, (err) => {
-                console.error("Replies execute error", err);
+                logger.log('error', "Replies execute error on %s: %o", this._id, err.response.data.error);
                 if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                 }
