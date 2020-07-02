@@ -100,9 +100,9 @@ class Video {
                         else {
                             // Determine whether records are too old & re-fetch all comments.
                             // Re-fetching is necessary to account for deleted comments, number of likes changing, etc.
-                            // Current criteria: Comment count has doubled OR 6 months have passed (this will probably change)
+                            // Current criteria: Comment count has changed by 1.5x OR 6 months have passed (this will probably change)
                             const sixMonths = 6*30*24*60*60*1000;
-                            if (row.initialCommentCount * 2 < this._commentCount || (new Date().getTime() - row.lastUpdated) > sixMonths) {
+                            if (row.initialCommentCount * 1.5 < this._commentCount || (new Date().getTime() - row.retrievedAt) > sixMonths) {
                                 this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
                             }
                             else {

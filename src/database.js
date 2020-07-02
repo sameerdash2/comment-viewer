@@ -9,7 +9,7 @@ class Database {
 
         this._db.serialize(() => {
             this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT, '
-            + 'commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL)');
+                + 'commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL)');
             this._db.run('CREATE TABLE IF NOT EXISTS comments(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT, '
                 + 'authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT, '
                 + 'totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)');
@@ -37,7 +37,7 @@ class Database {
     }
 
     resetVideo(video, callback) {
-        this._db.run('DELETE FROM videos WHERE id = ?', [video.id], (_result, _err) => this.addVideo(video, callback));
+        this._db.run('DELETE FROM videos WHERE id = ?', [video.id], () => this.addVideo(video, callback));
     }
 
     getComments(videoId, limit, offset, sortBy, callback) {
@@ -82,21 +82,24 @@ class Database {
         // - under 10,000 comments  & > 7 days untouched
         // - under 100,000 comments & > 60 days untouched
 
-        let now = new Date();
+        const now = new Date();
         logger.log('info', "Starting database cleanup");
         this._db.serialize(() => {
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000 OR inProgress = true)', [now.getTime() - 1*DAY], deleteCallback);
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000)', [now.getTime() - 7*DAY], deleteCallback);
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 100000)', [now.getTime() - 60*DAY], deleteCallback);
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000 OR inProgress = true)',
+                [now.getTime() - 1*DAY], function (err) { deleteCallback(this, err, 1000) });
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000)',
+                [now.getTime() - 7*DAY], function (err) { deleteCallback(this, err, 10000) });
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 100000)',
+                [now.getTime() - 60*DAY], function (err) { deleteCallback(this, err, 100000) });
 
             this._db.run('VACUUM');
         });
 
-        function deleteCallback(err) {
-            if (err)
-                logger.log('error', "Database delete error: %o", err);
+        function deleteCallback(context, err, cap) {
+            if (err) 
+                logger.log('error', "Database delete error for < %d: %o", cap, err);
             else
-                logger.log('info', "Deleted rows: %d", this.changes);
+                logger.log('info', "Deleted rows with < %d comments: %d", cap, context.changes);
         }
     }
 }
