@@ -101,19 +101,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (disabled) {
             commentInfo.innerHTML = `<i class="fas fa-comment"></i> <span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
-                commentInfo.innerHTML += ` <span class="red">(` + Number(num).toLocaleString() + ` hidden comments)</span>`;
+                commentInfo.innerHTML += ` <span class="red">(${Number(num).toLocaleString()} hidden comments)</span>`;
             }
         }
         else {
-            commentInfo.innerHTML = `<i class="fas fa-comment"></i> ` + Number(num).toLocaleString() + ` comments`;
+            commentInfo.innerHTML = `<i class="fas fa-comment"></i> ${Number(num).toLocaleString()} comments`;
+
+            if (commence && num > 0) video.prepareLoadStatus();
+
             if (max > 0) {
                 document.getElementById("limitMessage").innerHTML =
                     `Videos with over ${max.toLocaleString()} comments are not currently supported.<br>
                     (Stay tuned for the future!)`;
             }
         }
-
-        if (commence) video.prepareLoadStatus();
     });
 
     socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));

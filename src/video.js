@@ -79,7 +79,7 @@ class Video {
     }
 
     handleLoad(type) {
-        if (this._commentsEnabled && this._commentCount < config.maxLoad && type == "dateOldest") {
+        if (this._commentsEnabled && this._commentCount < config.maxLoad && this._commentCount > 0 && type == "dateOldest") {
             this._newComments = 0;
 
             this._startTime = new Date();
