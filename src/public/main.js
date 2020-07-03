@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
         reconnectionDelayMax: 30000,
         randomizationFactor: 0
     });
-    document.getElementById("enterID").focus();
     const video = new Video(socket);
 
     let message = document.getElementById("message");
@@ -39,10 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("videoForm").addEventListener('submit', (event) => {
         event.preventDefault(); // prevents page reloading
         let enterID = document.getElementById("enterID");
-        message.innerHTML = "Working...";
-        message.style.color = LOAD;
-        socket.emit('idSent', enterID.value);
-        enterID.value = "";
+        if (enterID.value.length > 0) {
+            message.innerHTML = "Working...";
+            message.style.color = LOAD;
+            socket.emit('idSent', enterID.value);
+            enterID.value = "";
+        }
         return false;
     });
     document.getElementById("submitAll").addEventListener('click', () => {
