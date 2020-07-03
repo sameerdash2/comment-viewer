@@ -1,6 +1,6 @@
 {
   "name": "commentviewer",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "View and analyze YouTube comments easily.",
   "main": "index.js",
   "engines": {

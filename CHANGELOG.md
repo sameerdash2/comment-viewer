@@ -1,3 +1,8 @@
+**2.3.1** (2 July 2020)
+- Fixed trying to load videos with 0 comments
+- Cached comments will be refreshed slightly more often
+- Larger favicon
+
 **2.3.0** (29 June 2020)
 - All comments now initially show a subset of their replies
 - Load percentage now shows as many decimal points as necessary
