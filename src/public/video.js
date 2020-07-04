@@ -31,6 +31,9 @@ export class Video {
     }
 
     prepareLoadStatus() {
+        document.getElementById("linkedHolder").innerHTML = "";
+        this._linkedParent = this._currentLinked = null;
+
         document.getElementById("loadPercentage").innerHTML = "Initializing...";
         document.getElementById("loadStatus").style.display = "block";
     }
