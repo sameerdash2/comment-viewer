@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let message = document.getElementById("message");
     let commentsSection = document.getElementById("commentsSection");
     let loadStatus = document.getElementById("loadStatus");
-    let info = document.getElementById("info");
     let showMoreBtn = document.getElementById("showMoreBtn");
     let linkedHolder = document.getElementById("linkedHolder");
     let terms = document.getElementById("terms");
@@ -93,7 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function displayVideo(videoObject) {
         resetPage();
         document.getElementById("intro").style.display = "none";
-        video.display(videoObject);
+        if (videoObject !== -1)
+            video.display(videoObject);
     }
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
         let commentInfo = document.getElementById("commentInfo");
@@ -139,14 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("newReplies", ({ items, id }) => video.handleNewReplies(id, items));
 
     socket.on("linkedComment", ({ parent, hasReply, reply, videoObject }) => {
-        if (videoObject == -1) {
-            resetPage();
-            message.innerHTML = "&nbsp;"
-            info.innerHTML = `<span class="gray">(No video associated with this comment)</span>`;
-        }
-        else {
-            displayVideo(videoObject);
-        }
+        displayVideo(videoObject);
         video.handleLinkedComment(parent, hasReply ? reply : null);
     });
 
