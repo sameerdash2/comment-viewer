@@ -44,6 +44,8 @@ class Database {
         this._db.run('DELETE FROM videos WHERE id = ?', [video.id], () => this.addVideo(video, callback));
     }
 
+    abortVideo(videoId) { this._videosInProgress.delete(videoId); }
+
     getComments(videoId, limit, offset, sortBy, callback) {
         this._db.all(`SELECT * FROM comments WHERE videoId = ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`,
             [videoId], (err, rows) => callback(err, rows));

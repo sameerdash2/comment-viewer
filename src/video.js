@@ -147,8 +147,15 @@ class Video {
     }
 
     fetchAllComments(pageToken, appending, consecutiveErrors = 0) {
-        // TODO: 30-second limit on API response
-        this._app.ytapi.executeCommentChunk(this._id, pageToken).then((response) => {
+        // Impose 30-second limit on API response.
+        const timeoutHolder = new Promise((resolve) => setTimeout(resolve, 30*1000, -1));
+        Promise.race([timeoutHolder, this._app.ytapi.executeCommentChunk(this._id, pageToken)]).then((response) => {
+            if (response === -1) {
+                logger.log('warn', "Fetch process on %s timed out.", this._id);
+                this._app.database.abortVideo(this._id);
+                return;
+            }
+
             let proceed = true;
             // Pinned comments always appear first regardless of their date (thanks google)
             // (this also means the pinned comment can be identified as long as it isn't the newest comment; could possibly use that in future)
