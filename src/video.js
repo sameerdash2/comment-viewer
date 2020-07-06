@@ -84,23 +84,28 @@ class Video {
 
             this._startTime = new Date();
             if (this._logToDatabase) {
-                this._app.database.checkVideo(this._id, (row) => {
+                this._app.database.checkVideo(this._id, (row, actuallyInProgress) => {
                     if (row) {
                         // Comments exist in the database.
                         if (row.inProgress) {
-                            // In-progress videos should be receiving updates every ~0.5 seconds
-                            // If no update in the last 30 seconds, it's likely stuck. Reset it
-                            if ((new Date().getTime() - row.lastUpdated) > 30*1000) {
-                                this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
-                            }
-                            else {
-                                this._socket.join('video-' + this._id);
+                            this._socket.join('video-' + this._id);
+                            if (!actuallyInProgress) {
+                                // Comment set is stuck in an unfinished state.
+                                // Use nextPageToken to continue fetch if possible
+                                if (row.nextPageToken) {
+                                    logger.log('info', "Attempting to resume unfinished fetch process on %s", this._id);
+                                    this._indexedComments = row.commentCount;
+                                    this.fetchAllComments(row.nextPageToken, false);
+                                }
+                                else {
+                                    this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
+                                }
                             }
                         }
                         else {
                             // Determine whether records are too old & re-fetch all comments.
                             // Re-fetching is necessary to account for deleted comments, number of likes changing, etc.
-                            // Current criteria: Comment count has changed by 1.5x OR 6 months have passed (this will probably change)
+                            // Current criteria: Comment count has changed by 1.5x OR 6 months have passed
                             const sixMonths = 6*30*24*60*60*1000;
                             if (row.initialCommentCount * 1.5 < this._commentCount || (new Date().getTime() - row.retrievedAt) > sixMonths) {
                                 this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
@@ -142,6 +147,7 @@ class Video {
     }
 
     fetchAllComments(pageToken, appending, consecutiveErrors = 0) {
+        // TODO: 30-second limit on API response
         this._app.ytapi.executeCommentChunk(this._id, pageToken).then((response) => {
             let proceed = true;
             // Pinned comments always appear first regardless of their date (thanks google)
@@ -178,7 +184,8 @@ class Video {
 
             if (convertedComments.length > 0 && this._logToDatabase) {
                 // Write new comments to database
-                this._app.database.writeNewComments(this._id, convertedComments);
+                this._app.database.writeNewComments(this._id, convertedComments,
+                    this._indexedComments, response.data.nextPageToken || null);
             }
 
             // Broadcast load status to clients to display percentage
