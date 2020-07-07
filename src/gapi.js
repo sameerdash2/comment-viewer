@@ -8,10 +8,10 @@ class YouTubeAPI {
             auth: config.gapiKey
         });
     }
-    
+
     executeVideo(videoId) {
         return this._youtube.videos.list({
-            "part": "snippet, statistics, liveStreamingDetails",
+            "part": "snippet,statistics,liveStreamingDetails",
             "id": videoId
         });
     }
