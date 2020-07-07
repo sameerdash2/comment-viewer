@@ -168,12 +168,12 @@ export class Video {
 
     resizeMetadata = () => {
         let metadata = document.getElementById("metadata");
-        if (document.documentElement.clientWidth < 550) {
-            metadata.style.display = "block";
+        if (document.documentElement.clientWidth < 600) {
+            metadata.style.cssFloat = "none";
             metadata.style.width = "auto";
         }
         else {
-            metadata.style.display = "inline-block";
+            metadata.style.cssFloat = "right";
             metadata.style.width = this.options.showImg ? "calc(100% - 261px)" :  "100%";
         }
 
