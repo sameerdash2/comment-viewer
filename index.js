@@ -20,8 +20,8 @@ class App {
         io.on('connection', (socket) => {
             let videoInstance = new Video(this, io, socket);
             
-            socket.on('idSent', (id) => {
-                if (!checkSendID(id)) socket.emit("idInvalid");
+            socket.on('idSent', (inputId) => {
+                if (!checkSendID(inputId.substring(0, 255))) socket.emit("idInvalid");
             });
             socket.on("requestAll", () => {
                 videoInstance.handleLoad("dateOldest");

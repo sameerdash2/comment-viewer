@@ -29,7 +29,6 @@ class Video {
     }
 
     fetchTitle(idString) {
-        this._id = idString;
         return this._app.ytapi.executeVideo(idString).then((response) => {
             if (response.data.pageInfo.totalResults > 0) {
                 this.handleNewVideo(response.data.items[0]);
@@ -39,7 +38,7 @@ class Video {
                 this._socket.emit("idInvalid");
             }
         }, (err) => {
-            logger.log('error', "Video execute error on %s: %o", this._id, err.response.data.error);
+            logger.log('error', "Video execute error on %s: %o", idString, err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
             }
@@ -234,6 +233,7 @@ class Video {
                 }
                 else {
                     logger.log('warn', "Ending fetch process on %s due to %d consecutive errors.", this._id, consecutiveErrors);
+                    this._app.database.abortVideo(this._id);
                 }
             });
     }
