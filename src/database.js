@@ -34,10 +34,10 @@ class Database {
         this._videosInProgress.add(video.id);
     }
 
-    reAddVideo(video, callback) {
+    reAddVideo(videoId, callback) {
         this._db.run('UPDATE videos SET lastUpdated = ?, inProgress = true WHERE id = ?',
-            [new Date().getTime(), video.id], () => callback());
-        this._videosInProgress.add(video.id);
+            [new Date().getTime(), videoId], () => callback());
+        this._videosInProgress.add(videoId);
     }
 
     resetVideo(video, callback) {

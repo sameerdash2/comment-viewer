@@ -94,7 +94,7 @@ class Video {
                                 if (row.nextPageToken) {
                                     logger.log('info', "Attempting to resume unfinished fetch process on %s", this._id);
                                     this._indexedComments = row.commentCount;
-                                    this.fetchAllComments(row.nextPageToken, false);
+                                    this._app.database.reAddVideo(this._id, () => this.fetchAllComments(row.nextPageToken, false));
                                 }
                                 else {
                                     this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
@@ -113,7 +113,7 @@ class Video {
                                 this._indexedComments = row.commentCount;
                                 // 5-minute cooldown before retrieving new comments
                                 if ((new Date().getTime() - row.lastUpdated) > 5*60*1000) {
-                                    this._app.database.reAddVideo(this._video, () => {
+                                    this._app.database.reAddVideo(this._id, () => {
                                         this._app.database.getLastDate(this._id, (row) => {
                                             this._lastDate = row['MAX(publishedAt)'];
                                             this.startFetchProcess(true);
@@ -391,7 +391,10 @@ class Video {
     makeGraph() {
         if (this._graphAvailable) {
             // Send array of dates to client
+            let a = new Date();
             this._app.database.getAllDates(this._id, (rows) => {
+                let b = new Date();
+                console.log("read dates from db took",b-a);
                 let dates = new Array(rows.length);
 
                 // Populate dates array in chunks of 1000 to ease CPU load                    
@@ -406,6 +409,8 @@ class Video {
                         setTimeout(processChunk, 5);
                     }
                     else {
+                        let c = new Date();
+                        console.log("populate dates array took",c-b);
                         this._socket.emit("graphData", dates);
                         dates = undefined;
                     }
