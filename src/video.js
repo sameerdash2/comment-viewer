@@ -156,32 +156,28 @@ class Video {
             }
 
             let proceed = true;
+            let convertedComments = [];
             // Pinned comments always appear first regardless of their date (thanks google)
             // (this also means the pinned comment can be identified as long as it isn't the newest comment; could possibly use that in future)
-            let firstPinned = false;
             if (response.data.items.length > 1 && response.data.items[0].snippet.topLevelComment.snippet.publishedAt
                     < response.data.items[1].snippet.topLevelComment.snippet.publishedAt) {
-                firstPinned = true;
+                // If the pinned comment precedes the last date, shift it out of the array in order not to
+                // distort the date-checking later. Keep it in convertedComments to update its database entry
+                // since its likeCount is probably increasing rapidly.
+                if (appending && new Date(response.data.items[0].snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastDate) {
+                    convertedComments.push(Utils.convertComment(response.data.items.shift()));
+                }
+                
             }
-            let len = response.data.items.length;
-            let commentThread, newIndexed;
-            let convertedComments = [];
-            for (let i = 0; i < len; i++) {
-                commentThread = response.data.items[i];
+            let newIndexed;
+            for (const commentThread of response.data.items) {
                 newIndexed = 1 + commentThread.snippet.totalReplyCount;
                 // If appending to database-stored comments, check if current comment has passed the date
                 // of the newest stored comment.
                 // Equal timestamps will slip through, but they should be taken care of by database.
                 if (appending && new Date(commentThread.snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastDate) {
-                    // Make sure it's not just a pinned comment out of place
-                    if ( !(i == 0 && firstPinned) ) {
-                        proceed = false;
-                        break;
-                    }
-                    else {
-                        // Don't count it since it's already been stored
-                        newIndexed = 0;
-                    }
+                    proceed = false;
+                    break;
                 }
                 convertedComments.push(Utils.convertComment(commentThread));
                 this._indexedComments += newIndexed;
@@ -205,7 +201,7 @@ class Video {
                 // Finished retrieving all comment threads.
                 this._app.database.markVideoComplete(this._id);
 
-                let elapsed = new Date().getTime() - this._startTime.getTime();
+                const elapsed = new Date().getTime() - this._startTime.getTime();
                 logger.log('info', "Retrieved video %s, %d comments in %dms, CPS = %d",
                     this._id, this._newComments, elapsed, (this._newComments / elapsed * 1000));
                 
