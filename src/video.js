@@ -298,9 +298,11 @@ class Video {
         if (!this._id) return;
         let newSet = commentIndex == 0;
         
-        // will make this less ugly later
+        // might make this less ugly later
         let sortBy = (sort == "likesMost" || sort == "likesLeast") ? "likeCount" : "publishedAt";
-        sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC" : " DESC";
+        // Including rowid ensures that any comments with identical timestamps will follow their original insertion order.
+        // This works in 99.99% of cases (as long as said comments were fetched at the same time)
+        sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
 
         this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, (err, rows) => {
             if (err) {
