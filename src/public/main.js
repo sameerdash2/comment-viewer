@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
         commentsSection.innerHTML = "";
         document.getElementById("limitMessage").innerHTML = "";
         document.getElementById("loadPercentage").innerHTML = "0.0%";
-        document.getElementById("loadEta").innerHTML = '--';
+        document.getElementById("loadEta").innerHTML = '';
         document.getElementById("progressGreen").style.width = "0%";
         
         document.getElementById("chooseLoad").style.display = "none";

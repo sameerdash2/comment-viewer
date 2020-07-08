@@ -49,9 +49,11 @@ export class Video {
             const percentage = (count / this._totalExpected * 100).toFixed(precision) + '%';
 
             document.getElementById("loadPercentage").innerHTML = percentage;
-            document.getElementById("loadEta").innerHTML = '~'
-                + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
             document.getElementById("progressGreen").style.width = percentage;
+            if (this._totalExpected > 1000) {
+                document.getElementById("loadEta").innerHTML = '~'
+                    + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
+            }
         }
     }
 
