@@ -78,9 +78,10 @@ export class Graph {
     }
 
     getGraphSize = () => {
+        // Cap size at 996 x 400
         return {
             width: Math.max(250, Math.min(996, document.documentElement.clientWidth - 48 - 4)),
-            height: 400
+            height: Math.max(150, Math.min(400, document.documentElement.clientHeight - 75))
         };
     }
 
@@ -119,7 +120,6 @@ export class Graph {
         }
 
         // Populate date counts from comments
-        // TODO: This is intensive for large arrays, optimize by possibly splitting into chunks
         for (let i = 0; i < this._rawDates.length; i++) {
             dateMap[floorDate(new Date(this._rawDates[i]), interval, isUtc).getTime()]++;
         }
@@ -140,7 +140,6 @@ export class Graph {
         this._leftBound = Math.min( new Date(this._video.videoPublished), new Date(this._rawDates[this._rawDates.length - 1]) );
         let graphDomainLength = new Date().getTime() - new Date(this._leftBound).getTime();
 
-        // Graph's x-axis breaks if there's only one point (may be a side effect of distr: 2).
         // Make available only the intervals that result in the graph having more than 1 point
         document.getElementById("optHour").disabled = graphDomainLength < 1 * HOUR;
         document.getElementById("optDay").disabled = graphDomainLength < 1 * DAY;

@@ -391,10 +391,7 @@ class Video {
     makeGraph() {
         if (this._graphAvailable) {
             // Send array of dates to client
-            let a = new Date();
             this._app.database.getAllDates(this._id, (rows) => {
-                let b = new Date();
-                console.log("read dates from db took",b-a);
                 let dates = new Array(rows.length);
 
                 // Populate dates array in chunks of 1000 to ease CPU load                    
@@ -409,8 +406,6 @@ class Video {
                         setTimeout(processChunk, 5);
                     }
                     else {
-                        let c = new Date();
-                        console.log("populate dates array took",c-b);
                         this._socket.emit("graphData", dates);
                         dates = undefined;
                     }
