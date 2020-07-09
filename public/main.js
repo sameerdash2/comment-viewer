@@ -11,12 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     const video = new Video(socket);
 
-    let message = document.getElementById("message");
-    let commentsSection = document.getElementById("commentsSection");
-    let loadStatus = document.getElementById("loadStatus");
-    let showMoreBtn = document.getElementById("showMoreBtn");
-    let linkedHolder = document.getElementById("linkedHolder");
-    let terms = document.getElementById("terms");
+    const message = document.getElementById("message");
+    const commentsSection = document.getElementById("commentsSection");
+    const loadStatus = document.getElementById("loadStatus");
+    const showMoreBtn = document.getElementById("showMoreBtn");
+    const linkedHolder = document.getElementById("linkedHolder");
+    const terms = document.getElementById("terms");
 
     document.getElementById("viewTerms").addEventListener('click', (event) => {
         event.preventDefault();
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("videoForm").addEventListener('submit', (event) => {
         event.preventDefault(); // prevents page reloading
-        let enterID = document.getElementById("enterID");
+        const enterID = document.getElementById("enterID");
         if (enterID.value.length > 0) {
             message.innerHTML = "Working...";
             message.style.color = LOAD;
@@ -59,11 +59,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     document.getElementById("sortLoaded").addEventListener('click', (event) => {
-        let closest = event.target.closest(".sendSort");
+        const closest = event.target.closest(".sendSort");
         if (closest) {
             video.currentSort = closest.id.substring(2);
             // Enable all except the clicked button
-            let items = document.querySelectorAll(".sendSort");
+            const items = document.querySelectorAll(".sendSort");
             items.forEach((elem) => {
                 elem.disabled = (elem.id == closest.id);
             });
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     commentsSection.addEventListener('click', repliesButton);
     linkedHolder.addEventListener('click', repliesButton);
     function repliesButton(event) {
-        let closest = event.target.closest(".showHideButton");
+        const closest = event.target.closest(".showHideButton");
         if (closest) {
             video.handleRepliesButton(closest);
         }
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
             video.display(videoObject);
     }
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
-        let commentInfo = document.getElementById("commentInfo");
+        const commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
         document.getElementById("viewGraph").style.display = graph ? "block" : "none";
         if (disabled) {

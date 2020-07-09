@@ -61,7 +61,7 @@ class Database {
     }
 
     writeNewComments(videoId, comments, newCommentCount, nextPageToken) {
-        let insert = [];
+        const insert = [];
         for (let i = 0; i < comments.length; i++) { 
             insert.push(comments[i].id, comments[i].textDisplay, comments[i].authorDisplayName, comments[i].authorProfileImageUrl,
                 comments[i].authorChannelId, comments[i].likeCount, comments[i].publishedAt, comments[i].updatedAt, comments[i].totalReplyCount);

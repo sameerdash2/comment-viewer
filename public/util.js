@@ -78,7 +78,7 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
 	else {
 		contentClass = options.showImg ? "commentContent" : "commentContentFull";
 	}
-	let channelUrl = "https://www.youtube.com/channel/" + item.authorChannelId;
+	const channelUrl = "https://www.youtube.com/channel/" + item.authorChannelId;
 
     let linkedSegment = "";
     let replySegment = "";
@@ -155,7 +155,7 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
 }
 
 export function parseTimestamp(iso, timezone) {
-    let date = new Date(iso);
+    const date = new Date(iso);
     if (isNaN(date)) {
         return `<span class="gray">(No date)</span>`;
     }
@@ -205,15 +205,15 @@ export function floorDate(date, unit, isUtc) {
 }
 
 export function parseDurationMSS(timeSeconds) {
-    let minutes = Math.floor(timeSeconds / 60);
-    let seconds = timeSeconds % 60;
+    const minutes = Math.floor(timeSeconds / 60);
+    const seconds = timeSeconds % 60;
     return minutes + ':' + ('0' + seconds).slice(-2);
 }
 
 export function parseDurationHMMSS(timeSeconds) {
-    let hours = Math.floor(timeSeconds / 60 / 60);
-    let minutes = Math.floor(timeSeconds / 60) % 60;
-    let seconds = timeSeconds % 60;
+    const hours = Math.floor(timeSeconds / 60 / 60);
+    const minutes = Math.floor(timeSeconds / 60) % 60;
+    const seconds = timeSeconds % 60;
     return hours + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
 }
 

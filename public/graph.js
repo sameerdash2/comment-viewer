@@ -33,14 +33,14 @@ export class Graph {
     }
 
     intervalChange() {
-        let newInterval = document.getElementById("intervalSelect").value;
+        const newInterval = document.getElementById("intervalSelect").value;
         if (newInterval != this._interval) {
-            let isUtc = this._video.options.timezone == "utc";
+            const isUtc = this._video.options.timezone == "utc";
 
             // Save the left & right graph bounds to keep the zoomed space.
-            let leftBound = this._graphInstance.series[0].min;
+            const leftBound = this._graphInstance.series[0].min;
 
-            let xMax = new Date(this._graphInstance.series[0].max * 1000);
+            const xMax = new Date(this._graphInstance.series[0].max * 1000);
             // Increment the right bound to make sure the entire range is spanned.
             // Example: interval is "month" & right bound is June 2020 (6/1/2020, 12:00 AM)
             // When switching to "day", the resulting range would only go until June 1 (not June 30 as expected)
@@ -49,7 +49,7 @@ export class Graph {
             // Now "day" would cover until July 1, an extra day past June 30
             // Solve this by decrementing using the new interval
             shiftDate(xMax, newInterval, -1, isUtc);
-            let rightBound = xMax.getTime() / 1000;
+            const rightBound = xMax.getTime() / 1000;
 
             // Build the graph data array if needed
             if (!this._datasets[newInterval]) {
@@ -58,7 +58,7 @@ export class Graph {
             this._graphInstance.setData(this._datasets[newInterval]);
 
             // Determine new left & right indexes based on the bounds
-            let len = this._datasets[newInterval][0].length;
+            const len = this._datasets[newInterval][0].length;
             let leftIndex = len - 1, rightIndex = 0;
             while (rightIndex < len - 1 && this._datasets[newInterval][0][rightIndex] < rightBound) {
                 rightIndex++;
@@ -107,13 +107,13 @@ export class Graph {
     }
 
     buildDataArray(interval) {
-        let dateMap = {};
-        let isUtc = this._video.options.timezone == "utc";
+        const dateMap = {};
+        const isUtc = this._video.options.timezone == "utc";
         
-        let startDate = floorDate(new Date(this._leftBound), interval, isUtc);
-        let endDate = floorDate(new Date(), interval, isUtc);
+        const startDate = floorDate(new Date(this._leftBound), interval, isUtc);
+        const endDate = floorDate(new Date(), interval, isUtc);
 
-        let currentDate = startDate;
+        const currentDate = startDate;
         // One key for each unit
         while (currentDate <= endDate) {
             dateMap[new Date(currentDate).getTime()] = 0;
@@ -126,8 +126,8 @@ export class Graph {
         }
 
         // Build dataset for graph
-        let data = [[], []];
-        for (let key in dateMap) {
+        const data = [[], []];
+        for (const key in dateMap) {
             data[0].push(Math.floor(key / 1000));
             data[1].push(dateMap[key]);
         }
@@ -139,7 +139,7 @@ export class Graph {
 
         // Begin from video publish date, or the first comment if its date precedes the video's
         this._leftBound = Math.min( new Date(this._video.videoPublished), new Date(this._rawDates[this._rawDates.length - 1]) );
-        let graphDomainLength = new Date().getTime() - new Date(this._leftBound).getTime();
+        const graphDomainLength = new Date().getTime() - new Date(this._leftBound).getTime();
 
         // Make available only the intervals that result in the graph having more than 1 point
         document.getElementById("optHour").disabled = graphDomainLength < 1 * HOUR;
@@ -168,7 +168,7 @@ export class Graph {
 
     makeLabel(rawValue, isUtc) {
         let output = "";
-        let date = new Date(rawValue*1000);
+        const date = new Date(rawValue*1000);
         switch (this._interval) {
             case "year":
                 output = isUtc ? date.getUTCFullYear() : date.getFullYear();
@@ -191,8 +191,8 @@ export class Graph {
     drawGraph(interval) {
         if (this._graphInstance) this._graphInstance.destroy();
 
-        let isUtc = this._video.options.timezone == "utc";
-        let axis = {
+        const isUtc = this._video.options.timezone == "utc";
+        const axis = {
             font: "14px Open Sans",
             grid: { stroke: GRIDCOLOR },
             ticks: {
@@ -202,7 +202,7 @@ export class Graph {
             },
         }
 
-        let opts = {
+        const opts = {
             ...this.getGraphSize(),
             tzDate: (ts) => isUtc ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),
             scales: {

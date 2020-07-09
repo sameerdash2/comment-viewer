@@ -11,6 +11,7 @@
         "sourceType": "module"
     },
     "rules": {
-        "no-fallthrough": "off"
+        "no-fallthrough": "off",
+        "prefer-const": "warn"
     }
 }

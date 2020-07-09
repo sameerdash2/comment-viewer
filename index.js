@@ -18,7 +18,7 @@ class App {
 
     createServer() {
         io.on('connection', (socket) => {
-            let videoInstance = new Video(this, io, socket);
+            const videoInstance = new Video(this, io, socket);
             
             socket.on('idSent', (inputId) => {
                 if (!checkSendID(inputId.substring(0, 255))) socket.emit("idInvalid");
@@ -39,7 +39,7 @@ class App {
             function checkSendID(inp) {
                 // Assuming video ID length of 11
                 if (inp.length >= 11) {
-                    let marker = inp.indexOf("v=");
+                    const marker = inp.indexOf("v=");
                     let idString = "";
                     if (marker > -1 && inp.length >= marker + 2 + 11) {
                         // Normal "watch?v=" link
@@ -50,13 +50,13 @@ class App {
                         idString = inp.substring(inp.length - 11);
                     }
                     
-                    let linked = inp.indexOf("lc=");
+                    const linked = inp.indexOf("lc=");
                     if (linked > -1) {
-                        let linkedId = inp.substring(linked + 3);
+                        const linkedId = inp.substring(linked + 3);
                         let linkedParentId;
                         if (linkedId.indexOf(".") > -1) {
                             // Linked a reply
-                            let dot = linkedId.indexOf(".");
+                            const dot = linkedId.indexOf(".");
                             linkedParentId = linkedId.substring(0, dot);
                             videoInstance.fetchLinkedComment(idString, linkedParentId, linkedId);
                         }
