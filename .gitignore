@@ -1,4 +1,6 @@
 node_modules/
+dist/
+.cache/
 config.json
 *.sql
 *.sql-journal

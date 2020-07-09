@@ -9,7 +9,7 @@ const io = require('socket.io')(http);
 
 class App {
     constructor() {
-        application.use(express.static("src/public"));
+        application.use(express.static("dist"));
         this.ytapi = new YouTubeAPI();
         this.createServer();
         this.database = new Database();
@@ -91,4 +91,5 @@ class App {
 
 }
 
+// eslint-disable-next-line no-unused-vars
 const app = new App();

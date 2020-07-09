@@ -49,7 +49,7 @@ class Video {
     }
 
     fetchTestComment() {
-        this._app.ytapi.executeTestComment(this._video.id).then((response) => {
+        this._app.ytapi.executeTestComment(this._video.id).then(() => {
             this._commentsEnabled = true;
             // for upcoming/live streams, disregard a 0 count.
             if (!(this._video.snippet.liveBroadcastContent != "none" && this._commentCount == 0)) {
@@ -260,9 +260,8 @@ class Video {
                             // Send only parent
                             this.sendLinkedComment(Utils.convertComment(this._linkedParent), null, videoObject);
                         }
-                    }, (err) => {
-                        // not handled
-                    });
+                    }, (err) => logger.log('error', "Linked reply/video error on replyId %s, video %s: %o",
+                            replyId, videoId, err.response.data.error));
                 }
                 else {
                     getVideo(videoId).then((res) => {
@@ -270,9 +269,7 @@ class Video {
                         this.handleNewVideo(videoObject);
                         // Send linked comment
                         this.sendLinkedComment(Utils.convertComment(response.data.items[0]), null, videoObject);
-                    }, (err) => {
-                        // not handled
-                    });
+                    }, (err) => logger.log('error', "Linked video error on %s: %o", videoId, err.response.data.error));
                 }
             }
             else {

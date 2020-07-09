@@ -1,3 +1,4 @@
+import uPlot from 'uplot';
 import { shiftDate, floorDate } from './util.js';
 
 const GRIDCOLOR = "rgba(0,0,0,0.1)";

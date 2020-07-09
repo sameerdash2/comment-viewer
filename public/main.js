@@ -1,3 +1,4 @@
+import io from 'socket.io-client';
 import { Video } from "./video.js";
 
 const ERR = "#A00";

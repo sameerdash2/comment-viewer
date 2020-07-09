@@ -68,7 +68,7 @@ class Database {
         }
         // Using video ID as constant to prevent exceeding 999-parameter limit
         // (10 parameters * 100 comments = 1000)
-        const placeholders = comments.map((_elem) => `(?,?,?,?,?,?,?,?,?,'${videoId}')`).join(',');
+        const placeholders = comments.map(() => `(?,?,?,?,?,?,?,?,?,'${videoId}')`).join(',');
 
         const statement = this._db.prepare(`INSERT OR REPLACE INTO comments(id, textDisplay, authorDisplayName, authorProfileImageUrl, `
             + `authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount, videoId) VALUES ${placeholders}`);
