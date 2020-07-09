@@ -1,4 +1,16 @@
-**2.3.1** (2 July 2020)
+**2.4.0** (09 July 2020)
+- Stores the next pageToken to continue loading comments even after server crash
+- Added 30-second timeout on API responses
+- Fixed comments with identical timestamps being out of order (now preserves the order from API response)
+- Linked comment now clears before loading all comments
+- Graph height now shrinks if necessary (e.g. landscape mobile displays)
+- Changed video metadata to use CSS float to reduce blank gaps
+- Limited input to 255 characters
+- Added ESLint and Parcel bundler
+- Fixed Discussion tab linked comments breaking the page
+- Fixed API errors due to extra whitespaces that seemed to somehow be the issue
+
+**2.3.1** (02 July 2020)
 - Fixed trying to load videos with 0 comments
 - Cached comments will be refreshed slightly more often
 - Larger favicon
