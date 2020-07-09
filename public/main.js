@@ -22,18 +22,14 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
         terms.style.display = "block";
     });
-    document.getElementById("closeTerms").addEventListener('click', () => {
-        terms.style.display = "none";
-    });
-    window.addEventListener('click', () => {
+    document.getElementById("closeTerms").addEventListener('click', () => terms.style.display = "none");
+    window.addEventListener('click', (event) => {
         if (event.target == terms) {
             terms.style.display = "none";
         }
     });
 
-    window.addEventListener('resize', () => {
-        video.handleWindowResize();
-    });
+    window.addEventListener('resize', () => video.handleWindowResize());
 
     document.getElementById("videoForm").addEventListener('submit', (event) => {
         event.preventDefault(); // prevents page reloading
@@ -96,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (videoObject !== -1)
             video.display(videoObject);
     }
+
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
         const commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
@@ -149,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
         linkedHolder.innerHTML = "";
         commentsSection.innerHTML = "";
         document.getElementById("limitMessage").innerHTML = "";
-        document.getElementById("loadPercentage").innerHTML = "0.0%";
+        document.getElementById("loadPercentage").innerHTML = "0%";
         document.getElementById("loadEta").innerHTML = '';
         document.getElementById("progressGreen").style.width = "0%";
         

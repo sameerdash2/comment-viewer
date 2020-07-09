@@ -78,7 +78,7 @@ export class Video {
 
     handleMinReplies(allReplies) {
         let content;
-        for (let id in allReplies) {
+        for (const id in allReplies) {
             content = "";
             allReplies[id].forEach((reply) => {
                 content +=`<div class="commentThreadDiv">`
@@ -87,7 +87,7 @@ export class Video {
             document.getElementById("repliesEE-" + id).innerHTML = content;
 
             // Remove reply button if all replies are shown
-            let replyButton = document.getElementById("getReplies-" + id);
+            const replyButton = document.getElementById("getReplies-" + id);
             if (replyButton !== null && allReplies[id].length >= this._replyCounts[id]) {
                 replyButton.parentNode.removeChild(replyButton);
             }
@@ -100,7 +100,7 @@ export class Video {
     }
 
     handleRepliesButton(button) {
-        let commentId = button.id.substring(11);
+        const commentId = button.id.substring(11);
         if (this._storedReplies[commentId]) {
             if (this._displayedReplies.has(commentId)) {
                 document.getElementById("repliesEE-" + commentId).style.display = "none";
@@ -121,7 +121,7 @@ export class Video {
     }
 
     populateReplies(commentId) {
-        let len = this._storedReplies[commentId].length;
+        const len = this._storedReplies[commentId].length;
         let newContent = "";
         let isLinked, className;
         for (let i = len - 1; i >= 0; i--) {
@@ -169,8 +169,8 @@ export class Video {
     }
 
     resizeMetadata = () => {
-        let metadata = document.getElementById("metadata");
-        if (document.documentElement.clientWidth < 600) {
+        const metadata = document.getElementById("metadata");
+        if (document.documentElement.clientWidth < 600 || !this.options.showImg) {
             metadata.style.cssFloat = "none";
             metadata.style.width = "auto";
         }

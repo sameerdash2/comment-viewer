@@ -123,8 +123,6 @@
     white-space: nowrap;
   }
   #metadata {
-    float: right;
-    width: calc(100% - 261px);
     white-space: initial;
     vertical-align: top;
     line-height: 1.75em;
