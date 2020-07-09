@@ -79,7 +79,7 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
 		contentClass = options.showImg ? "commentContent" : "commentContentFull";
 	}
 	let channelUrl = "https://www.youtube.com/channel/" + item.authorChannelId;
-	    
+
     let linkedSegment = "";
     let replySegment = "";
 	let likeSegment = "";

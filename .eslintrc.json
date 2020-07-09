@@ -11,5 +11,6 @@
         "sourceType": "module"
     },
     "rules": {
+        "no-fallthrough": "off"
     }
 }
