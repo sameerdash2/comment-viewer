@@ -80,6 +80,7 @@ class Video {
     handleLoad(type) {
         if (this._commentsEnabled && this._commentCount < config.maxLoad && this._commentCount > 0 && type == "dateOldest") {
             this._newComments = 0;
+            const now = new Date().getTime();
 
             this._startTime = new Date();
             if (this._logToDatabase) {
@@ -104,15 +105,19 @@ class Video {
                         else {
                             // Determine whether records are too old & re-fetch all comments.
                             // Re-fetching is necessary to account for deleted comments, number of likes changing, etc.
-                            // Current criteria: Comment count has changed by 1.5x OR 6 months have passed
+                            // Current criteria: Comment count has changed by 1.5x OR 6 months have passed OR
+                            // time between video publish and initial fetch has doubled
+                            const videoAge = now - new Date(this._video.snippet.publishedAt).getTime();
+                            const currentCommentsAge = now - row.retrievedAt;
                             const sixMonths = 6*30*24*60*60*1000;
-                            if (row.initialCommentCount * 1.5 < this._commentCount || (new Date().getTime() - row.retrievedAt) > sixMonths) {
+                            if (row.initialCommentCount * 1.5 < this._commentCount || (now - row.retrievedAt) > sixMonths
+                                    || currentCommentsAge * 2 > videoAge) {
                                 this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
                             }
                             else {
                                 this._indexedComments = row.commentCount;
                                 // 5-minute cooldown before retrieving new comments
-                                if ((new Date().getTime() - row.lastUpdated) > 5*60*1000) {
+                                if ((now - row.lastUpdated) > 5*60*1000) {
                                     this._app.database.reAddVideo(this._id, () => {
                                         this._app.database.getLastDate(this._id, (row) => {
                                             this._lastDate = row['MAX(publishedAt)'];
