@@ -1,5 +1,5 @@
 const config = require('../config.json');
-const Utils = require('./utils');
+const { convertComment } = require('./utils');
 const logger = require('./logger');
 
 class Video {
@@ -53,7 +53,7 @@ class Video {
             this._commentsEnabled = true;
             // for upcoming/live streams, disregard a 0 count.
             if (!(this._video.snippet.liveBroadcastContent != "none" && this._commentCount == 0)) {
-                let beginLoad = this._commentCount < 200;
+                const beginLoad = this._commentCount < 200;
                 // Make graph available if 1 hour has passed, to ensure at least 2 points on the graph
                 this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 60*60*1000);
                 this._socket.emit("commentsInfo", { num: this._commentCount, disabled: false,
@@ -156,7 +156,7 @@ class Video {
             }
 
             let proceed = true;
-            let convertedComments = [];
+            const convertedComments = [];
             // Pinned comments always appear first regardless of their date (thanks google)
             // (this also means the pinned comment can be identified as long as it isn't the newest comment; could possibly use that in future)
             if (response.data.items.length > 1 && response.data.items[0].snippet.topLevelComment.snippet.publishedAt
@@ -165,7 +165,7 @@ class Video {
                 // distort the date-checking later. Keep it in convertedComments to update its database entry
                 // since its likeCount is probably increasing rapidly.
                 if (appending && new Date(response.data.items[0].snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastDate) {
-                    convertedComments.push(Utils.convertComment(response.data.items.shift()));
+                    convertedComments.push(convertComment(response.data.items.shift()));
                 }
                 
             }
@@ -179,7 +179,7 @@ class Video {
                     proceed = false;
                     break;
                 }
-                convertedComments.push(Utils.convertComment(commentThread));
+                convertedComments.push(convertComment(commentThread));
                 this._indexedComments += newIndexed;
                 this._newComments += newIndexed;
             }
@@ -218,7 +218,7 @@ class Video {
         }, (err) => {
                 logger.log('error', "Comments execute error on %s: %o", this._id, err.response.data.error);
                 if (consecutiveErrors < 20) {
-                    let error = err.response.data.error.errors[0];
+                    const error = err.response.data.error.errors[0];
                     if (error.reason == "quotaExceeded") {
                         this._app.ytapi.quotaExceeded();
                     }
@@ -239,7 +239,7 @@ class Video {
             if (response.data.pageInfo.totalResults) {
                 // Linked comment found
                 this._linkedParent = response.data.items[0];
-                let videoId = response.data.items[0].snippet.videoId;
+                const videoId = response.data.items[0].snippet.videoId;
                 let getVideo = (videoId) => this._app.ytapi.executeVideo(videoId);
                 if (typeof response.data.items[0].snippet.videoId === "undefined") {
                     // Comment isn't associated with a video; likely on a Discussion page
@@ -248,27 +248,27 @@ class Video {
                 if (replyId) {
                     // Fetch the video info & linked reply at the same time
                     Promise.all([this._app.ytapi.executeSingleReply(replyId), getVideo(videoId)]).then((responses) => {
-                        let videoObject = (responses[1] == -1) ? -1 : responses[1].data.items[0];
+                        const videoObject = (responses[1] == -1) ? -1 : responses[1].data.items[0];
                         this.handleNewVideo(videoObject);
 
                         if (responses[0].data.items[0]) {
                             // Send parent comment & linked reply
-                            this.sendLinkedComment(Utils.convertComment(this._linkedParent),
-                                Utils.convertComment(responses[0].data.items[0], true), videoObject);
+                            this.sendLinkedComment(convertComment(this._linkedParent),
+                                convertComment(responses[0].data.items[0], true), videoObject);
                         }
                         else {
                             // Send only parent
-                            this.sendLinkedComment(Utils.convertComment(this._linkedParent), null, videoObject);
+                            this.sendLinkedComment(convertComment(this._linkedParent), null, videoObject);
                         }
                     }, (err) => logger.log('error', "Linked reply/video error on replyId %s, video %s: %o",
                             replyId, videoId, err.response.data.error));
                 }
                 else {
                     getVideo(videoId).then((res) => {
-                        let videoObject = (res == -1) ? -1 : res.data.items[0];
+                        const videoObject = (res == -1) ? -1 : res.data.items[0];
                         this.handleNewVideo(videoObject);
                         // Send linked comment
-                        this.sendLinkedComment(Utils.convertComment(response.data.items[0]), null, videoObject);
+                        this.sendLinkedComment(convertComment(response.data.items[0]), null, videoObject);
                     }, (err) => logger.log('error', "Linked video error on %s: %o", videoId, err.response.data.error));
                 }
             }
@@ -293,7 +293,7 @@ class Video {
 
     sendLoadedComments(sort, commentIndex, broadcast) {
         if (!this._id) return;
-        let newSet = commentIndex == 0;
+        const newSet = commentIndex == 0;
         
         // might make this less ugly later
         let sortBy = (sort == "likesMost" || sort == "likesLeast") ? "likeCount" : "publishedAt";
@@ -306,9 +306,9 @@ class Video {
                 logger.log('error', "Database getComments error: %o", err);
             }
             else {
-                let more = rows.length == config.maxDisplay;
-                let subset = [];
-                let repliesPromises = [];
+                const more = rows.length == config.maxDisplay;
+                const subset = [];
+                const repliesPromises = [];
                 for (let i = 0; i < rows.length; i++) {
                     subset.push({
                         id: rows[i].id,
@@ -328,15 +328,15 @@ class Video {
                 }
                 
                 // Fetch a subset of the replies for each comment
-                let replies = {};
+                const replies = {};
                 Promise.allSettled(repliesPromises).then((results) => {
                     results.forEach((result) => {
                         if (result.status == "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
-                            let id = result.value.data.items[0].id;
-                            let receivedReplies = result.value.data.items[0].replies.comments;
+                            const id = result.value.data.items[0].id;
+                            const receivedReplies = result.value.data.items[0].replies.comments;
                             replies[id] = [];
                             for (let i = 0; i < config.maxDisplayedReplies && i < receivedReplies.length; i++) {
-                                replies[id].push(Utils.convertComment(receivedReplies[i], true));
+                                replies[id].push(convertComment(receivedReplies[i], true));
                             }
                         }
                     });
@@ -359,7 +359,7 @@ class Video {
     fetchReplies(commentId, pageToken, silent, replies = []) {
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
             for (let i = 0; i < response.data.items.length; i++) {
-                replies.push(Utils.convertComment(response.data.items[i], true));
+                replies.push(convertComment(response.data.items[i], true));
             }
             if (response.data.nextPageToken) {
                 // Fetch next batch of replies
@@ -391,7 +391,7 @@ class Video {
 
                 // Populate dates array in chunks of 1000 to ease CPU load                    
                 let i = 0;
-                let processChunk = () => {
+                const processChunk = () => {
                     let count = 0;
                     while (count++ < 1000 && i < rows.length) {
                         dates[i] = rows[i].publishedAt;
