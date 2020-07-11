@@ -12,6 +12,7 @@
     },
     "rules": {
         "no-fallthrough": "off",
-        "prefer-const": "warn"
+        "prefer-const": "warn",
+        "no-unused-vars": "warn"
     }
 }

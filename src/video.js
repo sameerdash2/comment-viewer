@@ -77,6 +77,26 @@ class Video {
         });
     }
 
+    shouldReFetch = (row) => {
+        const now = new Date().getTime();
+        const videoAge = now - new Date(this._video.snippet.publishedAt).getTime();
+        const currentCommentsAge = now - row.retrievedAt;
+        const MONTH = 30*24*60*60*1000;
+
+        // Determine whether the comment set should be re-fetched
+        // by seeing if it meets at least 1 condition.
+        // These will probably change over time
+        const doReFetch = (
+            // Comment count has changed by 1.5x (50% increase)
+            row.initialCommentCount * 1.5 < this._commentCount
+            // Video's age has doubled since initial fetch
+            || currentCommentsAge * 2 > videoAge
+            // 6 months have passed since initial fetch
+            || now - row.retrievedAt > 6*MONTH
+        );
+        return doReFetch;
+    }
+
     handleLoad(type) {
         if (this._commentsEnabled && this._commentCount < config.maxLoad && this._commentCount > 0 && type == "dateOldest") {
             this._newComments = 0;
@@ -102,33 +122,21 @@ class Video {
                                 }
                             }
                         }
+                        // 5-minute cooldown before doing any new fetch
+                        else if ((now - row.lastUpdated) <= 5*60*1000) {
+                            this.sendLoadedComments("dateOldest", 0, false);
+                        }
+                        else if (this.shouldReFetch(row)) {
+                            this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
+                        }
                         else {
-                            // Determine whether records are too old & re-fetch all comments.
-                            // Re-fetching is necessary to account for deleted comments, number of likes changing, etc.
-                            // Current criteria: Comment count has changed by 1.5x OR 6 months have passed OR
-                            // time between video publish and initial fetch has doubled
-                            const videoAge = now - new Date(this._video.snippet.publishedAt).getTime();
-                            const currentCommentsAge = now - row.retrievedAt;
-                            const sixMonths = 6*30*24*60*60*1000;
-                            if (row.initialCommentCount * 1.5 < this._commentCount || (now - row.retrievedAt) > sixMonths
-                                    || currentCommentsAge * 2 > videoAge) {
-                                this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
-                            }
-                            else {
-                                this._indexedComments = row.commentCount;
-                                // 5-minute cooldown before retrieving new comments
-                                if ((now - row.lastUpdated) > 5*60*1000) {
-                                    this._app.database.reAddVideo(this._id, () => {
-                                        this._app.database.getLastDate(this._id, (row) => {
-                                            this._lastDate = row['MAX(publishedAt)'];
-                                            this.startFetchProcess(true);
-                                        });
-                                    });
-                                }
-                                else {
-                                    this.sendLoadedComments("dateOldest", 0, false);
-                                }
-                            }
+                            this._indexedComments = row.commentCount;
+                            this._app.database.reAddVideo(this._id, () => {
+                                this._app.database.getLastDate(this._id, (row) => {
+                                    this._lastDate = row['MAX(publishedAt)'];
+                                    this.startFetchProcess(true);
+                                });
+                            });
                         }
                     }
                     else {
