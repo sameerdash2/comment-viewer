@@ -2,7 +2,7 @@ export function formatTitle(video, options) {
     const liveState = video.snippet.liveBroadcastContent;
 
     // casting in order to use toLocaleString
-	const viewCount = Number(video.statistics.viewCount);
+    const viewCount = Number(video.statistics.viewCount);
     const likeCount = Number(video.statistics.likeCount);
     const dislikeCount = Number(video.statistics.dislikeCount);
 
@@ -46,13 +46,10 @@ export function formatTitle(video, options) {
             <i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
     }
     else {
-		// YT premium shows don't return viewcount
-		if (typeof video.statistics.viewCount === "undefined") {
-			viewcountSec += ` <span class="gray">View count unavailable</span>`;
-		}
-		else {
-			viewcountSec += `${viewCount.toLocaleString()} views`;
-		}
+        // YT premium shows don't return viewcount
+        viewcountSec += (typeof video.statistics.viewCount === "undefined")
+            ? ` <span class="gray">View count unavailable</span>`
+            : `${viewCount.toLocaleString()} views`;
         
         timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
 
@@ -70,57 +67,53 @@ export function formatTitle(video, options) {
 }
 
 export function formatComment(item, number, options, uploaderId, videoId, linked = false, reply = false) {
-	let content = "";
-	let contentClass;
-	if (reply) {
-		contentClass = options.showImg ? "replyContent" : "replyContentFull";
-	}
-	else {
-		contentClass = options.showImg ? "commentContent" : "commentContentFull";
-	}
-	const channelUrl = "https://www.youtube.com/channel/" + item.authorChannelId;
+    let content = "";
+    let contentClass;
+    if (reply) {
+        contentClass = options.showImg ? "replyContent" : "replyContentFull";
+    }
+    else {
+        contentClass = options.showImg ? "commentContent" : "commentContentFull";
+    }
+    const channelUrl = `https://www.youtube.com/channel/${item.authorChannelId}`;
 
     let linkedSegment = "";
     let replySegment = "";
-	let likeSegment = "";
-	let numSegment = "";
+    let likeSegment = "";
+    let numSegment = "";
     let opSegment = "";
     let pfpSegment = "";
 
     let timeString = parseTimestamp(item.publishedAt, options.timezone);
     if (item.publishedAt != item.updatedAt) {
-        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseTimestamp(item.updatedAt, options.timezone) + `)`;
-	}
-	
+        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ${parseTimestamp(item.updatedAt, options.timezone)})`;
+    }
+    
     if (linked) linkedSegment = `<span class="linkedComment">• LINKED COMMENT</span>`;
     
     // second condition included for safety
     if (item.totalReplyCount > 0 && !reply) {
         replySegment = `
-            <div id="replies-` + item.id + `" class="commentRepliesDiv">
+            <div id="replies-${item.id}" class="commentRepliesDiv">
                 <div class="repliesExpanderCollapsed">
-                    <button id="getReplies-` + item.id + `" class="showHideButton" type="button">
-                        Load ` + item.totalReplyCount + ` replies
+                    <button id="getReplies-${item.id}" class="showHideButton" type="button">
+                        Load ${item.totalReplyCount} replies
                     </button>
                 </div>
-                <div id="repliesEE-` + item.id + `" class="repliesExpanderExpanded">
-                    
-                </div>
+                <div id="repliesEE-${item.id}" class="repliesExpanderExpanded"></div>
             </div>
         `;
     }
-    
-    if (item.likeCount) {
-        likeSegment += `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ` + item.likeCount.toLocaleString() + `</div>`;
-    }
-    else {
-        likeSegment += `<div class="commentFooter"></div>`;
-	}
+
+    likeSegment += (item.likeCount)
+        ? `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ${item.likeCount.toLocaleString()}</div>`
+        : `<div class="commentFooter"></div>`;
 
     if (number > 0) {
         numSegment +=
-            `<span class="num"><a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id
-            + `" class="noColor" target="_blank">#` + number + `</a></span>`;
+            `<span class="num">
+                <a href="https://www.youtube.com/watch?v=${videoId}&lc=${item.id}" class="noColor">#${number}</a>
+            </span>`;
     }
 
     let authorClass = "authorName";
@@ -130,26 +123,26 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
     }
     
     if (options.showImg) {
-        pfpSegment += `<a class="channelPfpLink" href="` + channelUrl + `" target="_blank"><img class="pfp" src="` + item.authorProfileImageUrl + `"></a>`;
+        pfpSegment +=
+            `<a class="channelPfpLink" href="${channelUrl}">
+                <img class="pfp" src="${item.authorProfileImageUrl}">
+            </a>`;
     }
 
     content += 
-        pfpSegment
-        + `<div class="` + contentClass +`">
-			<div class="commentHeader">
-				<span dir="auto"` + opSegment + `><a href="` + channelUrl + `" class="` + authorClass + `" target="_blank">` + item.authorDisplayName + `</a></span>
-				<span>|</span>
-				<span class="timeStamp">
-					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id + `" class="noColor" target="_blank">
-						` + timeString + `
-					</a>
-				</span>
-				` + linkedSegment + numSegment + `
-			</div>
-			<div class="commentText" dir="auto">` + item.textDisplay + `</div>
-			` + likeSegment + replySegment + `
-		</div>
-    `;
+        `${pfpSegment}
+        <div class="${contentClass}">
+            <div class="commentHeader">
+                <span dir="auto"${opSegment}><a href="${channelUrl}" class="${authorClass}">${item.authorDisplayName}</a></span>
+                <span>|</span>
+                <span class="timeStamp">
+                    <a href="https://www.youtube.com/watch?v=${videoId}&lc=${item.id}" class="noColor">${timeString}</a>
+                </span>
+                ${linkedSegment}${numSegment}
+            </div>
+            <div class="commentText" dir="auto">${item.textDisplay}</div>
+            ${likeSegment}${replySegment}
+        </div>`;
 
     return content;
 }
@@ -163,7 +156,7 @@ export function parseTimestamp(iso, timezone) {
     let output;
     switch (timezone) {
         case "utc":
-            output = date.toISOString().substring(0, 10) + " " + date.toISOString().substring(11,19);
+            output = date.toISOString().substring(0, 19).replace('T', ' ');
             break;
         case "local":
         default:
