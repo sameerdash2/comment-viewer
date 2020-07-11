@@ -43,7 +43,7 @@ class Video {
                 this._app.ytapi.quotaExceeded();
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchTitle(idString) }, 1);
+                setTimeout(() => this.fetchTitle(idString), 1);
             }
         });
     }
@@ -67,7 +67,7 @@ class Video {
                 this._app.ytapi.quotaExceeded();
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchTestComment() }, 1);
+                setTimeout(() => this.fetchTestComment(), 1);
             }
             else if (this._video.snippet.liveBroadcastContent == "none" && err.response.data.error.errors[0].reason == "commentsDisabled") {
                 this._commentsEnabled = false;
@@ -208,7 +208,7 @@ class Video {
 
             // If there are more comments, and database-stored comments have not been reached, retrieve the next 100 comments
             if (response.data.nextPageToken && proceed) {
-                setTimeout(() => { this.fetchAllComments(response.data.nextPageToken, appending) }, 0);
+                setTimeout(() => this.fetchAllComments(response.data.nextPageToken, appending), 0);
             }
             else {
                 // Finished retrieving all comment threads.
@@ -295,7 +295,7 @@ class Video {
                 this._app.ytapi.quotaExceeded();
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchLinkedComment(idString, parentId, replyId) }, 1);
+                setTimeout(() => this.fetchLinkedComment(idString, parentId, replyId), 1);
             }
         });
     }
@@ -322,21 +322,21 @@ class Video {
                 const more = rows.length == config.maxDisplay;
                 const subset = [];
                 const repliesPromises = [];
-                for (let i = 0; i < rows.length; i++) {
+                for (const commentThread of rows) {
                     subset.push({
-                        id: rows[i].id,
-                        textDisplay: rows[i].textDisplay,
-                        authorDisplayName: rows[i].authorDisplayName,
-                        authorProfileImageUrl: rows[i].authorProfileImageUrl,
-                        authorChannelId: rows[i].authorChannelId,
-                        likeCount: rows[i].likeCount,
-                        publishedAt: rows[i].publishedAt,
-                        updatedAt: rows[i].updatedAt,
-                        totalReplyCount: rows[i].totalReplyCount
+                        id: commentThread.id,
+                        textDisplay: commentThread.textDisplay,
+                        authorDisplayName: commentThread.authorDisplayName,
+                        authorProfileImageUrl: commentThread.authorProfileImageUrl,
+                        authorChannelId: commentThread.authorChannelId,
+                        likeCount: commentThread.likeCount,
+                        publishedAt: commentThread.publishedAt,
+                        updatedAt: commentThread.updatedAt,
+                        totalReplyCount: commentThread.totalReplyCount
                     });
 
-                    if (rows[i].totalReplyCount > 0 && config.maxDisplayedReplies > 0) {
-                        repliesPromises.push(this._app.ytapi.executeMinReplies(rows[i].id));
+                    if (commentThread.totalReplyCount > 0 && config.maxDisplayedReplies > 0) {
+                        repliesPromises.push(this._app.ytapi.executeMinReplies(commentThread.id));
                     }
                 }
                 
@@ -345,12 +345,11 @@ class Video {
                 Promise.allSettled(repliesPromises).then((results) => {
                     results.forEach((result) => {
                         if (result.status == "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
-                            const id = result.value.data.items[0].id;
-                            const receivedReplies = result.value.data.items[0].replies.comments;
-                            replies[id] = [];
-                            for (let i = 0; i < config.maxDisplayedReplies && i < receivedReplies.length; i++) {
-                                replies[id].push(convertComment(receivedReplies[i], true));
-                            }
+                            const parentId = result.value.data.items[0].id;
+                            const chosenReplies = result.value.data.items[0].replies.comments.slice(0, config.maxDisplayedReplies);
+                            replies[parentId] = [];
+
+                            chosenReplies.forEach((reply) => replies[parentId].push(convertComment(reply, true)));
                         }
                     });
 
@@ -371,12 +370,11 @@ class Video {
 
     fetchReplies(commentId, pageToken, silent, replies = []) {
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
-            for (let i = 0; i < response.data.items.length; i++) {
-                replies.push(convertComment(response.data.items[i], true));
-            }
+            response.data.items.forEach((reply) => replies.push(convertComment(reply, true)));
+
             if (response.data.nextPageToken) {
                 // Fetch next batch of replies
-                setTimeout(() => { this.fetchReplies(commentId, response.data.nextPageToken, silent, replies) }, 0);
+                setTimeout(() => this.fetchReplies(commentId, response.data.nextPageToken, silent, replies), 0);
             }
             else if (!silent) {
                 this.sendReplies(commentId, replies);
@@ -387,7 +385,7 @@ class Video {
                     this._app.ytapi.quotaExceeded();
                 }
                 else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                    setTimeout(() => { this.fetchReplies(commentId, pageToken, silent, replies) }, 1);
+                    setTimeout(() => this.fetchReplies(commentId, pageToken, silent, replies), 1);
                 }                                
             });
     }
