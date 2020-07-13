@@ -86,19 +86,17 @@ class Database {
 
     cleanup() {
         // Remove any videos with:
-        // - under 1,000 comments   & > 1 day untouched
-        // - under 10,000 comments  & > 7 days untouched
-        // - under 100,000 comments & > 60 days untouched
+        // - under 10,000 comments & > 2 days untouched
+        // - under 1M comments     & > 30 days untouched
 
-        const now = new Date();
+        const now = new Date().getTime();
         logger.log('info', "Starting database cleanup");
+
         this._db.serialize(() => {
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000 OR inProgress = true)',
-                [now.getTime() - 1*DAY], function (err) { deleteCallback(this, err, 1000) });
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000)',
-                [now.getTime() - 7*DAY], function (err) { deleteCallback(this, err, 10000) });
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 100000)',
-                [now.getTime() - 60*DAY], function (err) { deleteCallback(this, err, 100000) });
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000 OR inProgress = true)',
+                [now - 2*DAY], function (err) { deleteCallback(this, err, 10000) });
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000000)',
+                [now - 30*DAY], function (err) { deleteCallback(this, err, 100000) });
 
             this._db.run('VACUUM');
         });
