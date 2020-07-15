@@ -37,13 +37,13 @@ export function formatTitle(video, options) {
 
         const startTime = new Date(video.liveStreamingDetails.actualStartTime);
         const duration = (new Date().getTime() - startTime.getTime());
-        timestampSec += `<i class="fas fa-clock"></i> <strong>Stream start time:</strong> ${parseTimestamp(startTime.toISOString(), options.timezone)}
+        timestampSec += `<i class="fas fa-clock"></i> <b>Stream start time:</b> ${parseTimestamp(startTime.toISOString(), options.timezone)}
             (Elapsed: ${parseDurationHMMSS(Math.floor(duration / 1000))})`;
     }
     else if (liveState == "upcoming") {
         viewcountSec += `<span class="red">Upcoming live stream</span>`;
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
-            <i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
+        timestampSec += `<b><i class="fas fa-calendar"></i> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
+            <i class="fas fa-clock"></i> <b>Scheduled start time:</b> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
     }
     else {
         // YT premium shows don't return viewcount
@@ -51,10 +51,10 @@ export function formatTitle(video, options) {
             ? ` <span class="gray">View count unavailable</span>`
             : `${viewCount.toLocaleString()} views`;
         
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
+        timestampSec += `<b><i class="fas fa-calendar"></i> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
 
         if (typeof video.liveStreamingDetails !== "undefined") {
-            timestampSec += `<br><div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> 
+            timestampSec += `<br><div class="streamTimes"><i class="fas fa-clock"></i> <b>Stream start time:</b> 
                 ${parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)}</div>`;
         }
 
@@ -130,8 +130,8 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
     }
 
     content += 
-        `${pfpSegment}
-        <div class="${contentClass}">
+        `${pfpSegment}` +
+        `<div class="${contentClass}">
             <div class="commentHeader">
                 <span dir="auto"${opSegment}><a href="${channelUrl}" class="${authorClass}">${item.authorDisplayName}</a></span>
                 <span>|</span>

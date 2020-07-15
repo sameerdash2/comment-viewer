@@ -21,6 +21,9 @@
   a:focus {
     color: red;
   }
+  b {
+    font-weight: 600;
+  }
   body {
     background-color: #bdf;
     font-family: "Open Sans", Arial, sans-serif;
@@ -51,6 +54,8 @@
   }
   h1 {
     padding: 0.1em 0;
+    font-weight: 600;
+    letter-spacing: -2px;
   }
   input[type="checkbox"],
   input[type="radio"] {
@@ -113,7 +118,7 @@
   }
   .linkedComment {
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     vertical-align: top;
   }
   div#info {
@@ -135,7 +140,7 @@
     font-size: 1.25em;
   }
   .author {
-    font-weight: 700;
+    font-weight: 600;
   }
   span.red {
     color: #b00;
@@ -164,7 +169,7 @@
     display: block;
   }
   div.optionsHeader {
-    font-weight: 700;
+    font-weight: 600;
   }
   div.commentHeader {
     vertical-align: middle;
@@ -202,7 +207,7 @@
     max-width: 100%;
   }
   div#loadHeader {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 18px;
     margin-bottom: 8px;
   }
@@ -280,7 +285,7 @@
     float: right;
   }
   .commentFooter {
-    font-weight: 700;
+    font-weight: 600;
   }
   img.pfp {
     height: 48px;
@@ -304,7 +309,8 @@
   }
   a.authorName,
   a.authorNameOp {
-    font-weight: 700;
+    font-weight: 600;
+    letter-spacing: -0.5px;
   }
   a.authorName {
     color: #00e;
@@ -362,7 +368,7 @@
   }
   .terms-header {
     padding: 8px 16px;
-    font-weight: 700;
+    font-weight: 600;
     font-size: 20px;
     background-color: #bdf;
   }
@@ -378,7 +384,7 @@
   #closeTerms {
     float: right;
     padding: 8px 16px;
-    font-weight: 700;
+    font-weight: 600;
   }
   #closeTerms:focus,
   #closeTerms:hover {
