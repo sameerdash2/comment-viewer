@@ -35,7 +35,12 @@ export class Graph {
     intervalChange() {
         const newInterval = document.getElementById("intervalSelect").value;
         if (newInterval != this._interval) {
-            const isUtc = this._video.options.timezone == "utc";
+            const isUtc = this._video.options.timezone === "utc";
+
+            // Build the graph data array if needed
+            if (!this._datasets[newInterval]) {
+                this.buildDataArray(newInterval);
+            }
 
             // Save the left & right graph bounds to keep the zoomed space.
             const leftBound = this._graphInstance.series[0].min;
@@ -51,12 +56,6 @@ export class Graph {
             shiftDate(xMax, newInterval, -1, isUtc);
             const rightBound = xMax.getTime() / 1000;
 
-            // Build the graph data array if needed
-            if (!this._datasets[newInterval]) {
-                this.buildDataArray(newInterval);
-            }
-            this._graphInstance.setData(this._datasets[newInterval]);
-
             // Determine new left & right indexes based on the bounds
             const len = this._datasets[newInterval][0].length;
             let leftIndex = len - 1, rightIndex = 0;
@@ -66,15 +65,17 @@ export class Graph {
             while (leftIndex > 0 && this._datasets[newInterval][0][leftIndex] > leftBound) {
                 leftIndex--;
             }
-            if (leftIndex == rightIndex) {
+            if (leftIndex === rightIndex) {
                 // Due to distr: 2, the graph can't show only one data point
                 // Widen the range by 1 on each side if possible
                 leftIndex = Math.max(0, leftIndex - 1);
                 rightIndex = Math.min(len - 1, rightIndex + 1);
             }
 
-            this._graphInstance.setScale("x", { min:leftIndex, max:rightIndex });
             this._interval = newInterval;
+
+            this._graphInstance.setData(this._datasets[newInterval], false);
+            this._graphInstance.setScale("x", { min:leftIndex, max:rightIndex });
         }
     }
 
