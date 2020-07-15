@@ -333,8 +333,11 @@
     max-width: 1000px;
     margin: 0;
   }
+  ul {
+    padding-left: 0px;
+  }
   li {
-    margin-left: 2px;
+    margin-left: 20px;
   }
   div#terms {
     display: none;
