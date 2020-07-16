@@ -35,21 +35,31 @@ export class Video {
         this._linkedParent = this._currentLinked = null;
 
         document.getElementById("loadPercentage").innerHTML = "Initializing...";
+
         document.getElementById("loadStatus").style.display = "block";
+        document.getElementById("progressIndeterminate").style.display = "block";
+        this._waiting = true;
     }
 
     updateLoadStatus(count) {
-        if (count == -1) {
+        if (count === -1) {
             document.getElementById("limitMessage").innerHTML =
                 `Loading is in progress. Please check back later`;
         }
         else {
+            if (this._waiting) {
+                document.getElementById("progressIndeterminate").style.display = "none";
+                document.getElementById("progressGreen").style.display = "block";
+                this._waiting = false;
+            }
+            
             // Determine percentage precision based on total comment count
             const precision = Math.max(0, Math.floor(Math.log10(this._totalExpected)) - 3);
             const percentage = (count / this._totalExpected * 100).toFixed(precision) + '%';
 
+            // Offset to make sure the first change does its transition
+            setTimeout(() => document.getElementById("progressGreen").style.width = percentage, 5);
             document.getElementById("loadPercentage").innerHTML = percentage;
-            document.getElementById("progressGreen").style.width = percentage;
             if (this._totalExpected > 1000) {
                 document.getElementById("loadEta").innerHTML = '~'
                     + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
