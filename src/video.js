@@ -403,16 +403,16 @@ class Video {
             this._app.database.getAllDates(this._id, (rows) => {
                 let dates = new Array(rows.length);
 
-                // Populate dates array in chunks of 1000 to ease CPU load                    
+                // Populate dates array in chunks of 10000 to not block the CPU
                 let i = 0;
                 const processChunk = () => {
                     let count = 0;
-                    while (count++ < 1000 && i < rows.length) {
+                    while (count++ < 10000 && i < rows.length) {
                         dates[i] = rows[i].publishedAt;
                         i++;
                     }
                     if (i < rows.length) {
-                        setTimeout(processChunk, 5);
+                        setTimeout(processChunk, 0);
                     }
                     else {
                         this._socket.emit("graphData", dates);
