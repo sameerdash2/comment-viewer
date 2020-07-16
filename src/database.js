@@ -51,8 +51,8 @@ class Database {
             [videoId], (err, rows) => callback(err, rows));
     }
 
-    getLastDate(videoId, callback) {
-        this._db.get('SELECT MAX(publishedAt) FROM comments WHERE videoId = ?', [videoId], (_err, row) => callback(row));
+    getLastComment(videoId, callback) {
+        this._db.get('SELECT id, MAX(publishedAt) FROM comments WHERE videoId = ?', [videoId], (_err, row) => callback(row));
     }
 
     getAllDates(videoId, callback) {

@@ -132,8 +132,8 @@ class Video {
                         else {
                             this._indexedComments = row.commentCount;
                             this._app.database.reAddVideo(this._id, () => {
-                                this._app.database.getLastDate(this._id, (row) => {
-                                    this._lastDate = row['MAX(publishedAt)'];
+                                this._app.database.getLastComment(this._id, (row) => {
+                                    this._lastComment = { id: row.id, publishedAt: row["MAX(publishedAt)"] };
                                     this.startFetchProcess(true);
                                 });
                             });
@@ -177,22 +177,25 @@ class Video {
                 // If the pinned comment precedes the last date, shift it out of the array in order not to
                 // distort the date-checking later. Keep it in convertedComments to update its database entry
                 // since its likeCount is probably increasing rapidly.
-                if (appending && new Date(response.data.items[0].snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastDate) {
+                if (appending && new Date(response.data.items[0].snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastComment.publishedAt) {
                     convertedComments.push(convertComment(response.data.items.shift()));
                 }
                 
             }
             let newIndexed;
             for (const commentThread of response.data.items) {
-                newIndexed = 1 + commentThread.snippet.totalReplyCount;
-                // If appending to database-stored comments, check if current comment has passed the date
-                // of the newest stored comment.
-                // Equal timestamps will slip through, but they should be taken care of by database.
-                if (appending && new Date(commentThread.snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastDate) {
+                // If appending to database-stored comments, check if the records have been reached by
+                // comparing IDs of the last stored comment.
+                // In case it's been deleted, also check if the current date has surpassed the last comment's date.
+                // Equal timestamps can slip through, but they should be taken care of by database.
+                const currentDate = new Date(commentThread.snippet.topLevelComment.snippet.publishedAt).getTime();
+                if (appending && (commentThread.id === this._lastComment.id || currentDate < this._lastComment.publishedAt)) {
                     proceed = false;
                     break;
                 }
+
                 convertedComments.push(convertComment(commentThread));
+                newIndexed = 1 + commentThread.snippet.totalReplyCount;
                 this._indexedComments += newIndexed;
                 this._newComments += newIndexed;
             }
