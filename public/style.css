@@ -24,9 +24,13 @@ a:focus {
 b {
   font-weight: 600;
 }
+p {
+  margin-bottom: 0;
+}
 body {
   background-color: #bdf;
   font-family: "Open Sans", Arial, sans-serif;
+  line-height: normal;
   font-size: 16px;
   min-height: 100vh;
   position: relative;
@@ -54,6 +58,7 @@ span.dot {
 }
 h1 {
   padding: 0.1em 0;
+  font-size: 2em;
   font-weight: 600;
   letter-spacing: -2px;
 }
