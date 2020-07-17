@@ -163,6 +163,13 @@ export class Video {
         }
     }
 
+    handleStatsData(data) {
+        document.getElementById("s_comments").textContent = data[0].comments.toLocaleString();
+        document.getElementById("s_totalLikes").textContent = data[0].totalLikes.toLocaleString();
+        document.getElementById("s_avgLikes").textContent = (data[0].totalLikes / data[0].comments).toFixed(2).toLocaleString();
+        this._graph.constructGraph(data[1]);
+    }
+
     handleWindowResize() {
         this.adjustMetadataElement();
         this._graph.requestResize();

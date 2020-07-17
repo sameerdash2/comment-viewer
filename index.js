@@ -33,7 +33,7 @@ class App {
                 videoInstance.getReplies(id);
             });
             socket.on("graphRequest", () => {
-                videoInstance.makeGraph();
+                videoInstance.getStatistics();
             });
     
             function checkSendID(inp) {

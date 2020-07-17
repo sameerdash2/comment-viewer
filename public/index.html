@@ -79,9 +79,27 @@
             </div>
 
             <div id="statsOptions">
-                <button id="viewGraph" class="option">Toggle graph</button>
+                <button id="viewGraph" class="option">Toggle statistics</button>
             </div>
-            <div id="graphContainer">
+            <div id="statsContainer">
+                <div id="stats">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td><b>Top-level comments</b></td>
+                                <td id="s_comments">0</td>
+                            </tr>
+                            <tr>
+                                <td><b>Total likes</b></td>
+                                <td id="s_totalLikes">0</td>
+                            </tr>
+                            <tr>
+                                <td><b>Average likes per comment</b></td>
+                                <td id="s_avgLikes">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <div id="graphSpace"></div>
                 <div id="graphFooter">
                     <span id="graphDesc">Drag to zoom, double-click to reset</span>

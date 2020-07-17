@@ -136,6 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("newReplies", ({ items, id }) => video.handleNewReplies(id, items));
 
+    socket.on("statsData", (data) => video.handleStatsData(data));
+
     socket.on("linkedComment", ({ parent, hasReply, reply, videoObject }) => {
         displayVideo(videoObject);
         video.handleLinkedComment(parent, hasReply ? reply : null);
@@ -158,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("b_likesMost").disabled = false;
         document.getElementById("b_dateNewest").disabled = false;
         document.getElementById("b_dateOldest").disabled = true;
-        document.getElementById("graphContainer").style.display = "none";
+        document.getElementById("statsContainer").style.display = "none";
         document.getElementById("graphSpace").innerHTML = "";
         
         video.reset();

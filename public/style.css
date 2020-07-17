@@ -86,10 +86,10 @@ span#options:hover {
   cursor: default;
 }
 button#viewGraph {
-  width: 125px;
+  width: 130px;
   padding: 2px 0;
 }
-div#graphContainer {
+div#statsContainer {
   display: none;
   width: 996px;
   border: 2px solid #000;

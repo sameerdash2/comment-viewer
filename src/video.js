@@ -397,11 +397,22 @@ class Video {
         this._socket.emit("newReplies", { items: items, id: commentId});
     }
 
-    makeGraph() {
+    getStatistics() {
         if (this._graphAvailable) {
-            // Send array of dates to client
+            Promise.all([this._app.database.getStatistics(this._id), this.makeGraphArray()]).then((results) => {
+                this._socket.emit("statsData", results);
+                results = undefined;
+            }, (err) => {
+                logger.log('error', "Statistics error on %s: %o", this._id, err);
+            });
+        }
+    }
+
+    makeGraphArray() {
+        // Form array of all dates
+        return new Promise((resolve) => {        
             this._app.database.getAllDates(this._id, (rows) => {
-                let dates = new Array(rows.length);
+                const dates = new Array(rows.length);
 
                 // Populate dates array in chunks of 10000 to not block the CPU
                 let i = 0;
@@ -415,13 +426,12 @@ class Video {
                         setTimeout(processChunk, 0);
                     }
                     else {
-                        this._socket.emit("graphData", dates);
-                        dates = undefined;
+                        resolve(dates);
                     }
                 }
                 processChunk();
             });
-        }
+        });
     }
 
 }

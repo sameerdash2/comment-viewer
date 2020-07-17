@@ -13,8 +13,6 @@ export class Graph {
 
         document.getElementById("viewGraph").addEventListener('click', () => this.handleGraphButton());
         document.getElementById("intervalSelect").onchange = () => this.intervalChange();
-
-        this._socket.on("graphData", (dates) => this.constructGraph(dates));
     }
     reset() {
         this._graphDisplayState = 0; //0=none, 1=loaded, 2=shown
@@ -89,11 +87,11 @@ export class Graph {
 
     handleGraphButton() {
         if (this._graphDisplayState == 2) {
-            document.getElementById("graphContainer").style.display = "none";
+            document.getElementById("statsContainer").style.display = "none";
             this._graphDisplayState = 1;
         }
         else if (this._graphDisplayState == 1) {
-            document.getElementById("graphContainer").style.display = "block";
+            document.getElementById("statsContainer").style.display = "block";
             this._graphDisplayState = 2;
         }
         else {
@@ -160,11 +158,11 @@ export class Graph {
 
         this.drawGraph(this._interval);
 
-        document.getElementById("graphContainer").style.display = "block";
+        document.getElementById("statsContainer").style.display = "block";
         this._graphDisplayState = 2;
         clearInterval(this._loadingInterval);
         document.getElementById("viewGraph").disabled = false;
-        document.getElementById("viewGraph").innerHTML = "Toggle graph";
+        document.getElementById("viewGraph").innerHTML = "Toggle statistics";
     }
 
     makeLabel(rawValue, isUtc) {
@@ -239,7 +237,7 @@ export class Graph {
         };
 
         this._graphInstance = new uPlot(opts, this._datasets[interval], document.getElementById("graphSpace"));
-        this.resizeGraphContainer();
+        this.resizeStatsContainer();
     }
 
     requestResize() {
@@ -254,14 +252,14 @@ export class Graph {
     
     resize = () => {
         this._graphInstance.setSize(this.getGraphSize());
-        this.resizeGraphContainer();
+        this.resizeStatsContainer();
         if (this._resizeRequestTimeout) {
             clearTimeout(this._resizeRequestTimeout);
         }
         this._resizeRequestTimeout = undefined;
     }
 
-    resizeGraphContainer = () => {
-        document.getElementById("graphContainer").style.width = this.getGraphSize().width + "px";
+    resizeStatsContainer = () => {
+        document.getElementById("statsContainer").style.width = this.getGraphSize().width + "px";
     }
 }

@@ -60,6 +60,34 @@ class Database {
             [videoId], (_err, rows) => callback(rows));
     }
 
+    getStatistics(videoId) {
+        return new Promise((resolve) => {
+            let remainingQueries = 2;
+            const data = {};
+            const tryFinish = () => {
+                if (--remainingQueries <= 0) {
+                    resolve(data);
+                }
+            }
+
+            this._db.parallelize(() => {
+                // Get comment count, total likes
+                this._db.get('SELECT COUNT(*), sum(likeCount) FROM comments WHERE videoId = ?', [videoId], (_err, row) => {
+                    data.comments = Number(row['COUNT(*)']);
+                    data.totalLikes = Number(row['sum(likeCount)']);
+                    tryFinish();
+                });
+                // Get top 10 commenters
+                this._db.all('SELECT authorChannelId, authorDisplayName, COUNT(authorChannelId) AS numComments '
+                    + 'FROM comments WHERE videoId = ? GROUP BY authorChannelId ORDER BY numComments DESC LIMIT 10',
+                    [videoId], (_err, rows) => {
+                        data.authors = rows;
+                        tryFinish();
+                });
+            });
+        });
+    }
+
     writeNewComments(videoId, comments, newCommentCount, nextPageToken) {
         const insert = [];
         for (let i = 0; i < comments.length; i++) { 
