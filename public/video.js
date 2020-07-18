@@ -1,5 +1,5 @@
 import { Graph } from "./graph.js";
-import { formatTitle, formatComment, eta, parseDurationMSS } from './util.js';
+import { formatTitle, formatComment, eta, parseDurationMSS, getChannelUrl } from './util.js';
 
 export class Video {
     constructor(socket) {
@@ -27,11 +27,12 @@ export class Video {
         this._uploaderId = video.snippet.channelId; // for highlighting OP comments
         document.getElementById("message").innerHTML = "&nbsp;";
         formatTitle(video, this.options);
-        this.resizeMetadata();
+        document.getElementById("videoColumn").style.display = "block";
     }
 
     prepareLoadStatus() {
         document.getElementById("linkedHolder").innerHTML = "";
+        document.getElementById("linkedColumn").style.display = "none";
         this._linkedParent = this._currentLinked = null;
 
         document.getElementById("loadPercentage").innerHTML = "Initializing...";
@@ -80,8 +81,8 @@ export class Video {
             // Skip comment if it's the linked one.
             if (this._linkedParent == items[i].id) continue;
     
-            add += `<hr><div class="commentThreadDiv">`
-                + formatComment(items[i], this.commentNum, this.options, this._uploaderId, this._videoId, false, false) + `</div>`;		
+            add += `<li class="list-group-item comment">`
+                + formatComment(items[i], this.commentNum, this.options, this._uploaderId, this._videoId, false) + `</li>`;		
         }
         document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
     }
@@ -91,8 +92,8 @@ export class Video {
         for (const id in allReplies) {
             content = "";
             allReplies[id].forEach((reply) => {
-                content +=`<div class="commentThreadDiv">`
-                    + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, false, true) + `</div>`
+                content +=`<div class="mt-2">`
+                    + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, true) + `</div>`
             });
             document.getElementById("repliesEE-" + id).innerHTML = content;
 
@@ -114,12 +115,12 @@ export class Video {
         if (this._storedReplies[commentId]) {
             if (this._displayedReplies.has(commentId)) {
                 document.getElementById("repliesEE-" + commentId).style.display = "none";
-                button.innerHTML = "Show " + this._storedReplies[commentId].length + " replies";
+                button.innerHTML = "&#x25BC; Show " + this._storedReplies[commentId].length + " replies";
                 this._displayedReplies.delete(commentId);
             }
             else {
                 document.getElementById("repliesEE-" + commentId).style.display = "block";
-                button.innerHTML = "Hide " + this._storedReplies[commentId].length + " replies";
+                button.innerHTML = "&#x25B2; Hide " + this._storedReplies[commentId].length + " replies";
                 this._displayedReplies.add(commentId);
             }
         }
@@ -133,17 +134,16 @@ export class Video {
     populateReplies(commentId) {
         const len = this._storedReplies[commentId].length;
         let newContent = "";
-        let isLinked, className;
+        let lClass;
         for (let i = len - 1; i >= 0; i--) {
-            isLinked = this._storedReplies[commentId][i].id == this._currentLinked;
-            className = isLinked ? "linked" : "commentThreadDiv";
-            newContent +=`<div class="` + className + `">`
+            lClass = this._storedReplies[commentId][i].id === this._currentLinked ? " linked" : "";
+            newContent +=`<div class="mt-2${lClass}">`
                 + formatComment(this._storedReplies[commentId][i], len - i, this.options,
-                    this._uploaderId, this._videoId, isLinked, true) + `</div>`;
+                    this._uploaderId, this._videoId, true) + `</div>`;
         }
         document.getElementById("repliesEE-" + commentId).innerHTML = newContent;
         this._displayedReplies.add(commentId);
-        document.getElementById("getReplies-" + commentId).innerHTML = "Hide " + len + " replies";
+        document.getElementById("getReplies-" + commentId).innerHTML = "&#x25B2; Hide " + len + " replies";
         document.getElementById("getReplies-" + commentId).disabled = false;
     }
 
@@ -152,53 +152,46 @@ export class Video {
         this._currentLinked = reply ? reply.id : parent.id;
         
         document.getElementById("linkedHolder").innerHTML =
-            `<hr><section class="linkedSec"><div class="commentThreadDiv">`
-            + formatComment(parent, -1, this.options, this._uploaderId, this._videoId,!reply, false)
-            + `</div></section><hr><br>`;
+            formatComment(parent, -1, this.options, this._uploaderId, this._videoId, false);
         if (reply) {
             document.getElementById("repliesEE-" + parent.id).innerHTML =
-                `<div class="linked">`
-                + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, true, true)
+                `<div class="mt-2 linked">`
+                + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, true)
                 + `</div>`;
         }
+
+        document.getElementById("linkedColumn").style.display = "block";
     }
 
     handleStatsData(data) {
         document.getElementById("s_comments").textContent = data[0].comments.toLocaleString();
         document.getElementById("s_totalLikes").textContent = data[0].totalLikes.toLocaleString();
         document.getElementById("s_avgLikes").textContent = (data[0].totalLikes / data[0].comments).toFixed(2).toLocaleString();
+
+        const tbl = document.getElementById("topCommenters");
+        let row, cell, url, opSegment, authorClass;
+        for (const item of data[0].authors) {
+            row = tbl.insertRow(-1);
+            cell = row.insertCell(0);
+            url = getChannelUrl(item.authorChannelId);
+            authorClass = "authorName";
+            opSegment = "";
+
+            if (item.authorChannelId === this._uploaderId) { 
+                opSegment += `class="authorNameCreator"`;
+                authorClass = "authorNameOp";
+            }
+            
+            cell.innerHTML = `<span dir="auto"${opSegment}><a href="${url}" class="${authorClass}">${item.authorDisplayName}</a></span>`
+            
+            cell = row.insertCell(1);
+            cell.textContent = item.numComments;
+        }
+
         this._graph.constructGraph(data[1]);
     }
 
     handleWindowResize() {
-        this.adjustMetadataElement();
         this._graph.requestResize();
-    }
-
-    adjustMetadataElement() {
-        if (document.getElementById("metadata")) {
-            // Set timeout to resize only after a pause in window resize events, prevents CPU overload
-            if (this._metadataResizeTimeout) {
-                clearTimeout(this._metadataResizeTimeout);
-            }
-            this._metadataResizeTimeout = setTimeout(this.resizeMetadata, 100);
-        }
-    }
-
-    resizeMetadata = () => {
-        const metadata = document.getElementById("metadata");
-        if (document.documentElement.clientWidth < 600 || !this.options.showImg) {
-            metadata.style.cssFloat = "none";
-            metadata.style.width = "auto";
-        }
-        else {
-            metadata.style.cssFloat = "right";
-            metadata.style.width = this.options.showImg ? "calc(100% - 261px)" :  "100%";
-        }
-
-        if (this._metadataResizeTimeout) {
-            clearTimeout(this._metadataResizeTimeout);
-        }
-        this._metadataResizeTimeout = undefined;
     }
 }

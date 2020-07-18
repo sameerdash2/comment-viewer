@@ -78,9 +78,12 @@ export class Graph {
     }
 
     getGraphSize = () => {
-        // Cap size at 996 x 400
+        // Fill container width
+        const statsColumn = document.getElementById("statsColumn");
+        const computedStyle = window.getComputedStyle(statsColumn);
+        const containerWidth = statsColumn.clientWidth - parseFloat(computedStyle.paddingLeft) - parseFloat(computedStyle.paddingRight);
         return {
-            width: Math.max(250, Math.min(996, document.documentElement.clientWidth - 48 - 4)),
+            width: Math.max(250, containerWidth - 16),
             height: Math.max(150, Math.min(400, document.documentElement.clientHeight - 75))
         };
     }
@@ -88,18 +91,20 @@ export class Graph {
     handleGraphButton() {
         if (this._graphDisplayState == 2) {
             document.getElementById("statsContainer").style.display = "none";
+            document.getElementById("viewGraph").innerHTML = "&#x25BC; Statistics";
             this._graphDisplayState = 1;
         }
         else if (this._graphDisplayState == 1) {
             document.getElementById("statsContainer").style.display = "block";
+            document.getElementById("viewGraph").innerHTML = "&#x25B2; Statistics";
             this._graphDisplayState = 2;
         }
         else {
             document.getElementById("viewGraph").disabled = true;
-            document.getElementById("viewGraph").innerHTML = "Loading...";
+            document.getElementById("viewGraph").textContent = "Loading...";
             this._loadingInterval = setInterval(() => {
                 this._loadingDots = ++this._loadingDots % 4;
-                document.getElementById("viewGraph").innerHTML = "Loading" + '.'.repeat(this._loadingDots);
+                document.getElementById("viewGraph").textContent = "Loading" + '.'.repeat(this._loadingDots);
             }, 200);
             this._socket.emit("graphRequest");
         }
@@ -162,7 +167,7 @@ export class Graph {
         this._graphDisplayState = 2;
         clearInterval(this._loadingInterval);
         document.getElementById("viewGraph").disabled = false;
-        document.getElementById("viewGraph").innerHTML = "Toggle statistics";
+        document.getElementById("viewGraph").innerHTML = "&#x25B2; Statistics";
     }
 
     makeLabel(rawValue, isUtc) {
@@ -237,7 +242,6 @@ export class Graph {
         };
 
         this._graphInstance = new uPlot(opts, this._datasets[interval], document.getElementById("graphSpace"));
-        this.resizeStatsContainer();
     }
 
     requestResize() {
@@ -252,14 +256,9 @@ export class Graph {
     
     resize = () => {
         this._graphInstance.setSize(this.getGraphSize());
-        this.resizeStatsContainer();
         if (this._resizeRequestTimeout) {
             clearTimeout(this._resizeRequestTimeout);
         }
         this._resizeRequestTimeout = undefined;
-    }
-
-    resizeStatsContainer = () => {
-        document.getElementById("statsContainer").style.width = this.getGraphSize().width + "px";
     }
 }

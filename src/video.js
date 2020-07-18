@@ -14,6 +14,7 @@ class Video {
     reset() {
         this._indexedComments = 0; // All retrieved comments + their reply counts
         this._newComments = 0;
+        this._loadComplete = false;
     }
 
     handleNewVideo(item, allowCommence = true) {
@@ -322,6 +323,8 @@ class Video {
                 logger.log('error', "Database getComments error: %o", err);
             }
             else {
+                this._loadComplete = true; // To permit statistics retrieval later
+
                 const more = rows.length == config.maxDisplay;
                 const subset = [];
                 const repliesPromises = [];
@@ -398,7 +401,7 @@ class Video {
     }
 
     getStatistics() {
-        if (this._graphAvailable) {
+        if (this._graphAvailable && this._loadComplete) {
             Promise.all([this._app.database.getStatistics(this._id), this.makeGraphArray()]).then((results) => {
                 this._socket.emit("statsData", results);
                 results = undefined;

@@ -77,9 +77,9 @@ class Database {
                     data.totalLikes = Number(row['sum(likeCount)']);
                     tryFinish();
                 });
-                // Get top 10 commenters
+                // Get top 5 commenters
                 this._db.all('SELECT authorChannelId, authorDisplayName, COUNT(authorChannelId) AS numComments '
-                    + 'FROM comments WHERE videoId = ? GROUP BY authorChannelId ORDER BY numComments DESC LIMIT 10',
+                    + 'FROM comments WHERE videoId = ? GROUP BY authorChannelId ORDER BY numComments DESC LIMIT 5',
                     [videoId], (_err, rows) => {
                         data.authors = rows;
                         tryFinish();

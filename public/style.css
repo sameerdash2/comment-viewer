@@ -7,6 +7,9 @@
   font-size: 16px;
 }
 
+:root {
+  --pagelight: #f5faff;
+}
 * {
   margin: 0;
 }
@@ -32,6 +35,7 @@ body {
   font-family: "Open Sans", Arial, sans-serif;
   line-height: normal;
   font-size: 16px;
+  color: #000;
   min-height: 100vh;
   position: relative;
 }
@@ -62,23 +66,6 @@ h1 {
   font-weight: 600;
   letter-spacing: -2px;
 }
-input[type="checkbox"],
-input[type="radio"] {
-  margin: 6px 2px;
-}
-hr.opt {
-  margin: 2px 0;
-}
-div#message {
-  color: #977;
-  font-size: 80%;
-  margin-top: 5px;
-}
-div#intro {
-  max-width: 1000px;
-  font-size: 20px;
-  margin-top: 10px;
-}
 .mainInput {
   box-sizing: border-box;
   width: 100%;
@@ -90,25 +77,15 @@ div#intro {
 span#options:hover {
   cursor: default;
 }
-button#viewGraph {
-  width: 130px;
-  padding: 2px 0;
-}
-div#statsContainer {
-  display: none;
-  width: 996px;
-  border: 2px solid #000;
-  padding: 5px 0;
-}
-div#graphFooter {
-  overflow: auto;
+button.nostyle {
+  font: inherit;
+  text-transform: inherit;
+  padding: 0;
+  width: 100%;
+  text-align: left;
 }
 span#graphDesc {
-  padding-left: 5px;
   font-size: 14px;
-}
-span#interval {
-  padding-right: 5px;
   float: right;
 }
 select {
@@ -121,25 +98,40 @@ div.gray,
 span.gray {
   color: #555;
 }
-.linkedComment {
-  font-size: 14px;
-  font-weight: 600;
-  vertical-align: top;
-}
 div#info {
   display: none;
-  font-size: 0;
-  margin: 10px 0;
-  white-space: nowrap;
-}
-#metadata {
-  white-space: initial;
-  vertical-align: top;
   line-height: 1.75em;
 }
-#commentInfo,
-#metadata {
-  font-size: 1rem;
+.card {
+  background-color: var(--pagelight);
+}
+.comment {
+  background-color: var(--pagelight);
+  padding: 0.5rem;
+  border: none;
+}
+.comment + .comment {
+  border-top: 1px solid rgba(0, 0, 0, 0.25);
+}
+ul.comment {
+  line-height: 1.5;
+  text-align: left;
+}
+#commentsCol,
+#videoColumn,
+#statsColumn,
+#statsContainer,
+#loadStatus,
+#linkedColumn, 
+#noteColumn {
+  display: none;
+}
+tr:first-child td,
+tr:first-child th {
+  border-top: none;
+}
+#commentsSection {
+  line-height: 1.5;
 }
 .vidTitle {
   font-size: 1.25em;
@@ -158,6 +150,10 @@ span#options {
 span#arrow {
   font-size: 16px;
 }
+h6.sub-title {
+  font-weight: 600;
+  margin: 0;
+}
 #optionsContent {
   display: none;
   font-size: 16px;
@@ -173,9 +169,6 @@ span#arrow {
 #options:hover #optionsContent {
   display: block;
 }
-div.optionsHeader {
-  font-weight: 600;
-}
 div.commentHeader {
   vertical-align: middle;
 }
@@ -189,60 +182,68 @@ button:hover {
   cursor: pointer;
   background-color: #e4e4e4;
 }
-button:disabled {
-  cursor: inherit;
-  color: #0006;
-  background-color: #eee9;
-  border-color: rgba(0, 0, 0, 0.25);
-}
-button.send {
-  font-size: 18px;
-  padding: 8px;
-}
 button.sendSort {
-  padding: 2px 8px;
+  padding: 0.25rem 0.5rem;
 }
-.commentsList.fade {
-  opacity: 0.5;
-  transition: opacity 0.25s;
+#intervalSelect {
+  color: inherit;
 }
-div#loadStatus {
-  display: none;
-  width: 400px;
-  max-width: 100%;
+button:disabled {
+  pointer-events: none;
 }
-div#loadHeader {
+h5.head {
+  text-transform: uppercase;
+  font-size: 16px;
   font-weight: 600;
-  font-size: 18px;
-  margin-bottom: 8px;
+  color: #666;
+  padding: 0.75rem;
 }
-span#loadEta {
+
+.btn-light {
+  color: #000;
+  font: inherit;
+  height: fit-content;
+}
+.btn-link {
+  color: #00f;
+}
+div#spinnerContainer {
+  display: none;
+  height: 0;
+}
+div#spinner {
+  margin-top: 100px;
+  z-index: 10;
+}
+.reloading {
+  opacity: 0.25;
+  transition: opacity 0.25s linear;
+  pointer-events: none;
+}
+#loadEta {
   float: right;
 }
-div#progressBar {
-  background-color: rgba(0,0,0,0.1);
-  border-radius: 4px;
-  border: 1px solid #000;
-  overflow: hidden;
-  margin-top: 8px;
-}
-div#progressGreen, div#progressIndeterminate {
-  display: none;
+div#progress {
   height: 24px;
-  position: relative;
-  background-color: #0b0;
 }
-div#progressGreen {
-  width: 0%;
-  transition: width 0.1s;
+div.pbar {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.snap {
+  transition: width 0.25s;
 }
 div#progressIndeterminate {
+  position: relative;
   width: 25%;
-  animation: movingGreen 1.5s cubic-bezier(0.4,0.6,0.6,0.4) infinite;
+  animation: movingGreen 1.5s cubic-bezier(0.4, 0.6, 0.6, 0.4) infinite;
 }
 @keyframes movingGreen {
-  from { left: -25%; }
-  to { left: 100%; }
+  from {
+    left: -25%;
+  }
+  to {
+    left: 100%;
+  }
 }
 div#chooseLoad {
   display: none;
@@ -250,27 +251,11 @@ div#chooseLoad {
 div#sortLoaded {
   display: none;
   font-size: 18px;
-  margin-bottom: 8px;
-}
-div#statsOptions {
-  display: none;
-  margin-bottom: 5px;
-}
-div#limitMessage {
-  font-size: 18px;
-}
-div.commentThreadDiv,
-div.linked {
-  margin: 6px 0;
-  line-height: 1.5em;
-  text-align: left;
-  white-space: nowrap;
 }
 div.linked {
   background-color: #def;
 }
 a.channelPfpLink {
-  margin-top: 5px;
   margin-right: 5px;
   display: inline-block;
   vertical-align: top;
@@ -287,15 +272,12 @@ a.channelPfpLink {
   white-space: normal;
   word-wrap: break-word;
   width: calc(100% - 53px);
-  max-width: 947px;
 }
 .commentContentFull {
   width: 100%;
-  max-width: 1000px;
 }
 .replyContentFull {
   width: calc(100% - 32px);
-  max-width: 968px;
   margin-left: 32px;
 }
 span.num {
@@ -309,20 +291,18 @@ img.pfp {
   width: 48px;
 }
 img.thumbnail {
-  width: 256px;
-  height: 144px;
-  margin-right: 5px;
+  width: 100%;
   margin-bottom: 5px;
+}
+#submitAll {
+  width: 100%;
 }
 #showMoreDiv {
   display: none;
 }
 #showMoreBtn {
   font-size: 20px;
-  height: 56px;
   width: 100%;
-  max-width: 1000px;
-  margin-top: 10px;
 }
 a.authorName,
 a.authorNameOp {
@@ -343,17 +323,10 @@ span.authorNameCreator {
 a.noColor {
   color: inherit;
 }
-hr {
-  height: 2px;
-  background-color: #000;
-  border: 0;
-  max-width: 1000px;
-  margin: 0;
-}
-ul {
+ul.terms-list {
   padding-left: 0px;
 }
-li {
+li.terms-item {
   margin-left: 20px;
 }
 div#terms {
