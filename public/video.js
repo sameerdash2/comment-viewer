@@ -75,13 +75,14 @@ export class Video {
             this._displayedReplies = new Set();
         }
         let add = "";
+        const paddingX = this.options.showImg ? "2" : "3";
         for (let i = 0; i < items.length; i++) {
             this.commentNum++;
             this._replyCounts[items[i].id] = items[i].totalReplyCount;
-            // Skip comment if it's the linked one.
+            // Skip comment if it's the linked one. (obsolete)
             if (this._linkedParent == items[i].id) continue;
     
-            add += `<li class="list-group-item comment">`
+            add += `<li class="list-group-item comment py-2 px-${paddingX}">`
                 + formatComment(items[i], this.commentNum, this.options, this._uploaderId, this._videoId, false) + `</li>`;		
         }
         document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);

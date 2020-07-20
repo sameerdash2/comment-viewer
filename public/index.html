@@ -48,7 +48,8 @@
             <div class="card-body">
               <form id="videoForm" autocomplete="off" onsubmit="return false">
                 <div id="inputRow">
-                  <input class="form-control form-control-lg" type="text" id="enterID" autofocus spellcheck="false" maxlength="255" placeholder="Enter video or comment URL" aria-label="Enter video or comment URL" />
+                  <input class="form-control form-control-lg" type="text" id="enterID" autofocus spellcheck="false"
+                    maxlength="255" placeholder="Video or comment URL" aria-label="Video or comment URL" />
                 </div>
               </form>
               <p id="message" class="card-text mt-1">&nbsp;</p>
@@ -60,22 +61,22 @@
             <h5 class="card-header head">Options</h5>
             <div class="card-body p-3">
               <h6 class="sub-title">Time zone</h6>
-              <form>
-                <div class="form-check my-1">
-                  <input type="radio" class="form-check-input" id="selectLocal" name="timezone" value="local" checked />
-                  <label for="selectLocal" class="form-check-label" id="localLabel">Local time</label>
+              <form class="form-check p-0">
+                <div class="custom-control custom-radio my-1">
+                  <input type="radio" class="custom-control-input" id="selectLocal" name="timezone" value="local" checked />
+                  <label for="selectLocal" class="custom-control-label" id="localLabel">Local time</label>
                 </div>
 
-                <div class="form-check my-1">
-                  <input type="radio" class="form-check-input" id="selectUtc" name="timezone" value="utc" />
-                  <label for="selectUtc" class="form-check-label" id="utcLabel">UTC</label>
+                <div class="custom-control custom-radio my-1">
+                  <input type="radio" class="custom-control-input" id="selectUtc" name="timezone" value="utc" />
+                  <label for="selectUtc" class="custom-control-label" id="utcLabel">UTC</label>
                 </div>
 
                 <hr class="m-1" />
 
-                <div class="form-check my-1">
-                  <input type="checkbox" class="form-check-input" id="noImg" value="Bike" />
-                  <label for="noImg" class="form-check-label">Don't load images</label>
+                <div class="custom-control custom-checkbox my-1">
+                  <input type="checkbox" class="custom-control-input" id="noImg" value="Bike" />
+                  <label for="noImg" class="custom-control-label">Don't load images</label>
                 </div>
               </form>
             </div>
@@ -132,7 +133,7 @@
                   <div class="row px-2">
                     <div class="col-sm-6">
                       <label for="intervalSelect">Aggregate by:</label>
-                      <select name="interval" id="intervalSelect" class="form-control w-25 p-1 d-inline-block">
+                      <select name="interval" id="intervalSelect" class="form-control noColor w-25 p-1 d-inline-block">
                         <option id="optHour" value="hour">Hour</option>
                         <option id="optDay" value="day">Day</option>
                         <option id="optMonth" value="month">Month</option>
@@ -143,7 +144,7 @@
                       <span id="graphDesc">Drag to zoom, double-click to reset</span>
                     </div>
                   </div>
-                  <hr />
+                  <hr class="half-dark" />
                   <div class="row px-2">
                     <div class="col-sm-6">
                       <!-- Stats -->
