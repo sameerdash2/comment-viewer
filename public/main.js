@@ -18,6 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const linkedHolder = document.getElementById("linkedHolder");
     const terms = document.getElementById("terms");
 
+    let statsAvailable = false;
+
     document.getElementById("viewTerms").addEventListener('click', (event) => {
         event.preventDefault();
         terms.style.display = "block";
@@ -64,8 +66,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 elem.disabled = (elem.id == closest.id);
             });
 
-            // Lower opacity to indicate loading
-            commentsSection.classList.add("fade");
+            // Loading spinner
+            commentsSection.classList.add("reloading");
+            document.getElementById("spinnerContainer").style.display = "flex";
 
             // Send request
             socket.emit("showMore", {sort: video.currentSort, commentNum: 0});
@@ -96,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
         const commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
-        document.getElementById("viewGraph").style.display = graph ? "block" : "none";
+        statsAvailable = graph;
         if (disabled) {
             commentInfo.innerHTML = `<i class="fas fa-comment"></i> <span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
@@ -109,8 +112,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (commence && num > 0) video.prepareLoadStatus();
 
             if (max > 0) {
-                document.getElementById("limitMessage").innerHTML =
-                    `Videos with over ${max.toLocaleString()} comments are not currently supported.<br>
+                document.getElementById("noteColumn").style.display = "block";
+                document.getElementById("limitMessage").textContent =
+                    `Videos with over ${max.toLocaleString()} comments are not currently supported.
                     (Stay tuned for the future!)`;
             }
         }
@@ -122,10 +126,12 @@ document.addEventListener("DOMContentLoaded", () => {
         message.innerHTML = "&nbsp;";
         if (reset) {
             commentsSection.innerHTML = "";
-            commentsSection.classList.remove("fade");
+            commentsSection.classList.remove("reloading");
+            document.getElementById("spinnerContainer").style.display = "none";
             loadStatus.style.display = "none";
+            document.getElementById("commentsCol").style.display = "block";
             document.getElementById("sortLoaded").style.display = "block";
-            document.getElementById("statsOptions").style.display = "block";
+            document.getElementById("statsColumn").style.display = statsAvailable ? "block" : "none";
         }
         video.handleGroupComments(reset, items);
         video.handleMinReplies(replies);
@@ -135,6 +141,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     socket.on("newReplies", ({ items, id }) => video.handleNewReplies(id, items));
+
+    socket.on("statsData", (data) => video.handleStatsData(data));
 
     socket.on("linkedComment", ({ parent, hasReply, reply, videoObject }) => {
         displayVideo(videoObject);
@@ -152,13 +160,13 @@ document.addEventListener("DOMContentLoaded", () => {
         
         document.getElementById("chooseLoad").style.display = "none";
         document.getElementById("sortLoaded").style.display = "none";
-        document.getElementById("statsOptions").style.display = "none";
+        document.getElementById("statsColumn").style.display = "none";
         document.getElementById("showMoreDiv").style.display = "none";
         
         document.getElementById("b_likesMost").disabled = false;
         document.getElementById("b_dateNewest").disabled = false;
         document.getElementById("b_dateOldest").disabled = true;
-        document.getElementById("graphContainer").style.display = "none";
+        document.getElementById("statsContainer").style.display = "none";
         document.getElementById("graphSpace").innerHTML = "";
         
         video.reset();

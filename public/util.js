@@ -2,23 +2,22 @@ export function formatTitle(video, options) {
     const liveState = video.snippet.liveBroadcastContent;
 
     // casting in order to use toLocaleString
-	const viewCount = Number(video.statistics.viewCount);
+    const viewCount = Number(video.statistics.viewCount);
     const likeCount = Number(video.statistics.likeCount);
     const dislikeCount = Number(video.statistics.dislikeCount);
 
     if (options.showImg) {
-        document.getElementById("thumb").style.display = "inline-block";
         document.getElementById("thumb").src = video.snippet.thumbnails.medium.url;
     }
     else {
-        document.getElementById("thumb").style.display = "none";
+        document.getElementById("thumbCol").style.display = "none";
     }
 
     document.getElementById("videoTitle").textContent = video.snippet.title;
     document.getElementById("videoTitle").href = `https://www.youtube.com/watch?v=${video.id}`;
 
     document.getElementById("uploader").textContent = video.snippet.channelTitle;
-    document.getElementById("uploader").href = `https://www.youtube.com/channel/${video.snippet.channelId}`;
+    document.getElementById("uploader").href = getChannelUrl(video.snippet.channelId);
 
     if (typeof video.statistics.likeCount === "undefined") {
         document.getElementById("ratings").innerHTML = `<i class="fas fa-thumbs-up"></i> <span class="gray">Ratings have been hidden.</span>`;
@@ -37,27 +36,24 @@ export function formatTitle(video, options) {
 
         const startTime = new Date(video.liveStreamingDetails.actualStartTime);
         const duration = (new Date().getTime() - startTime.getTime());
-        timestampSec += `<i class="fas fa-clock"></i> <strong>Stream start time:</strong> ${parseTimestamp(startTime.toISOString(), options.timezone)}
+        timestampSec += `<i class="fas fa-clock"></i> <b>Stream start time:</b> ${parseTimestamp(startTime.toISOString(), options.timezone)}
             (Elapsed: ${parseDurationHMMSS(Math.floor(duration / 1000))})`;
     }
     else if (liveState == "upcoming") {
         viewcountSec += `<span class="red">Upcoming live stream</span>`;
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
-            <i class="fas fa-clock"></i> <strong>Scheduled start time:</strong> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
+        timestampSec += `<b><i class="fas fa-calendar"></i> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
+            <i class="fas fa-clock"></i> <b>Scheduled start time:</b> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
     }
     else {
-		// YT premium shows don't return viewcount
-		if (typeof video.statistics.viewCount === "undefined") {
-			viewcountSec += ` <span class="gray">View count unavailable</span>`;
-		}
-		else {
-			viewcountSec += `${viewCount.toLocaleString()} views`;
-		}
+        // YT premium shows don't return viewcount
+        viewcountSec += (typeof video.statistics.viewCount === "undefined")
+            ? ` <span class="gray">View count unavailable</span>`
+            : `${viewCount.toLocaleString()} views`;
         
-        timestampSec += `<strong><i class="fas fa-calendar"></i> Published:</strong> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
+        timestampSec += `<b><i class="fas fa-calendar"></i> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
 
         if (typeof video.liveStreamingDetails !== "undefined") {
-            timestampSec += `<br><div class="streamTimes"><i class="fas fa-clock"></i> <strong>Stream start time:</strong> 
+            timestampSec += `<br><div class="streamTimes"><i class="fas fa-clock"></i> <b>Stream start time:</b> 
                 ${parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)}</div>`;
         }
 
@@ -69,58 +65,50 @@ export function formatTitle(video, options) {
     document.getElementById("info").style.display = "block";
 }
 
-export function formatComment(item, number, options, uploaderId, videoId, linked = false, reply = false) {
-	let content = "";
-	let contentClass;
-	if (reply) {
-		contentClass = options.showImg ? "replyContent" : "replyContentFull";
-	}
-	else {
-		contentClass = options.showImg ? "commentContent" : "commentContentFull";
-	}
-	const channelUrl = "https://www.youtube.com/channel/" + item.authorChannelId;
-
-    let linkedSegment = "";
+export function formatComment(item, number, options, uploaderId, videoId, reply = false) {
+    let content = "";
+    let contentClass;
+    if (reply) {
+        contentClass = options.showImg ? "replyContent" : "replyContentFull";
+    }
+    else {
+        contentClass = options.showImg ? "commentContent" : "commentContentFull";
+    }
+    const channelUrl = getChannelUrl(item.authorChannelId);
     let replySegment = "";
-	let likeSegment = "";
-	let numSegment = "";
+    let likeSegment = "";
+    let numSegment = "";
     let opSegment = "";
     let pfpSegment = "";
 
     let timeString = parseTimestamp(item.publishedAt, options.timezone);
     if (item.publishedAt != item.updatedAt) {
-        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ` + parseTimestamp(item.updatedAt, options.timezone) + `)`;
-	}
-	
-    if (linked) linkedSegment = `<span class="linkedComment">• LINKED COMMENT</span>`;
+        timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ${parseTimestamp(item.updatedAt, options.timezone)})`;
+    }
     
     // second condition included for safety
     if (item.totalReplyCount > 0 && !reply) {
         replySegment = `
-            <div id="replies-` + item.id + `" class="commentRepliesDiv">
+            <div id="replies-${item.id}" class="commentRepliesDiv">
                 <div class="repliesExpanderCollapsed">
-                    <button id="getReplies-` + item.id + `" class="showHideButton" type="button">
-                        Load ` + item.totalReplyCount + ` replies
+                    <button id="getReplies-${item.id}" class="showHideButton btn btn-link font-weight-bold p-0" type="button">
+                        &#x25BC; Load ${item.totalReplyCount} replies
                     </button>
                 </div>
-                <div id="repliesEE-` + item.id + `" class="repliesExpanderExpanded">
-                    
-                </div>
+                <div id="repliesEE-${item.id}" class="repliesExpanderExpanded"></div>
             </div>
         `;
     }
-    
-    if (item.likeCount) {
-        likeSegment += `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ` + item.likeCount.toLocaleString() + `</div>`;
-    }
-    else {
-        likeSegment += `<div class="commentFooter"></div>`;
-	}
+
+    likeSegment += (item.likeCount)
+        ? `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ${item.likeCount.toLocaleString()}</div>`
+        : `<div class="commentFooter"></div>`;
 
     if (number > 0) {
         numSegment +=
-            `<span class="num"><a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id
-            + `" class="noColor" target="_blank">#` + number + `</a></span>`;
+            `<span class="num">
+                <a href="https://www.youtube.com/watch?v=${videoId}&lc=${item.id}" class="noColor">#${number}</a>
+            </span>`;
     }
 
     let authorClass = "authorName";
@@ -130,28 +118,32 @@ export function formatComment(item, number, options, uploaderId, videoId, linked
     }
     
     if (options.showImg) {
-        pfpSegment += `<a class="channelPfpLink" href="` + channelUrl + `" target="_blank"><img class="pfp" src="` + item.authorProfileImageUrl + `"></a>`;
+        pfpSegment +=
+            `<a class="channelPfpLink" href="${channelUrl}">
+                <img class="pfp" src="${item.authorProfileImageUrl}">
+            </a>`;
     }
 
     content += 
-        pfpSegment
-        + `<div class="` + contentClass +`">
-			<div class="commentHeader">
-				<span dir="auto"` + opSegment + `><a href="` + channelUrl + `" class="` + authorClass + `" target="_blank">` + item.authorDisplayName + `</a></span>
-				<span>|</span>
-				<span class="timeStamp">
-					<a href="https://www.youtube.com/watch?v=` + videoId + `&lc=` + item.id + `" class="noColor" target="_blank">
-						` + timeString + `
-					</a>
-				</span>
-				` + linkedSegment + numSegment + `
-			</div>
-			<div class="commentText" dir="auto">` + item.textDisplay + `</div>
-			` + likeSegment + replySegment + `
-		</div>
-    `;
+        `${pfpSegment}` +
+        `<div class="${contentClass}">
+            <div class="commentHeader">
+                <span dir="auto"${opSegment}><a href="${channelUrl}" class="${authorClass}">${item.authorDisplayName}</a></span>
+                <span>|</span>
+                <span class="timeStamp">
+                    <a href="https://www.youtube.com/watch?v=${videoId}&lc=${item.id}" class="noColor">${timeString}</a>
+                </span>
+                ${numSegment}
+            </div>
+            <div class="commentText" dir="auto">${item.textDisplay}</div>
+            ${likeSegment}${replySegment}
+        </div>`;
 
     return content;
+}
+
+export function getChannelUrl(channelId) {
+    return `https://www.youtube.com/channel/${channelId}`;
 }
 
 export function parseTimestamp(iso, timezone) {
@@ -163,7 +155,7 @@ export function parseTimestamp(iso, timezone) {
     let output;
     switch (timezone) {
         case "utc":
-            output = date.toISOString().substring(0, 10) + " " + date.toISOString().substring(11,19);
+            output = date.toISOString().substring(0, 19).replace('T', ' ');
             break;
         case "local":
         default:

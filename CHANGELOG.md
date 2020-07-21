@@ -1,3 +1,14 @@
+**3.0.0** (21 July 2020)
+- Revamped page to fresh new card layout
+- Added more comment statistics, including total likes & top commenters
+- Graph now loads in larger, quicker chunks
+- Fixed some faulty counting logic causing progress to exceed 100%
+- Slight improvements to input parsing
+- Switched to proper bold font
+- Fixed linked comment instantly disappearing for videos with under 200 comments
+- Full video information is now stored in database (for future possibilities)
+- Various performance and visual improvements
+
 **2.4.0** (09 July 2020)
 - Stores the next pageToken to continue loading comments even after server crash
 - Added 30-second timeout on API responses

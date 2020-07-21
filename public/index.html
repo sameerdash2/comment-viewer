@@ -1,159 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset = "utf-8">
-        <title>YouTube Comment Viewer</title>
-        <link href="./style.css" rel="stylesheet" type="text/css">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-        <link rel="icon" href="/favicon.ico">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <base target="_blank">
+  <head>
+    <meta charset="utf-8" />
+    <title>YouTube Comment Viewer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous" />
+    <link href="./style.css" rel="stylesheet" type="text/css" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base target="_blank" />
 
-        <meta name="description" content="Viewer for YouTube comments. Sort YouTube comments by oldest first, see comment trends on an interactive graph, and more.">
-        <meta name="keywords" content="youtube, comments, viewer, sort, graph, oldest, first">
+    <meta name="description" content="Viewer for YouTube comments. Sort YouTube comments by oldest first, see comment trends on an interactive graph, and more." />
+    <meta name="keywords" content="youtube, comments, viewer, sort, graph, oldest, first" />
 
-        <meta property="og:title" content="YouTube Comment Viewer">
-        <meta property="og:type" content="website">
-        <meta property="og:url" content="https://commentviewer.com/">
-        <meta property="og:description" content="Viewer for YouTube comments. Sort YouTube comments by oldest first, see comment trends on an interactive graph, and more.">
+    <meta property="og:title" content="YouTube Comment Viewer" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://commentviewer.com/" />
+    <meta property="og:description" content="Viewer for YouTube comments. Sort YouTube comments by oldest first, see comment trends on an interactive graph, and more." />
 
-        <meta name="twitter:card" content="summary">
-        <meta name="twitter:title" content="YouTube Comment Viewer">
-        <meta name="twitter:description" content="Viewer for YouTube comments. Sort YouTube comments by oldest first, see comment trends on an interactive graph, and more.">
-        <meta name="twitter:creator" content="@Kite_Frozen">
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="YouTube Comment Viewer" />
+    <meta name="twitter:description" content="Viewer for YouTube comments. Sort YouTube comments by oldest first, see comment trends on an interactive graph, and more." />
+    <meta name="twitter:creator" content="@Kite_Frozen" />
 
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-82745335-2"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-82745335-2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-            gtag('config', 'UA-82745335-2');
-        </script>
+      gtag("config", "UA-82745335-2");
+    </script>
 
-        <script defer src="./main.js"></script>
+    <script defer src="./main.js"></script>
+  </head>
 
-    </head>
-
-    <body>
-        <main>
-            <h1><a href="" target="_self" class="noColor">Comment Viewer</a></h1>
-            <div id="intro">
-                <span id="caption">Sort and graph YouTube comments</span>
-                <span id="options"> Options <span id="arrow">▼</span>
-                    <div id="optionsContent">
-                        <div class="optionsHeader">Time zone</div>
-                        <input type="radio" id="selectLocal" name="timezone" value="local" checked>
-                        <label for="selectLocal" id="localLabel">Local time</label>
-                        <br>
-                        <input type="radio" id="selectUtc" name="timezone" value="utc">
-                        <label for="selectUtc" id="utcLabel">UTC</label>
-                        <br><hr class="opt">
-                        <input type="checkbox" id="noImg" value="Bike">
-                        <label for="noImg">Don't load images</label>
-                    </div>
-                </span>
-                <br>
-                <form id="videoForm" autocomplete="off" onsubmit="return false">
-                    <div id="inputRow">
-                        <input class="mainInput" type="text" id="enterID" autofocus spellcheck="false" maxlength="255"
-                            placeholder="Enter video or comment URL" aria-label="Enter video or comment URL"/>
-                    </div>
-                </form>
-                <div id="message">&nbsp;</div>
+  <body>
+    <main class="container-xl">
+      <h1><a href="" target="_self" class="noColor">YouTube Comment Viewer</a></h1>
+      <div class="row" id="intro">
+        <div class="col-md-8">
+          <div class="card mb-3">
+            <h5 class="card-header head">Enter video</h5>
+            <div class="card-body">
+              <form id="videoForm" autocomplete="off" onsubmit="return false">
+                <div id="inputRow">
+                  <input class="form-control form-control-lg" type="text" id="enterID" autofocus spellcheck="false"
+                    maxlength="255" placeholder="Video or comment URL" aria-label="Video or comment URL" />
+                </div>
+              </form>
+              <p id="message" class="card-text mt-1">&nbsp;</p>
             </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card mb-3">
+            <h5 class="card-header head">Options</h5>
+            <div class="card-body p-3">
+              <h6 class="sub-title">Time zone</h6>
+              <form class="form-check p-0">
+                <div class="custom-control custom-radio my-1">
+                  <input type="radio" class="custom-control-input" id="selectLocal" name="timezone" value="local" checked />
+                  <label for="selectLocal" class="custom-control-label" id="localLabel">Local time</label>
+                </div>
 
-            <div id="info">
-                <img id="thumb" class="thumbnail">
-                <div id="metadata">
-                    <div class="vidTitle"><a id="videoTitle" class="authorName"></a></div>
-                    <div class="author"><a id="uploader" class="noColor"></a></div>
-                    <div class="moreMeta">
+                <div class="custom-control custom-radio my-1">
+                  <input type="radio" class="custom-control-input" id="selectUtc" name="timezone" value="utc" />
+                  <label for="selectUtc" class="custom-control-label" id="utcLabel">UTC</label>
+                </div>
+
+                <hr class="half-dark my-1" />
+
+                <div class="custom-control custom-checkbox my-1">
+                  <input type="checkbox" class="custom-control-input" id="noImg" value="Bike" />
+                  <label for="noImg" class="custom-control-label">Don't load images</label>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12" id="videoColumn">
+          <div class="card mb-3">
+            <h5 class="card-header head">Video</h5>
+            <div class="card-body p-3">
+              <div id="info">
+                <div class="row">
+                  <div class="col-sm-auto" id="thumbCol">
+                    <img id="thumb" alt="thumbnail" class="thumbnail" />
+                  </div>
+                  <div class="col-sm">
+                    <div id="metadata">
+                      <div class="vidTitle"><a id="videoTitle" class="authorName"></a></div>
+                      <div class="author"><a id="uploader" class="noColor"></a></div>
+                      <div class="moreMeta">
                         <div id="viewcount" class="viewcount"></div>
                         <div id="ratings" class="ratings"></div>
                         <div id="vidTimestamp" class="vidTimestamp"></div>
+                      </div>
                     </div>
+                    <div id="commentInfo" class="commentCount"></div>
+                  </div>
                 </div>
-                <div id="commentInfo" class="commentCount"></div>
+              </div>
             </div>
-
-            <div id="statsOptions">
-                <button id="viewGraph" class="option">Toggle graph</button>
-            </div>
-            <div id="graphContainer">
-                <div id="graphSpace"></div>
-                <div id="graphFooter">
-                    <span id="graphDesc">Drag to zoom, double-click to reset</span>
-                    <span id="interval">Aggregate by:
-                        <select name="interval" id="intervalSelect">
-                            <option id="optHour" value="hour">Hour</option>
-                            <option id="optDay" value="day">Day</option>
-                            <option id="optMonth" value="month">Month</option>
-                            <option id="optYear" value="year">Year</option>
-                        </select>
-                    </span>
-                </div>
-            </div>
-            <br>
-            <div id="linkedHolder" class="commentsList"></div>
-            <div id="chooseLoad" class="choose">
-                <button id="submitAll" class="send">Load all comments</button>
-            </div>
-            <div id="sortLoaded" class="choose">
-                <span><strong>Sort by:</strong></span>
-                <button id="b_likesMost" class="sendSort">Likes</button>
-                <button id="b_dateNewest" class="sendSort">Date (newest first)</button>
-                <button id="b_dateOldest" class="sendSort">Date (oldest first)</button>
-            </div>
-            <div id="loadStatus" class="loadStatus">
-                <div id="loadHeader">Loading comments...</div>
-                <span id="loadPercentage">0.0%</span>
-                <span id="loadEta"></span>
-                <div id="progressBar">
-                    <div id="progressGreen"></div>
-                </div>
-            </div>
-            <div id="limitMessage"></div>
-            <div id="commentsSection" class="commentsList">
-                
-                <!-- main zone -->
-
-            </div>
-            <div id="showMoreDiv">
-                <button id="showMoreBtn" class="loadMore">Show more comments...</button>
-            </div>
-        </main>
-
-        <footer>
-            <span>v2.4.0</span>
-            <span>|</span>
-            <span><a id="viewTerms" href="#">Terms of Service</a></span>
-            <span>|</span>
-            <span>Made by <a href="https://twitter.com/Kite_Frozen">FrozenKite</a></span>
-        </footer>
-
-        <div id="terms">            
-            <div class="terms-content">
-                <div class="terms-header">Terms of Service</div>
-                <div class="terms-body">
-                    <p>This application uses YouTube API Services to retrieve and display publicly available YouTube data.</p>
-                    <br>
-                    <p>By using this application, you agree to be bound by the YouTube Terms of Service:</p>
-                    <li><a href="https://www.youtube.com/t/terms">https://www.youtube.com/t/terms</a></li>
-                    <br>
-                    <p>This application collects data through the use of Google Analytics:</p>
-                    <li><a href="https://www.google.com/policies/privacy/partners">https://www.google.com/policies/privacy/partners</a></li>
-                    <br>
-                    <p>Information about YouTube user data is available in the Google Privacy Policy:</p>
-                    <li><a href="https://www.google.com/policies/privacy">https://www.google.com/policies/privacy</a></li>
-                    <br>
-                    <p>YouTube is a trademark of Google LLC.</p>
-                </div>
-                <div class="terms-footer">
-                    <span id="closeTerms">OK</span>
-                </div>                
-            </div>
+          </div>
         </div>
-    </body>
+        <div class="col-12" id="noteColumn">
+          <div class="card mb-3">
+            <div class="card-body p-3" id="limitMessage"></div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="row">
+            <div class="col-12" id="statsColumn">
+              <div class="card mb-3">
+                <h5 class="card-header head">
+                  <button id="viewGraph" class="btn text-reset nostyle" type="button" data-toggle="collapse">&#x25BC; Statistics</button>
+                </h5>
+                <div class="card-body p-2" id="statsContainer">
+                  <div class="row">
+                    <div class="col">
+                      <div id="graphSpace"></div>
+                    </div>
+                  </div>
+                  <div class="row px-2">
+                    <div class="col-sm-6">
+                      <label for="intervalSelect">Aggregate by:</label>
+                      <select name="interval" id="intervalSelect" class="form-control noColor w-25 p-1 d-inline-block">
+                        <option id="optHour" value="hour">Hour</option>
+                        <option id="optDay" value="day">Day</option>
+                        <option id="optMonth" value="month">Month</option>
+                        <option id="optYear" value="year">Year</option>
+                      </select>
+                    </div>
+                    <div class="col-sm-6">
+                      <span id="graphDesc">Drag to zoom, double-click to reset</span>
+                    </div>
+                  </div>
+                  <hr class="half-dark" />
+                  <div class="row px-2">
+                    <div class="col-sm-6">
+                      <!-- Stats -->
+                      <table class="table table-sm">
+                        <tbody>
+                          <tr>
+                            <td><b>Top-level comments</b></td>
+                            <td id="s_comments">0</td>
+                          </tr>
+                          <tr>
+                            <td><b>Total likes</b></td>
+                            <td id="s_totalLikes">0</td>
+                          </tr>
+                          <tr>
+                            <td><b>Average likes per comment</b></td>
+                            <td id="s_avgLikes">0</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="col-sm-6">
+                      <!-- Top commenters -->
+                      <table class="table table-sm" id="topCommenters">
+                        <thead>
+                          <tr>
+                            <th colspan="2">Top commenters</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12" id="linkedColumn">
+              <div class="card mb-3">
+                <h5 class="card-header head">Linked comment</h5>
+                <div class="card-body p-3">
+                  <div id="linkedHolder"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12" id="chooseLoad">
+              <button id="submitAll" class="btn btn-primary btn-lg">Load all comments</button>
+            </div>
+            <div class="col-12" id="loadStatus">
+              <div class="card mb-3">
+                <h5 class="card-header head" id="loadHeader">Load status</h5>
+                <div class="card-body p-3">
+                  <span id="loadPercentage" class="card-text">0.0%</span>
+                  <span id="loadEta" class="card-text"></span>
+                  <div id="progress" class="progress pbar mt-2">
+                    <div id="progressIndeterminate" class="progress-bar"></div>
+                    <div id="progressGreen" class="progress-bar snap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12" id="sortLoaded">
+              <div class="card mb-3">
+                <h5 class="card-header head">Sort by</h5>
+                <div class="card-body p-2">
+                  <button id="b_likesMost" class="sendSort btn btn-primary my-2">Likes</button>
+                  <button id="b_dateNewest" class="sendSort btn btn-primary my-2">Date (newest first)</button>
+                  <button id="b_dateOldest" class="sendSort btn btn-primary my-2">Date (oldest first)</button>
+                </div>
+              </div>
+            </div>
+            <div id="commentsCol" class="col-12">
+              <div class="card">
+                <h5 class="card-header head">Comments</h5>
+                <div class="card-body p-0">
+                  <div id="spinnerContainer" class="justify-content-center">
+                    <div id="spinner" class="spinner-border" role="status">
+                      <span class="sr-only">Loading...</span>
+                    </div>
+                  </div>
+                  <ul id="commentsSection" class="list-group"></ul>
+                  <div id="showMoreDiv" class="card-footer">
+                    <button id="showMoreBtn" class="loadMore btn btn-primary">Show more comments...</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container-xl">
+        <span>v3.0.0</span>
+        <span>|</span>
+        <span><a id="viewTerms" href="#">Terms of Service</a></span>
+        <span>|</span>
+        <span>Made by <a href="https://twitter.com/Kite_Frozen">FrozenKite</a></span>
+      </div>
+    </footer>
+
+    <div id="terms">
+      <div class="terms-content">
+        <div class="terms-header">Terms of Service</div>
+        <div class="terms-body">
+          <ul class="terms-list">
+            <p>This application uses YouTube API Services to retrieve and display publicly available YouTube data.</p>
+            <br />
+            <p>By using this application, you agree to be bound by the YouTube Terms of Service:</p>
+            <li class="terms-item"><a href="https://www.youtube.com/t/terms">https://www.youtube.com/t/terms</a></li>
+            <br />
+            <p>This application collects data through the use of Google Analytics:</p>
+            <li class="terms-item"><a href="https://www.google.com/policies/privacy/partners">https://www.google.com/policies/privacy/partners</a></li>
+            <br />
+            <p>Information about YouTube user data is available in the Google Privacy Policy:</p>
+            <li class="terms-item"><a href="https://www.google.com/policies/privacy">https://www.google.com/policies/privacy</a></li>
+            <br />
+            <p>YouTube is a trademark of Google LLC.</p>
+          </ul>
+        </div>
+        <div class="terms-footer">
+          <span id="closeTerms">OK</span>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

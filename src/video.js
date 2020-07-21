@@ -1,5 +1,5 @@
 const config = require('../config.json');
-const Utils = require('./utils');
+const { convertComment } = require('./utils');
 const logger = require('./logger');
 
 class Video {
@@ -14,9 +14,10 @@ class Video {
     reset() {
         this._indexedComments = 0; // All retrieved comments + their reply counts
         this._newComments = 0;
+        this._loadComplete = false;
     }
 
-    handleNewVideo(item) {
+    handleNewVideo(item, allowCommence = true) {
         this.reset();
         if (item != -1) {
             this._video = item;
@@ -24,7 +25,7 @@ class Video {
             this._commentCount = this._video.statistics.commentCount;
             // this._logToDatabase = this._commentCount >= 500;
             this._logToDatabase = true; // Currently needed as comments are only sent from database
-            this.fetchTestComment();
+            this.fetchTestComment(allowCommence);
         }
     }
 
@@ -43,17 +44,17 @@ class Video {
                 this._app.ytapi.quotaExceeded();
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchTitle(idString) }, 1);
+                setTimeout(() => this.fetchTitle(idString), 1);
             }
         });
     }
 
-    fetchTestComment() {
+    fetchTestComment(allowCommence) {
         this._app.ytapi.executeTestComment(this._video.id).then(() => {
             this._commentsEnabled = true;
             // for upcoming/live streams, disregard a 0 count.
             if (!(this._video.snippet.liveBroadcastContent != "none" && this._commentCount == 0)) {
-                let beginLoad = this._commentCount < 200;
+                const beginLoad = this._commentCount < 200 && allowCommence;
                 // Make graph available if 1 hour has passed, to ensure at least 2 points on the graph
                 this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 60*60*1000);
                 this._socket.emit("commentsInfo", { num: this._commentCount, disabled: false,
@@ -67,7 +68,7 @@ class Video {
                 this._app.ytapi.quotaExceeded();
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchTestComment() }, 1);
+                setTimeout(() => this.fetchTestComment(allowCommence), 1);
             }
             else if (this._video.snippet.liveBroadcastContent == "none" && err.response.data.error.errors[0].reason == "commentsDisabled") {
                 this._commentsEnabled = false;
@@ -75,6 +76,26 @@ class Video {
                     commence: false, max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1, graph: false });
             }
         });
+    }
+
+    shouldReFetch = (row) => {
+        const now = new Date().getTime();
+        const videoAge = now - new Date(this._video.snippet.publishedAt).getTime();
+        const currentCommentsAge = now - row.retrievedAt;
+        const MONTH = 30*24*60*60*1000;
+
+        // Determine whether the comment set should be re-fetched
+        // by seeing if it meets at least 1 condition.
+        // These will probably change over time
+        const doReFetch = (
+            // Comment count has changed by 1.5x (50% increase)
+            row.initialCommentCount * 1.5 < this._commentCount
+            // Video's age has doubled since initial fetch
+            || currentCommentsAge * 2 > videoAge
+            // 6 months have passed since initial fetch
+            || now - row.retrievedAt > 6*MONTH
+        );
+        return doReFetch;
     }
 
     handleLoad(type) {
@@ -95,40 +116,28 @@ class Video {
                                 if (row.nextPageToken) {
                                     logger.log('info', "Attempting to resume unfinished fetch process on %s", this._id);
                                     this._indexedComments = row.commentCount;
-                                    this._app.database.reAddVideo(this._id, () => this.fetchAllComments(row.nextPageToken, false));
+                                    this._app.database.reAddVideo(this._video, () => this.fetchAllComments(row.nextPageToken, false));
                                 }
                                 else {
                                     this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
                                 }
                             }
                         }
+                        // 5-minute cooldown before doing any new fetch
+                        else if ((now - row.lastUpdated) <= 5*60*1000) {
+                            this.sendLoadedComments("dateOldest", 0, false);
+                        }
+                        else if (this.shouldReFetch(row)) {
+                            this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
+                        }
                         else {
-                            // Determine whether records are too old & re-fetch all comments.
-                            // Re-fetching is necessary to account for deleted comments, number of likes changing, etc.
-                            // Current criteria: Comment count has changed by 1.5x OR 6 months have passed OR
-                            // time between video publish and initial fetch has doubled
-                            const videoAge = now - new Date(this._video.snippet.publishedAt).getTime();
-                            const currentCommentsAge = now - row.retrievedAt;
-                            const sixMonths = 6*30*24*60*60*1000;
-                            if (row.initialCommentCount * 1.5 < this._commentCount || (now - row.retrievedAt) > sixMonths
-                                    || currentCommentsAge * 2 > videoAge) {
-                                this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
-                            }
-                            else {
-                                this._indexedComments = row.commentCount;
-                                // 5-minute cooldown before retrieving new comments
-                                if ((now - row.lastUpdated) > 5*60*1000) {
-                                    this._app.database.reAddVideo(this._id, () => {
-                                        this._app.database.getLastDate(this._id, (row) => {
-                                            this._lastDate = row['MAX(publishedAt)'];
-                                            this.startFetchProcess(true);
-                                        });
-                                    });
-                                }
-                                else {
-                                    this.sendLoadedComments("dateOldest", 0, false);
-                                }
-                            }
+                            this._indexedComments = row.commentCount;
+                            this._app.database.reAddVideo(this._video, () => {
+                                this._app.database.getLastComment(this._id, (row) => {
+                                    this._lastComment = { id: row.id, publishedAt: row["MAX(publishedAt)"] };
+                                    this.startFetchProcess(true);
+                                });
+                            });
                         }
                     }
                     else {
@@ -161,7 +170,7 @@ class Video {
             }
 
             let proceed = true;
-            let convertedComments = [];
+            const convertedComments = [];
             // Pinned comments always appear first regardless of their date (thanks google)
             // (this also means the pinned comment can be identified as long as it isn't the newest comment; could possibly use that in future)
             if (response.data.items.length > 1 && response.data.items[0].snippet.topLevelComment.snippet.publishedAt
@@ -169,22 +178,25 @@ class Video {
                 // If the pinned comment precedes the last date, shift it out of the array in order not to
                 // distort the date-checking later. Keep it in convertedComments to update its database entry
                 // since its likeCount is probably increasing rapidly.
-                if (appending && new Date(response.data.items[0].snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastDate) {
-                    convertedComments.push(Utils.convertComment(response.data.items.shift()));
+                if (appending && new Date(response.data.items[0].snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastComment.publishedAt) {
+                    convertedComments.push(convertComment(response.data.items.shift()));
                 }
                 
             }
             let newIndexed;
             for (const commentThread of response.data.items) {
-                newIndexed = 1 + commentThread.snippet.totalReplyCount;
-                // If appending to database-stored comments, check if current comment has passed the date
-                // of the newest stored comment.
-                // Equal timestamps will slip through, but they should be taken care of by database.
-                if (appending && new Date(commentThread.snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastDate) {
+                // If appending to database-stored comments, check if the records have been reached by
+                // comparing IDs of the last stored comment.
+                // In case it's been deleted, also check if the current date has surpassed the last comment's date.
+                // Equal timestamps can slip through, but they should be taken care of by database.
+                const currentDate = new Date(commentThread.snippet.topLevelComment.snippet.publishedAt).getTime();
+                if (appending && (commentThread.id === this._lastComment.id || currentDate < this._lastComment.publishedAt)) {
                     proceed = false;
                     break;
                 }
-                convertedComments.push(Utils.convertComment(commentThread));
+
+                convertedComments.push(convertComment(commentThread));
+                newIndexed = 1 + commentThread.snippet.totalReplyCount;
                 this._indexedComments += newIndexed;
                 this._newComments += newIndexed;
             }
@@ -200,7 +212,7 @@ class Video {
 
             // If there are more comments, and database-stored comments have not been reached, retrieve the next 100 comments
             if (response.data.nextPageToken && proceed) {
-                setTimeout(() => { this.fetchAllComments(response.data.nextPageToken, appending) }, 0);
+                setTimeout(() => this.fetchAllComments(response.data.nextPageToken, appending), 0);
             }
             else {
                 // Finished retrieving all comment threads.
@@ -223,7 +235,7 @@ class Video {
         }, (err) => {
                 logger.log('error', "Comments execute error on %s: %o", this._id, err.response.data.error);
                 if (consecutiveErrors < 20) {
-                    let error = err.response.data.error.errors[0];
+                    const error = err.response.data.error.errors[0];
                     if (error.reason == "quotaExceeded") {
                         this._app.ytapi.quotaExceeded();
                     }
@@ -244,7 +256,7 @@ class Video {
             if (response.data.pageInfo.totalResults) {
                 // Linked comment found
                 this._linkedParent = response.data.items[0];
-                let videoId = response.data.items[0].snippet.videoId;
+                const videoId = response.data.items[0].snippet.videoId;
                 let getVideo = (videoId) => this._app.ytapi.executeVideo(videoId);
                 if (typeof response.data.items[0].snippet.videoId === "undefined") {
                     // Comment isn't associated with a video; likely on a Discussion page
@@ -253,27 +265,27 @@ class Video {
                 if (replyId) {
                     // Fetch the video info & linked reply at the same time
                     Promise.all([this._app.ytapi.executeSingleReply(replyId), getVideo(videoId)]).then((responses) => {
-                        let videoObject = (responses[1] == -1) ? -1 : responses[1].data.items[0];
-                        this.handleNewVideo(videoObject);
+                        const videoObject = (responses[1] == -1) ? -1 : responses[1].data.items[0];
+                        this.handleNewVideo(videoObject, false);
 
                         if (responses[0].data.items[0]) {
                             // Send parent comment & linked reply
-                            this.sendLinkedComment(Utils.convertComment(this._linkedParent),
-                                Utils.convertComment(responses[0].data.items[0], true), videoObject);
+                            this.sendLinkedComment(convertComment(this._linkedParent),
+                                convertComment(responses[0].data.items[0], true), videoObject);
                         }
                         else {
                             // Send only parent
-                            this.sendLinkedComment(Utils.convertComment(this._linkedParent), null, videoObject);
+                            this.sendLinkedComment(convertComment(this._linkedParent), null, videoObject);
                         }
                     }, (err) => logger.log('error', "Linked reply/video error on replyId %s, video %s: %o",
                             replyId, videoId, err.response.data.error));
                 }
                 else {
                     getVideo(videoId).then((res) => {
-                        let videoObject = (res == -1) ? -1 : res.data.items[0];
-                        this.handleNewVideo(videoObject);
+                        const videoObject = (res == -1) ? -1 : res.data.items[0];
+                        this.handleNewVideo(videoObject, false);
                         // Send linked comment
-                        this.sendLinkedComment(Utils.convertComment(response.data.items[0]), null, videoObject);
+                        this.sendLinkedComment(convertComment(response.data.items[0]), null, videoObject);
                     }, (err) => logger.log('error', "Linked video error on %s: %o", videoId, err.response.data.error));
                 }
             }
@@ -287,7 +299,7 @@ class Video {
                 this._app.ytapi.quotaExceeded();
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                setTimeout(() => { this.fetchLinkedComment(idString, parentId, replyId) }, 1);
+                setTimeout(() => this.fetchLinkedComment(idString, parentId, replyId), 1);
             }
         });
     }
@@ -298,7 +310,7 @@ class Video {
 
     sendLoadedComments(sort, commentIndex, broadcast) {
         if (!this._id) return;
-        let newSet = commentIndex == 0;
+        const newSet = commentIndex == 0;
         
         // might make this less ugly later
         let sortBy = (sort == "likesMost" || sort == "likesLeast") ? "likeCount" : "publishedAt";
@@ -311,38 +323,39 @@ class Video {
                 logger.log('error', "Database getComments error: %o", err);
             }
             else {
-                let more = rows.length == config.maxDisplay;
-                let subset = [];
-                let repliesPromises = [];
-                for (let i = 0; i < rows.length; i++) {
+                this._loadComplete = true; // To permit statistics retrieval later
+
+                const more = rows.length == config.maxDisplay;
+                const subset = [];
+                const repliesPromises = [];
+                for (const commentThread of rows) {
                     subset.push({
-                        id: rows[i].id,
-                        textDisplay: rows[i].textDisplay,
-                        authorDisplayName: rows[i].authorDisplayName,
-                        authorProfileImageUrl: rows[i].authorProfileImageUrl,
-                        authorChannelId: rows[i].authorChannelId,
-                        likeCount: rows[i].likeCount,
-                        publishedAt: rows[i].publishedAt,
-                        updatedAt: rows[i].updatedAt,
-                        totalReplyCount: rows[i].totalReplyCount
+                        id: commentThread.id,
+                        textDisplay: commentThread.textDisplay,
+                        authorDisplayName: commentThread.authorDisplayName,
+                        authorProfileImageUrl: commentThread.authorProfileImageUrl,
+                        authorChannelId: commentThread.authorChannelId,
+                        likeCount: commentThread.likeCount,
+                        publishedAt: commentThread.publishedAt,
+                        updatedAt: commentThread.updatedAt,
+                        totalReplyCount: commentThread.totalReplyCount
                     });
 
-                    if (rows[i].totalReplyCount > 0 && config.maxDisplayedReplies > 0) {
-                        repliesPromises.push(this._app.ytapi.executeMinReplies(rows[i].id));
+                    if (commentThread.totalReplyCount > 0 && config.maxDisplayedReplies > 0) {
+                        repliesPromises.push(this._app.ytapi.executeMinReplies(commentThread.id));
                     }
                 }
                 
                 // Fetch a subset of the replies for each comment
-                let replies = {};
+                const replies = {};
                 Promise.allSettled(repliesPromises).then((results) => {
                     results.forEach((result) => {
                         if (result.status == "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
-                            let id = result.value.data.items[0].id;
-                            let receivedReplies = result.value.data.items[0].replies.comments;
-                            replies[id] = [];
-                            for (let i = 0; i < config.maxDisplayedReplies && i < receivedReplies.length; i++) {
-                                replies[id].push(Utils.convertComment(receivedReplies[i], true));
-                            }
+                            const parentId = result.value.data.items[0].id;
+                            const chosenReplies = result.value.data.items[0].replies.comments.slice(0, config.maxDisplayedReplies);
+                            replies[parentId] = [];
+
+                            chosenReplies.forEach((reply) => replies[parentId].push(convertComment(reply, true)));
                         }
                     });
 
@@ -363,12 +376,11 @@ class Video {
 
     fetchReplies(commentId, pageToken, silent, replies = []) {
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
-            for (let i = 0; i < response.data.items.length; i++) {
-                replies.push(Utils.convertComment(response.data.items[i], true));
-            }
+            response.data.items.forEach((reply) => replies.push(convertComment(reply, true)));
+
             if (response.data.nextPageToken) {
                 // Fetch next batch of replies
-                setTimeout(() => { this.fetchReplies(commentId, response.data.nextPageToken, silent, replies) }, 0);
+                setTimeout(() => this.fetchReplies(commentId, response.data.nextPageToken, silent, replies), 0);
             }
             else if (!silent) {
                 this.sendReplies(commentId, replies);
@@ -379,7 +391,7 @@ class Video {
                     this._app.ytapi.quotaExceeded();
                 }
                 else if (err.response.data.error.errors[0].reason == "processingFailure") {
-                    setTimeout(() => { this.fetchReplies(commentId, pageToken, silent, replies) }, 1);
+                    setTimeout(() => this.fetchReplies(commentId, pageToken, silent, replies), 1);
                 }                                
             });
     }
@@ -388,31 +400,41 @@ class Video {
         this._socket.emit("newReplies", { items: items, id: commentId});
     }
 
-    makeGraph() {
-        if (this._graphAvailable) {
-            // Send array of dates to client
-            this._app.database.getAllDates(this._id, (rows) => {
-                let dates = new Array(rows.length);
+    getStatistics() {
+        if (this._graphAvailable && this._loadComplete) {
+            Promise.all([this._app.database.getStatistics(this._id), this.makeGraphArray()]).then((results) => {
+                this._socket.emit("statsData", results);
+                results = undefined;
+            }, (err) => {
+                logger.log('error', "Statistics error on %s: %o", this._id, err);
+            });
+        }
+    }
 
-                // Populate dates array in chunks of 1000 to ease CPU load                    
+    makeGraphArray() {
+        // Form array of all dates
+        return new Promise((resolve) => {        
+            this._app.database.getAllDates(this._id, (rows) => {
+                const dates = new Array(rows.length);
+
+                // Populate dates array in chunks of 10000 to not block the CPU
                 let i = 0;
-                let processChunk = () => {
+                const processChunk = () => {
                     let count = 0;
-                    while (count++ < 1000 && i < rows.length) {
+                    while (count++ < 10000 && i < rows.length) {
                         dates[i] = rows[i].publishedAt;
                         i++;
                     }
                     if (i < rows.length) {
-                        setTimeout(processChunk, 5);
+                        setTimeout(processChunk, 0);
                     }
                     else {
-                        this._socket.emit("graphData", dates);
-                        dates = undefined;
+                        resolve(dates);
                     }
                 }
                 processChunk();
             });
-        }
+        });
     }
 
 }

@@ -13,8 +13,6 @@ export class Graph {
 
         document.getElementById("viewGraph").addEventListener('click', () => this.handleGraphButton());
         document.getElementById("intervalSelect").onchange = () => this.intervalChange();
-
-        this._socket.on("graphData", (dates) => this.constructGraph(dates));
     }
     reset() {
         this._graphDisplayState = 0; //0=none, 1=loaded, 2=shown
@@ -35,7 +33,12 @@ export class Graph {
     intervalChange() {
         const newInterval = document.getElementById("intervalSelect").value;
         if (newInterval != this._interval) {
-            const isUtc = this._video.options.timezone == "utc";
+            const isUtc = this._video.options.timezone === "utc";
+
+            // Build the graph data array if needed
+            if (!this._datasets[newInterval]) {
+                this.buildDataArray(newInterval);
+            }
 
             // Save the left & right graph bounds to keep the zoomed space.
             const leftBound = this._graphInstance.series[0].min;
@@ -51,12 +54,6 @@ export class Graph {
             shiftDate(xMax, newInterval, -1, isUtc);
             const rightBound = xMax.getTime() / 1000;
 
-            // Build the graph data array if needed
-            if (!this._datasets[newInterval]) {
-                this.buildDataArray(newInterval);
-            }
-            this._graphInstance.setData(this._datasets[newInterval]);
-
             // Determine new left & right indexes based on the bounds
             const len = this._datasets[newInterval][0].length;
             let leftIndex = len - 1, rightIndex = 0;
@@ -66,41 +63,48 @@ export class Graph {
             while (leftIndex > 0 && this._datasets[newInterval][0][leftIndex] > leftBound) {
                 leftIndex--;
             }
-            if (leftIndex == rightIndex) {
+            if (leftIndex === rightIndex) {
                 // Due to distr: 2, the graph can't show only one data point
                 // Widen the range by 1 on each side if possible
                 leftIndex = Math.max(0, leftIndex - 1);
                 rightIndex = Math.min(len - 1, rightIndex + 1);
             }
 
-            this._graphInstance.setScale("x", { min:leftIndex, max:rightIndex });
             this._interval = newInterval;
+
+            this._graphInstance.setData(this._datasets[newInterval], false);
+            this._graphInstance.setScale("x", { min:leftIndex, max:rightIndex });
         }
     }
 
     getGraphSize = () => {
-        // Cap size at 996 x 400
+        // Fill container width
+        const statsColumn = document.getElementById("statsColumn");
+        const computedStyle = window.getComputedStyle(statsColumn);
+        const containerWidth = statsColumn.clientWidth - parseFloat(computedStyle.paddingLeft) - parseFloat(computedStyle.paddingRight);
         return {
-            width: Math.max(250, Math.min(996, document.documentElement.clientWidth - 48 - 4)),
+            width: Math.max(250, containerWidth - 16),
             height: Math.max(150, Math.min(400, document.documentElement.clientHeight - 75))
         };
     }
 
     handleGraphButton() {
         if (this._graphDisplayState == 2) {
-            document.getElementById("graphContainer").style.display = "none";
+            document.getElementById("statsContainer").style.display = "none";
+            document.getElementById("viewGraph").innerHTML = "&#x25BC; Statistics";
             this._graphDisplayState = 1;
         }
         else if (this._graphDisplayState == 1) {
-            document.getElementById("graphContainer").style.display = "block";
+            document.getElementById("statsContainer").style.display = "block";
+            document.getElementById("viewGraph").innerHTML = "&#x25B2; Statistics";
             this._graphDisplayState = 2;
         }
         else {
             document.getElementById("viewGraph").disabled = true;
-            document.getElementById("viewGraph").innerHTML = "Loading...";
+            document.getElementById("viewGraph").textContent = "Loading...";
             this._loadingInterval = setInterval(() => {
                 this._loadingDots = ++this._loadingDots % 4;
-                document.getElementById("viewGraph").innerHTML = "Loading" + '.'.repeat(this._loadingDots);
+                document.getElementById("viewGraph").textContent = "Loading" + '.'.repeat(this._loadingDots);
             }, 200);
             this._socket.emit("graphRequest");
         }
@@ -159,11 +163,11 @@ export class Graph {
 
         this.drawGraph(this._interval);
 
-        document.getElementById("graphContainer").style.display = "block";
+        document.getElementById("statsContainer").style.display = "block";
         this._graphDisplayState = 2;
         clearInterval(this._loadingInterval);
         document.getElementById("viewGraph").disabled = false;
-        document.getElementById("viewGraph").innerHTML = "Toggle graph";
+        document.getElementById("viewGraph").innerHTML = "&#x25B2; Statistics";
     }
 
     makeLabel(rawValue, isUtc) {
@@ -238,7 +242,6 @@ export class Graph {
         };
 
         this._graphInstance = new uPlot(opts, this._datasets[interval], document.getElementById("graphSpace"));
-        this.resizeGraphContainer();
     }
 
     requestResize() {
@@ -253,14 +256,9 @@ export class Graph {
     
     resize = () => {
         this._graphInstance.setSize(this.getGraphSize());
-        this.resizeGraphContainer();
         if (this._resizeRequestTimeout) {
             clearTimeout(this._resizeRequestTimeout);
         }
         this._resizeRequestTimeout = undefined;
-    }
-
-    resizeGraphContainer = () => {
-        document.getElementById("graphContainer").style.width = this.getGraphSize().width + "px";
     }
 }

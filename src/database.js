@@ -10,7 +10,7 @@ class Database {
 
         this._db.serialize(() => {
             this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT, '
-                + 'commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT)');
+                + 'commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT, rawObject TEXT)');
             this._db.run('CREATE TABLE IF NOT EXISTS comments(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT, '
                 + 'authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT, '
                 + 'totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)');
@@ -29,15 +29,15 @@ class Database {
     addVideo(video, callback) {
         const now = new Date().getTime();
         this._db.run('INSERT OR REPLACE INTO videos(id, initialCommentCount, '
-            + 'retrievedAt, lastUpdated, inProgress) VALUES(?, ?, ?, ?, true)',
-            [video.id, video.statistics.commentCount, now, now], () => callback());
+            + 'retrievedAt, lastUpdated, rawObject, inProgress) VALUES(?, ?, ?, ?, ?, true)',
+            [video.id, video.statistics.commentCount, now, now, JSON.stringify(video)], () => callback());
         this._videosInProgress.add(video.id);
     }
 
-    reAddVideo(videoId, callback) {
-        this._db.run('UPDATE videos SET lastUpdated = ?, inProgress = true WHERE id = ?',
-            [new Date().getTime(), videoId], () => callback());
-        this._videosInProgress.add(videoId);
+    reAddVideo(video, callback) {
+        this._db.run('UPDATE videos SET lastUpdated = ?, rawObject = ?, inProgress = true WHERE id = ?',
+            [new Date().getTime(), JSON.stringify(video), video.id], () => callback());
+        this._videosInProgress.add(video.id);
     }
 
     resetVideo(video, callback) {
@@ -51,13 +51,41 @@ class Database {
             [videoId], (err, rows) => callback(err, rows));
     }
 
-    getLastDate(videoId, callback) {
-        this._db.get('SELECT MAX(publishedAt) FROM comments WHERE videoId = ?', [videoId], (_err, row) => callback(row));
+    getLastComment(videoId, callback) {
+        this._db.get('SELECT id, MAX(publishedAt) FROM comments WHERE videoId = ?', [videoId], (_err, row) => callback(row));
     }
 
     getAllDates(videoId, callback) {
         this._db.all('SELECT publishedAt FROM comments WHERE videoId = ? ORDER BY publishedAt DESC',
             [videoId], (_err, rows) => callback(rows));
+    }
+
+    getStatistics(videoId) {
+        return new Promise((resolve) => {
+            let remainingQueries = 2;
+            const data = {};
+            const tryFinish = () => {
+                if (--remainingQueries <= 0) {
+                    resolve(data);
+                }
+            }
+
+            this._db.parallelize(() => {
+                // Get comment count, total likes
+                this._db.get('SELECT COUNT(*), sum(likeCount) FROM comments WHERE videoId = ?', [videoId], (_err, row) => {
+                    data.comments = Number(row['COUNT(*)']);
+                    data.totalLikes = Number(row['sum(likeCount)']);
+                    tryFinish();
+                });
+                // Get top 5 commenters
+                this._db.all('SELECT authorChannelId, authorDisplayName, COUNT(authorChannelId) AS numComments '
+                    + 'FROM comments WHERE videoId = ? GROUP BY authorChannelId ORDER BY numComments DESC LIMIT 5',
+                    [videoId], (_err, rows) => {
+                        data.authors = rows;
+                        tryFinish();
+                });
+            });
+        });
     }
 
     writeNewComments(videoId, comments, newCommentCount, nextPageToken) {
@@ -86,19 +114,17 @@ class Database {
 
     cleanup() {
         // Remove any videos with:
-        // - under 1,000 comments   & > 1 day untouched
-        // - under 10,000 comments  & > 7 days untouched
-        // - under 100,000 comments & > 60 days untouched
+        // - under 10,000 comments & > 2 days untouched
+        // - under 1M comments     & > 30 days untouched
 
-        const now = new Date();
+        const now = new Date().getTime();
         logger.log('info', "Starting database cleanup");
+
         this._db.serialize(() => {
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000 OR inProgress = true)',
-                [now.getTime() - 1*DAY], function (err) { deleteCallback(this, err, 1000) });
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000)',
-                [now.getTime() - 7*DAY], function (err) { deleteCallback(this, err, 10000) });
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 100000)',
-                [now.getTime() - 60*DAY], function (err) { deleteCallback(this, err, 100000) });
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000 OR inProgress = true)',
+                [now - 2*DAY], function (err) { deleteCallback(this, err, 10000) });
+            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000000)',
+                [now - 30*DAY], function (err) { deleteCallback(this, err, 100000) });
 
             this._db.run('VACUUM');
         });
