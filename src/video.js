@@ -116,7 +116,7 @@ class Video {
                                 if (row.nextPageToken) {
                                     logger.log('info', "Attempting to resume unfinished fetch process on %s", this._id);
                                     this._indexedComments = row.commentCount;
-                                    this._app.database.reAddVideo(this._id, () => this.fetchAllComments(row.nextPageToken, false));
+                                    this._app.database.reAddVideo(this._video, () => this.fetchAllComments(row.nextPageToken, false));
                                 }
                                 else {
                                     this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
@@ -132,7 +132,7 @@ class Video {
                         }
                         else {
                             this._indexedComments = row.commentCount;
-                            this._app.database.reAddVideo(this._id, () => {
+                            this._app.database.reAddVideo(this._video, () => {
                                 this._app.database.getLastComment(this._id, (row) => {
                                     this._lastComment = { id: row.id, publishedAt: row["MAX(publishedAt)"] };
                                     this.startFetchProcess(true);

@@ -10,7 +10,7 @@ class Database {
 
         this._db.serialize(() => {
             this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT, '
-                + 'commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT)');
+                + 'commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT, rawObject TEXT)');
             this._db.run('CREATE TABLE IF NOT EXISTS comments(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT, '
                 + 'authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT, '
                 + 'totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)');
@@ -29,15 +29,15 @@ class Database {
     addVideo(video, callback) {
         const now = new Date().getTime();
         this._db.run('INSERT OR REPLACE INTO videos(id, initialCommentCount, '
-            + 'retrievedAt, lastUpdated, inProgress) VALUES(?, ?, ?, ?, true)',
-            [video.id, video.statistics.commentCount, now, now], () => callback());
+            + 'retrievedAt, lastUpdated, rawObject, inProgress) VALUES(?, ?, ?, ?, ?, true)',
+            [video.id, video.statistics.commentCount, now, now, JSON.stringify(video)], () => callback());
         this._videosInProgress.add(video.id);
     }
 
-    reAddVideo(videoId, callback) {
-        this._db.run('UPDATE videos SET lastUpdated = ?, inProgress = true WHERE id = ?',
-            [new Date().getTime(), videoId], () => callback());
-        this._videosInProgress.add(videoId);
+    reAddVideo(video, callback) {
+        this._db.run('UPDATE videos SET lastUpdated = ?, rawObject = ?, inProgress = true WHERE id = ?',
+            [new Date().getTime(), JSON.stringify(video), video.id], () => callback());
+        this._videosInProgress.add(video.id);
     }
 
     resetVideo(video, callback) {
