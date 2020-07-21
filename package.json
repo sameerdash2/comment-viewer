@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
-    "googleapis": "^52.0.0",
+    "googleapis": "^55.0.0",
     "socket.io": "^2.3.0",
     "sqlite3": "^4.2.0",
     "uplot": "^1.0.11",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
-    "eslint": "^7.4.0",
+    "eslint": "^7.5.0",
     "parcel-bundler": "1.12.4"
   },
   "scripts": {
