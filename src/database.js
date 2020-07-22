@@ -62,7 +62,7 @@ class Database {
 
     getStatistics(videoId) {
         return new Promise((resolve) => {
-            let remainingQueries = 2;
+            let remainingQueries = 1;
             const data = {};
             const tryFinish = () => {
                 if (--remainingQueries <= 0) {
@@ -76,13 +76,6 @@ class Database {
                     data.comments = Number(row['COUNT(*)']);
                     data.totalLikes = Number(row['sum(likeCount)']);
                     tryFinish();
-                });
-                // Get top 5 commenters
-                this._db.all('SELECT authorChannelId, authorDisplayName, COUNT(authorChannelId) AS numComments '
-                    + 'FROM comments WHERE videoId = ? GROUP BY authorChannelId ORDER BY numComments DESC LIMIT 5',
-                    [videoId], (_err, rows) => {
-                        data.authors = rows;
-                        tryFinish();
                 });
             });
         });

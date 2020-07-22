@@ -169,25 +169,9 @@ export class Video {
         document.getElementById("s_totalLikes").textContent = data[0].totalLikes.toLocaleString();
         document.getElementById("s_avgLikes").textContent = (data[0].totalLikes / data[0].comments).toFixed(2).toLocaleString();
 
-        const tbl = document.getElementById("topCommenters");
-        let row, cell, url, opSegment, authorClass;
-        for (const item of data[0].authors) {
-            row = tbl.insertRow(-1);
-            cell = row.insertCell(0);
-            url = getChannelUrl(item.authorChannelId);
-            authorClass = "authorName";
-            opSegment = "";
-
-            if (item.authorChannelId === this._uploaderId) { 
-                opSegment += `class="authorNameCreator"`;
-                authorClass = "authorNameOp";
-            }
-            
-            cell.innerHTML = `<span dir="auto"${opSegment}><a href="${url}" class="${authorClass}">${item.authorDisplayName}</a></span>`
-            
-            cell = row.insertCell(1);
-            cell.textContent = item.numComments;
-        }
+        const videoAge = (new Date().getTime() - new Date(this.videoPublished).getTime()) / (24*60*60*1000);
+        const commentsPerDay = data[1].length / Math.ceil(videoAge);
+        document.getElementById("s_avgPerDay").textContent = commentsPerDay.toFixed(2).toLocaleString();
 
         this._graph.constructGraph(data[1]);
     }

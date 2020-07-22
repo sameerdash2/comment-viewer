@@ -261,6 +261,9 @@ span.authorNameCreator {
 .noColor, .noColor:focus, a.noColor {
   color: inherit;
 }
+.bold-column > tbody > tr > td:first-child {
+  font-weight: 600;
+}
 ul.terms-list {
   padding-left: 0px;
 }
