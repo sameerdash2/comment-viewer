@@ -258,7 +258,7 @@ span.authorNameCreator {
   padding: 0 3px;
   vertical-align: middle;
 }
-.noColor, a.noColor {
+.noColor, .noColor:focus, a.noColor {
   color: inherit;
 }
 ul.terms-list {
