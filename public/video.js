@@ -1,5 +1,5 @@
 import { Graph } from "./graph.js";
-import { formatTitle, formatComment, eta, parseDurationMSS, getChannelUrl } from './util.js';
+import { formatTitle, formatComment, eta, parseDurationMSS } from './util.js';
 
 export class Video {
     constructor(socket) {
