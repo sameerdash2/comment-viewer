@@ -28,6 +28,7 @@ export class Graph {
             "month": undefined,
             "year": undefined
         };
+        this._throttled = false;
     }
 
     intervalChange() {
@@ -245,20 +246,15 @@ export class Graph {
     }
 
     requestResize() {
-        // Set timeout to resize only after a pause in window resize events, prevents CPU overload
-        if (this._graphInstance) {
-            if (this._resizeRequestTimeout) {
-                clearTimeout(this._resizeRequestTimeout); 
-            }
-            this._resizeRequestTimeout = setTimeout(this.resize, 100);
+        // Throttle resize events at every 100 ms
+        if (this._graphInstance && !this._throttled) {
+            this._throttled = true;
+            this.resize();
+            setTimeout(() => this._throttled = false, 100);
         }
     }
-    
+
     resize = () => {
         this._graphInstance.setSize(this.getGraphSize());
-        if (this._resizeRequestTimeout) {
-            clearTimeout(this._resizeRequestTimeout);
-        }
-        this._resizeRequestTimeout = undefined;
     }
 }

@@ -1,3 +1,7 @@
+**3.0.1** (22 July 2020)
+- Removed "top commenters" for now due to slow performance and replaced it with "average comments per day"
+- Switched to throttling instead of debouncing for graph resize
+
 **3.0.0** (21 July 2020)
 - Revamped page to fresh new card layout
 - Added more comment statistics, including total likes & top commenters
