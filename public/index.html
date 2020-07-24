@@ -117,137 +117,137 @@
           </div>
         </div>
 
-        <div class="col-12">
-          <div class="row">
-            <div class="col-12" id="statsColumn">
-              <div class="card mb-3">
-                <h5 class="card-header head">
-                  <button id="viewGraph" class="btn text-reset nostyle" type="button" data-toggle="collapse">&#x25BC; Statistics</button>
-                </h5>
-                <div class="card-body p-2" id="statsContainer">
-                  <div class="row">
-                    <div class="col">
-                      <div id="graphSpace"></div>
-                    </div>
-                  </div>
-                  <div class="row px-2">
-                    <div class="col-sm-6">
-                      <label for="intervalSelect">Aggregate by:</label>
-                      <select name="interval" id="intervalSelect" class="form-control noColor w-25 p-1 d-inline-block">
-                        <option id="optHour" value="hour">Hour</option>
-                        <option id="optDay" value="day">Day</option>
-                        <option id="optMonth" value="month">Month</option>
-                        <option id="optYear" value="year">Year</option>
-                      </select>
-                    </div>
-                    <div class="col-sm-6">
-                      <span id="graphDesc">Drag to zoom, double-click to reset</span>
-                    </div>
-                  </div>
-                  <hr class="half-dark" />
-                  <!-- Stats -->
-                  <div class="row px-2">
-                    <div class="col-sm-6">
-                      <table class="table table-sm bold-column">
-                        <tbody>
-                          <tr>
-                            <td>Top-level comments</td>
-                            <td id="s_comments">0</td>
-                          </tr>
-                          <tr>
-                            <td>Total likes</td>
-                            <td id="s_totalLikes">0</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <div class="col-sm-6">
-                      <table class="table table-sm bold-column">
-                        <tbody>
-                          <tr>
-                            <td>Average comments per day</td>
-                            <td id="s_avgPerDay">0</td>
-                          </tr>
-                          <tr>
-                            <td>Average likes per comment</td>
-                            <td id="s_avgLikes">0</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+        <div class="col-12" id="statsColumn">
+          <div class="card mb-3">
+            <h5 class="card-header head">
+              <button id="viewGraph" class="btn text-reset nostyle" type="button" data-toggle="collapse">&#x25BC; Statistics</button>
+            </h5>
+            <div class="card-body p-2" id="statsContainer">
+              <div class="row">
+                <div class="col">
+                  <div id="graphSpace"></div>
+                </div>
+              </div>
+              <div class="row px-2">
+                <div class="col-sm-6">
+                  <label for="intervalSelect">Aggregate by:</label>
+                  <select name="interval" id="intervalSelect" class="form-control noColor w-25 p-1 d-inline-block">
+                    <option id="optHour" value="hour">Hour</option>
+                    <option id="optDay" value="day">Day</option>
+                    <option id="optMonth" value="month">Month</option>
+                    <option id="optYear" value="year">Year</option>
+                  </select>
+                </div>
+                <div class="col-sm-6">
+                  <span id="graphDesc">Drag to zoom, double-click to reset</span>
+                </div>
+              </div>
+              <hr class="half-dark" />
+              <!-- Stats -->
+              <div class="row px-2">
+                <div class="col-sm-6">
+                  <table class="table table-sm bold-column">
+                    <tbody>
+                      <tr>
+                        <td>Top-level comments</td>
+                        <td id="s_comments">0</td>
+                      </tr>
+                      <tr>
+                        <td>Total likes</td>
+                        <td id="s_totalLikes">0</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-sm-6">
+                  <table class="table table-sm bold-column">
+                    <tbody>
+                      <tr>
+                        <td>Average comments per day</td>
+                        <td id="s_avgPerDay">0</td>
+                      </tr>
+                      <tr>
+                        <td>Average likes per comment</td>
+                        <td id="s_avgLikes">0</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
-            <div class="col-12" id="linkedColumn">
-              <div class="card mb-3">
-                <h5 class="card-header head">Linked comment</h5>
-                <div class="card-body p-3">
-                  <div id="linkedHolder"></div>
-                </div>
+          </div>
+        </div>
+        <div class="col-12" id="linkedColumn">
+          <div class="card mb-3">
+            <h5 class="card-header head">Linked comment</h5>
+            <div class="card-body p-3">
+              <div id="linkedHolder"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12" id="chooseLoad">
+          <button id="submitAll" class="btn btn-primary btn-lg">Load all comments</button>
+        </div>
+        <div class="col-12" id="loadStatus">
+          <div class="card mb-3">
+            <h5 class="card-header head" id="loadHeader">Load status</h5>
+            <div class="card-body p-3">
+              <span id="loadPercentage" class="card-text">0.0%</span>
+              <span id="loadEta" class="card-text"></span>
+              <div id="progress" class="progress pbar mt-2">
+                <div id="progressIndeterminate" class="progress-bar"></div>
+                <div id="progressGreen" class="progress-bar snap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
             </div>
-            <div class="col-12" id="chooseLoad">
-              <button id="submitAll" class="btn btn-primary btn-lg">Load all comments</button>
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-3" id="sortLoaded">
+          <div class="card h-100">
+            <h5 class="card-header head">Sort by</h5>
+            <div class="card-body align-items-center d-flex px-2 pb-2 pt-0">
+              <div>
+                <button id="b_likesMost" class="sendSort btn btn-primary mt-2">Likes</button>
+                <button id="b_dateNewest" class="sendSort btn btn-primary mt-2">Date (newest first)</button>
+                <button id="b_dateOldest" class="sendSort btn btn-primary mt-2">Date (oldest first)</button>
+              </div>
             </div>
-            <div class="col-12" id="loadStatus">
-              <div class="card mb-3">
-                <h5 class="card-header head" id="loadHeader">Load status</h5>
-                <div class="card-body p-3">
-                  <span id="loadPercentage" class="card-text">0.0%</span>
-                  <span id="loadEta" class="card-text"></span>
-                  <div id="progress" class="progress pbar mt-2">
-                    <div id="progressIndeterminate" class="progress-bar"></div>
-                    <div id="progressGreen" class="progress-bar snap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        <div class="col-md-6" id="filter">
+          <div class="card mb-3">
+            <h5 class="card-header head">Filter</h5>
+            <div class="card-body p-2">
+              <form id="filterDate">
+                <div class="row">
+                  <label for="dateMin" class="col-2 col-form-label pr-0">From</label>
+                  <div class="col-10">
+                    <input type="date" class="form-control form-control-sm" id="dateMin" placeholder="Choose date" aria-label="Start date">
                   </div>
                 </div>
-              </div>
-            </div>
-            <div class="col-md-6" id="sortLoaded">
-              <div class="card mb-3">
-                <h5 class="card-header head">Sort by</h5>
-                <div class="card-body px-2 pb-2 pt-0">
-                  <button id="b_likesMost" class="sendSort btn btn-primary mt-2">Likes</button>
-                  <button id="b_dateNewest" class="sendSort btn btn-primary mt-2">Date (newest first)</button>
-                  <button id="b_dateOldest" class="sendSort btn btn-primary mt-2">Date (oldest first)</button>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6" id="filter">
-              <div class="card mb-3">
-                <h5 class="card-header head">Filter</h5>
-                <div class="card-body p-2">
-                  <form id="filterDate">
-                    <div class="row">
-                      <label for="dateMin" class="col-2 col-form-label pr-0">From</label>
-                      <div class="col-10">
-                        <input type="date" class="form-control form-control-sm" id="dateMin" placeholder="Choose date" aria-label="Start date">
-                      </div>
-                    </div>
-                    <div class="row">
-                      <label for="dateMax" class="col-2 col-form-label">To</label>
-                      <div class="col-10">
-                        <input type="date" class="form-control form-control-sm" id="dateMax" placeholder="Choose date" aria-label="End date">
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div id="commentsCol" class="col-12">
-              <div class="card">
-                <h5 class="card-header head">Comments</h5>
-                <div class="card-body p-0">
-                  <div id="spinnerContainer" class="justify-content-center">
-                    <div id="spinner" class="spinner-border" role="status">
-                      <span class="sr-only">Loading...</span>
-                    </div>
-                  </div>
-                  <ul id="commentsSection" class="list-group"></ul>
-                  <div id="showMoreDiv" class="card-footer">
-                    <button id="showMoreBtn" class="loadMore btn btn-primary">Show more comments...</button>
+                <div class="row">
+                  <label for="dateMax" class="col-2 col-form-label">To</label>
+                  <div class="col-10">
+                    <input type="date" class="form-control form-control-sm" id="dateMax" placeholder="Choose date" aria-label="End date">
                   </div>
                 </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div id="commentsCol" class="col-12">
+          <div class="card">
+            <h5 class="card-header head">Comments</h5>
+            <div class="card-body p-0">
+              <div id="spinnerContainer" class="justify-content-center">
+                <div id="spinner" class="spinner-border" role="status">
+                  <span class="sr-only">Loading...</span>
+                </div>
+              </div>
+              <ul id="commentsSection" class="list-group"></ul>
+              <div id="showMoreDiv" class="card-footer">
+                <button id="showMoreBtn" class="loadMore btn btn-primary">Show more comments...</button>
               </div>
             </div>
           </div>
