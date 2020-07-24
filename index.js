@@ -26,8 +26,8 @@ class App {
             socket.on("requestAll", () => {
                 videoInstance.handleLoad("dateOldest");
             });
-            socket.on("showMore", ({ sort, commentNum }) => {
-                videoInstance.sendLoadedComments(sort, commentNum, false);
+            socket.on("showMore", ({ sort, commentNum, minDate, maxDate }) => {
+                videoInstance.sendLoadedComments(sort, commentNum, minDate, maxDate, false);
             });
             socket.on("replyRequest", (id) => {
                 videoInstance.getReplies(id);

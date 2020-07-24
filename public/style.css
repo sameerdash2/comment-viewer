@@ -94,7 +94,8 @@ div#info {
 #statsContainer,
 #loadStatus,
 #linkedColumn, 
-#noteColumn {
+#noteColumn,
+#filter {
   display: none;
 }
 tr:first-child td,

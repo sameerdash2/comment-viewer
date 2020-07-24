@@ -125,7 +125,7 @@ class Video {
                         }
                         // 5-minute cooldown before doing any new fetch
                         else if ((now - row.lastUpdated) <= 5*60*1000) {
-                            this.sendLoadedComments("dateOldest", 0, false);
+                            this.sendLoadedComments("dateOldest", 0, -1, -1, false);
                         }
                         else if (this.shouldReFetch(row)) {
                             this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
@@ -223,7 +223,7 @@ class Video {
                     this._id, this._newComments, elapsed, (this._newComments / elapsed * 1000));
                 
                 // Send the first batch of comments
-                this.sendLoadedComments("dateOldest", 0, true);
+                this.sendLoadedComments("dateOldest", 0, -1, -1, true);
 
                 // Clear out the room
                 setTimeout(() => {
@@ -308,17 +308,22 @@ class Video {
         this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
-    sendLoadedComments(sort, commentIndex, broadcast) {
+    sendLoadedComments(sort, commentIndex, minDate, maxDate, broadcast) {
         if (!this._id) return;
+
         const newSet = commentIndex == 0;
-        
+        if (minDate == undefined || minDate < 0) {
+            minDate = 0;
+            maxDate = 1e13;
+        }
+
         // might make this less ugly later
         let sortBy = (sort == "likesMost" || sort == "likesLeast") ? "likeCount" : "publishedAt";
         // Including rowid ensures that any comments with identical timestamps will follow their original insertion order.
         // This works in 99.99% of cases (as long as said comments were fetched at the same time)
         sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
 
-        this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, (err, rows) => {
+        this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate, (err, rows) => {
             if (err) {
                 logger.log('error', "Database getComments error: %o", err);
             }

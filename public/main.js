@@ -1,5 +1,6 @@
 import io from 'socket.io-client';
 import { Video } from "./video.js";
+import { shiftDate } from './util.js';
 
 const ERR = "#A00";
 const LOAD = "#666";
@@ -17,6 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const showMoreBtn = document.getElementById("showMoreBtn");
     const linkedHolder = document.getElementById("linkedHolder");
     const terms = document.getElementById("terms");
+    const dateMin = document.getElementById("dateMin");
+    const dateMax = document.getElementById("dateMax");
+
+    let dateLeftBound = -1;
+    let dateRightBound = -1;
 
     let statsAvailable = false;
 
@@ -37,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault(); // prevents page reloading
         const enterID = document.getElementById("enterID");
         if (enterID.value.length > 0) {
-            message.innerHTML = "Working...";
+            message.textContent = "Working...";
             message.style.color = LOAD;
             socket.emit('idSent', enterID.value);
             enterID.value = "";
@@ -52,8 +58,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     showMoreBtn.addEventListener('click', () => {
         showMoreBtn.disabled = true;
-        showMoreBtn.innerHTML = "Loading..."
-        socket.emit("showMore", {sort: video.currentSort, commentNum: video.commentNum});
+        showMoreBtn.textContent = "Loading..."
+        socket.emit("showMore", {sort: video.currentSort, commentNum: video.commentNum, minDate: dateLeftBound, maxDate: dateRightBound});
     });
     
     document.getElementById("sortLoaded").addEventListener('click', (event) => {
@@ -66,13 +72,39 @@ document.addEventListener("DOMContentLoaded", () => {
                 elem.disabled = (elem.id == closest.id);
             });
 
-            // Loading spinner
-            commentsSection.classList.add("reloading");
-            document.getElementById("spinnerContainer").style.display = "flex";
+            showLoading();
 
             // Send request
-            socket.emit("showMore", {sort: video.currentSort, commentNum: 0});
+            socket.emit("showMore", {sort: video.currentSort, commentNum: 0, minDate: dateLeftBound, maxDate: dateRightBound});
         }
+    });
+
+    document.getElementById("filterDate").addEventListener('change', (event) => {
+        event.preventDefault();
+        const isUtc = video.options.timezone === "utc";
+        let minDate, maxDate;
+        if (isUtc) {
+            minDate = new Date(dateMin.value);
+            maxDate = new Date(dateMax.value);
+        }
+        else {
+            minDate = new Date(dateMin.value.split('-', 3));
+            maxDate = new Date(dateMax.value.split('-', 3));
+        }
+        if (isNaN(minDate) || isNaN(maxDate) || minDate > maxDate) {
+            // TODO: err
+            return;
+        }
+
+        // Shift max date to cover the day
+        shiftDate(maxDate, "day", 1, true);
+        maxDate.setTime(maxDate.getTime() - 1);
+
+        dateLeftBound = minDate.getTime();
+        dateRightBound = maxDate.getTime();
+
+        socket.emit("showMore", {sort: video.currentSort, commentNum: 0, minDate: dateLeftBound, maxDate: dateRightBound});
+        showLoading();
     });
 
     commentsSection.addEventListener('click', repliesButton);
@@ -85,15 +117,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     socket.on("idInvalid", () => {
-        message.innerHTML = "Invalid video link or ID.";
+        message.textContent = "Invalid video link or ID.";
         message.style.color = ERR;
     });
     socket.on("videoInfo", ({ videoObject }) => displayVideo(videoObject));
     function displayVideo(videoObject) {
         resetPage();
         document.getElementById("intro").style.display = "none";
-        if (videoObject !== -1)
+        if (videoObject !== -1) {
             video.display(videoObject);
+            const min = new Date(videoObject.snippet.publishedAt).toISOString().substring(0, 10);
+            const max = new Date().toISOString().substring(0, 10);
+            dateMin.setAttribute("min", min);
+            dateMin.setAttribute("max", max);
+            dateMax.setAttribute("min", min);
+            dateMax.setAttribute("max", max);
+            dateMin.value = min;
+            dateMax.value = max;
+        }
     }
 
     socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
@@ -125,18 +166,18 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("groupComments", ({ reset, items, replies, showMore }) => {      
         message.innerHTML = "&nbsp;";
         if (reset) {
+            hideLoading();
             commentsSection.innerHTML = "";
-            commentsSection.classList.remove("reloading");
-            document.getElementById("spinnerContainer").style.display = "none";
             loadStatus.style.display = "none";
             document.getElementById("commentsCol").style.display = "block";
             document.getElementById("sortLoaded").style.display = "block";
+            document.getElementById("filter").style.display = "block";
             document.getElementById("statsColumn").style.display = statsAvailable ? "block" : "none";
         }
         video.handleGroupComments(reset, items);
         video.handleMinReplies(replies);
         document.getElementById("showMoreDiv").style.display = showMore ? "block" : "none";
-        showMoreBtn.innerHTML = "Show more comments...";
+        showMoreBtn.textContent = "Show more comments...";
         showMoreBtn.disabled = false;
     });
 
@@ -154,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
         linkedHolder.innerHTML = "";
         commentsSection.innerHTML = "";
         document.getElementById("limitMessage").innerHTML = "";
-        document.getElementById("loadPercentage").innerHTML = "0%";
+        document.getElementById("loadPercentage").textContent = "0%";
         document.getElementById("loadEta").innerHTML = '';
         document.getElementById("progressGreen").style.width = "0%";
         
@@ -173,7 +214,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }    
 
     socket.on("quotaExceeded", () => {             
-        message.innerHTML = "Quota exceeded. Please try again later";
+        message.textContent = "Quota exceeded. Please try again later";
         message.style.color = ERR;
     });
+
+    function showLoading() {
+        commentsSection.classList.add("reloading");
+        document.getElementById("spinnerContainer").style.display = "flex";
+    }
+
+    function hideLoading() {
+        commentsSection.classList.remove("reloading");
+        document.getElementById("spinnerContainer").style.display = "none";
+    }
 });

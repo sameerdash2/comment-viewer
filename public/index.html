@@ -203,13 +203,34 @@
                 </div>
               </div>
             </div>
-            <div class="col-12" id="sortLoaded">
+            <div class="col-md-6" id="sortLoaded">
               <div class="card mb-3">
                 <h5 class="card-header head">Sort by</h5>
+                <div class="card-body px-2 pb-2 pt-0">
+                  <button id="b_likesMost" class="sendSort btn btn-primary mt-2">Likes</button>
+                  <button id="b_dateNewest" class="sendSort btn btn-primary mt-2">Date (newest first)</button>
+                  <button id="b_dateOldest" class="sendSort btn btn-primary mt-2">Date (oldest first)</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6" id="filter">
+              <div class="card mb-3">
+                <h5 class="card-header head">Filter</h5>
                 <div class="card-body p-2">
-                  <button id="b_likesMost" class="sendSort btn btn-primary my-2">Likes</button>
-                  <button id="b_dateNewest" class="sendSort btn btn-primary my-2">Date (newest first)</button>
-                  <button id="b_dateOldest" class="sendSort btn btn-primary my-2">Date (oldest first)</button>
+                  <form id="filterDate">
+                    <div class="row">
+                      <label for="dateMin" class="col-2 col-form-label pr-0">From</label>
+                      <div class="col-10">
+                        <input type="date" class="form-control form-control-sm" id="dateMin" placeholder="Choose date" aria-label="Start date">
+                      </div>
+                    </div>
+                    <div class="row">
+                      <label for="dateMax" class="col-2 col-form-label">To</label>
+                      <div class="col-10">
+                        <input type="date" class="form-control form-control-sm" id="dateMax" placeholder="Choose date" aria-label="End date">
+                      </div>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>

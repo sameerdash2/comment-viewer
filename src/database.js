@@ -46,9 +46,10 @@ class Database {
 
     abortVideo(videoId) { this._videosInProgress.delete(videoId); }
 
-    getComments(videoId, limit, offset, sortBy, callback) {
-        this._db.all(`SELECT * FROM comments WHERE videoId = ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`,
-            [videoId], (err, rows) => callback(err, rows));
+    getComments(videoId, limit, offset, sortBy, minDate, maxDate, callback) {
+        this._db.all(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ? `
+            + `ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`,
+            [videoId, minDate, maxDate], (err, rows) => callback(err, rows));
     }
 
     getLastComment(videoId, callback) {
