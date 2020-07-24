@@ -91,20 +91,32 @@ document.addEventListener("DOMContentLoaded", () => {
             minDate = new Date(dateMin.value.split('-', 3));
             maxDate = new Date(dateMax.value.split('-', 3));
         }
-        if (isNaN(minDate) || isNaN(maxDate) || minDate > maxDate) {
-            // TODO: err
-            return;
+
+        if (isNaN(minDate) || isNaN(maxDate)) {
+            if (isNaN(minDate)) {
+                dateMin.classList.add("bg-invalid");
+            }
+            if (isNaN(maxDate)) {
+                dateMax.classList.add("bg-invalid");
+            }
         }
+        else if (minDate > maxDate) {
+            dateMin.classList.add("bg-invalid");
+            dateMax.classList.add("bg-invalid");
+        }
+        else {
+            dateMin.classList.remove("bg-invalid");
+            dateMax.classList.remove("bg-invalid");
+            // Shift max date to cover the day
+            shiftDate(maxDate, "day", 1, true);
+            maxDate.setTime(maxDate.getTime() - 1);
 
-        // Shift max date to cover the day
-        shiftDate(maxDate, "day", 1, true);
-        maxDate.setTime(maxDate.getTime() - 1);
+            dateLeftBound = minDate.getTime();
+            dateRightBound = maxDate.getTime();
 
-        dateLeftBound = minDate.getTime();
-        dateRightBound = maxDate.getTime();
-
-        socket.emit("showMore", {sort: video.currentSort, commentNum: 0, minDate: dateLeftBound, maxDate: dateRightBound});
-        showLoading();
+            socket.emit("showMore", {sort: video.currentSort, commentNum: 0, minDate: dateLeftBound, maxDate: dateRightBound});
+            showLoading();
+        }
     });
 
     commentsSection.addEventListener('click', repliesButton);

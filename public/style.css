@@ -88,6 +88,9 @@ div#info {
 .comment + .comment {
   border-top: 1px solid rgba(0, 0, 0, 0.25);
 }
+.bg-invalid, .bg-invalid:focus {
+  background-color: rgba(255,0,0,.10);
+}
 #commentsCol,
 #videoColumn,
 #statsColumn,
