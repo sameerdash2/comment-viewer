@@ -247,10 +247,16 @@ export class Graph {
 
     requestResize() {
         // Throttle resize events at every 100 ms
-        if (this._graphInstance && !this._throttled) {
-            this._throttled = true;
-            this.resize();
-            setTimeout(() => this._throttled = false, 100);
+        if (this._graphInstance) {
+            // Debounce if throttled
+            if (this._throttled) {
+                setTimeout(() => this.requestResize(), 100);
+            }
+            else {
+                this._throttled = true;
+                this.resize();
+                setTimeout(() => this._throttled = false, 100);
+            }
         }
     }
 
