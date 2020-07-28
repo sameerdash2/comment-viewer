@@ -138,8 +138,18 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("intro").style.display = "none";
         if (videoObject !== -1) {
             video.display(videoObject);
-            const min = new Date(videoObject.snippet.publishedAt).toISOString().substring(0, 10);
-            const max = new Date().toISOString().substring(0, 10);
+            // Apply values to HTML date picker which operates on YYYY-MM-DD format
+            const minDate = new Date(videoObject.snippet.publishedAt);
+            const maxDate = new Date();
+            let min, max;
+            if (video.options.timezone === "utc") {
+                min = minDate.toISOString().split('T')[0];
+                max = maxDate.toISOString().split('T')[0];
+            }
+            else {
+                min = new Date(minDate.getTime() - (minDate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
+                max = new Date(maxDate.getTime() - (maxDate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
+            }
             dateMin.setAttribute("min", min);
             dateMin.setAttribute("max", max);
             dateMax.setAttribute("min", min);
