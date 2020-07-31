@@ -238,7 +238,19 @@
 
         <div id="commentsCol" class="col-12">
           <div class="card">
-            <h5 class="card-header head">Comments</h5>
+            <h5 class="card-header head py-2">
+              <div class="row align-items-center">
+                <div class="col-sm-6">
+                  Comments
+                </div>
+                <div class="col-sm-6 input-group mt-2 mt-sm-0">
+                  <input class="form-control" type="text" id="searchBox" spellcheck="false" maxlength="255" placeholder="Search" aria-label="Search comments" />
+                  <div class="input-group-append">
+                    <button class="btn btn-primary" type="button"><i class="fas fa-search"></i></button>
+                  </div>
+                </div>
+              </div>
+            </h5>
             <div class="card-body p-0">
               <div id="spinnerContainer" class="justify-content-center">
                 <div id="spinner" class="spinner-border" role="status">
