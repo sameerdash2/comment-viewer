@@ -1,108 +1,94 @@
-const sqlite = require('sqlite3');
+const sqlite = require('better-sqlite3');
 const logger = require('./logger');
 
 const DAY = 24*60*60*1000;
 
 class Database {
     constructor() {
-        this._db = new sqlite.Database('database.sql');
+        this._db = new sqlite('database.sql');
         this._videosInProgress = new Set();
 
-        this._db.serialize(() => {
-            this._db.run('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT, '
-                + 'commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT, rawObject TEXT)');
-            this._db.run('CREATE TABLE IF NOT EXISTS comments(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT, '
-                + 'authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT, '
-                + 'totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)');
+        this._db.prepare('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT,' +
+            ' commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT, rawObject TEXT)').run();
+        this._db.prepare('CREATE TABLE IF NOT EXISTS comments(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT,' +
+            ' authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT,' +
+            ' totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)').run();
 
-            this._db.run('CREATE INDEX IF NOT EXISTS comment_index ON comments(videoId, publishedAt, likeCount)');
-        });
+        this._db.prepare('CREATE INDEX IF NOT EXISTS comment_index ON comments(videoId, publishedAt, likeCount)').run();
 
         setInterval(() => this.cleanup(), 1 * DAY);
     }
 
-    checkVideo(videoId, callback) {
+    checkVideo(videoId) {
         const actuallyInProgress = this._videosInProgress.has(videoId);
-        this._db.get('SELECT * FROM videos WHERE id = ?', [videoId], (_err, row) => callback(row, actuallyInProgress));
+        const row = this._db.prepare('SELECT * FROM videos WHERE id = ?').get(videoId);
+        return {row, actuallyInProgress};
     }
 
-    addVideo(video, callback) {
+    addVideo(video) {
         const now = new Date().getTime();
-        this._db.run('INSERT OR REPLACE INTO videos(id, initialCommentCount, '
-            + 'retrievedAt, lastUpdated, rawObject, inProgress) VALUES(?, ?, ?, ?, ?, true)',
-            [video.id, video.statistics.commentCount, now, now, JSON.stringify(video)], () => callback());
+        this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, retrievedAt, lastUpdated, rawObject, inProgress)' +
+                ' VALUES(?, ?, ?, ?, ?, true)')
+            .run(video.id, video.statistics.commentCount, now, now, JSON.stringify(video));
         this._videosInProgress.add(video.id);
     }
 
-    reAddVideo(video, callback) {
-        this._db.run('UPDATE videos SET lastUpdated = ?, rawObject = ?, inProgress = true WHERE id = ?',
-            [new Date().getTime(), JSON.stringify(video), video.id], () => callback());
+    reAddVideo(video) {
+        this._db.prepare('UPDATE videos SET lastUpdated = ?, rawObject = ?, inProgress = true WHERE id = ?')
+            .run(new Date().getTime(), JSON.stringify(video), video.id);
         this._videosInProgress.add(video.id);
     }
 
-    resetVideo(video, callback) {
-        this._db.run('DELETE FROM videos WHERE id = ?', [video.id], () => this.addVideo(video, callback));
+    deleteVideo(videoId) {
+        this._db.prepare('DELETE FROM videos WHERE id = ?').run(videoId);
     }
 
     abortVideo(videoId) { this._videosInProgress.delete(videoId); }
 
-    getComments(videoId, limit, offset, sortBy, minDate, maxDate, callback) {
-        this._db.all(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ? `
-            + `ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`,
-            [videoId, minDate, maxDate], (err, rows) => callback(err, rows));
+    getLastComment(videoId) {
+        return this._db.prepare('SELECT id, MAX(publishedAt) FROM comments WHERE videoId = ?').get(videoId);
     }
 
-    getLastComment(videoId, callback) {
-        this._db.get('SELECT id, MAX(publishedAt) FROM comments WHERE videoId = ?', [videoId], (_err, row) => callback(row));
+    getComments(videoId, limit, offset, sortBy, minDate, maxDate) {
+        return this._db.prepare(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?` +
+                ` ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
+            .all(videoId, minDate, maxDate);
     }
 
-    getAllDates(videoId, callback) {
-        this._db.all('SELECT publishedAt FROM comments WHERE videoId = ? ORDER BY publishedAt DESC',
-            [videoId], (_err, rows) => callback(rows));
+    getAllDates(videoId) {
+        return this._db.prepare('SELECT publishedAt FROM comments WHERE videoId = ? ORDER BY publishedAt DESC')
+            .all(videoId);
     }
 
     getStatistics(videoId) {
-        return new Promise((resolve) => {
-            let remainingQueries = 1;
-            const data = {};
-            const tryFinish = () => {
-                if (--remainingQueries <= 0) {
-                    resolve(data);
-                }
-            }
+        const stats = {};
 
-            this._db.parallelize(() => {
-                // Get comment count, total likes
-                this._db.get('SELECT COUNT(*), sum(likeCount) FROM comments WHERE videoId = ?', [videoId], (_err, row) => {
-                    data.comments = Number(row['COUNT(*)']);
-                    data.totalLikes = Number(row['sum(likeCount)']);
-                    tryFinish();
-                });
-            });
-        });
+        const row = this._db.prepare('SELECT COUNT(*), sum(likeCount) FROM comments WHERE videoId = ?').get(videoId);
+        stats.comments = Number(row['COUNT(*)']);
+        stats.totalLikes = Number(row['sum(likeCount)']);
+
+        return stats;
     }
 
     writeNewComments(videoId, comments, newCommentCount, nextPageToken) {
         const insert = [];
         for (let i = 0; i < comments.length; i++) { 
-            insert.push(comments[i].id, comments[i].textDisplay, comments[i].authorDisplayName, comments[i].authorProfileImageUrl,
-                comments[i].authorChannelId, comments[i].likeCount, comments[i].publishedAt, comments[i].updatedAt, comments[i].totalReplyCount);
+            insert.push(comments[i].id, comments[i].textDisplay, comments[i].authorDisplayName,
+                comments[i].authorProfileImageUrl, comments[i].authorChannelId, comments[i].likeCount,
+                comments[i].publishedAt, comments[i].updatedAt, comments[i].totalReplyCount, videoId);
         }
-        // Using video ID as constant to prevent exceeding 999-parameter limit
-        // (10 parameters * 100 comments = 1000)
-        const placeholders = comments.map(() => `(?,?,?,?,?,?,?,?,?,'${videoId}')`).join(',');
+        const placeholders = comments.map(() => `(?,?,?,?,?,?,?,?,?,?)`).join(',');
 
-        const statement = this._db.prepare(`INSERT OR REPLACE INTO comments(id, textDisplay, authorDisplayName, authorProfileImageUrl, `
-            + `authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount, videoId) VALUES ${placeholders}`);
+        const statement = this._db.prepare(`INSERT OR REPLACE INTO comments(id, textDisplay, authorDisplayName, authorProfileImageUrl,` +
+            ` authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount, videoId) VALUES ${placeholders}`);
         statement.run(insert);
-        statement.finalize();
 
-        this._db.run('UPDATE videos SET commentCount = ?, lastUpdated = ?, nextPageToken = ? WHERE id = ?',
-            [newCommentCount, new Date().getTime(), nextPageToken || null, videoId]);
+        this._db.prepare('UPDATE videos SET commentCount = ?, lastUpdated = ?, nextPageToken = ? WHERE id = ?')
+            .run(newCommentCount, new Date().getTime(), nextPageToken || null, videoId);
     }
 
     markVideoComplete(videoId) {
-        this._db.run('UPDATE videos SET inProgress = false WHERE id = ?', [videoId]);
+        this._db.prepare('UPDATE videos SET inProgress = false WHERE id = ?').run(videoId);
         this._videosInProgress.delete(videoId);
     }
 
@@ -111,24 +97,19 @@ class Database {
         // - under 10,000 comments & > 2 days untouched
         // - under 1M comments     & > 30 days untouched
 
-        const now = new Date().getTime();
         logger.log('info', "Starting database cleanup");
+        const now = new Date().getTime();
+        let info;
 
-        this._db.serialize(() => {
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000 OR inProgress = true)',
-                [now - 2*DAY], function (err) { deleteCallback(this, err, 10000) });
-            this._db.run('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000000)',
-                [now - 30*DAY], function (err) { deleteCallback(this, err, 100000) });
+        info = this._db.prepare('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000 OR inProgress = true)')
+            .run(now - 2*DAY);
+        logger.log('info', "Deleted rows with < %d comments: %d", 10000, info.changes);
 
-            this._db.run('VACUUM');
-        });
+        info = this._db.prepare('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000000)')
+            .run(now - 30*DAY);
+        logger.log('info', "Deleted rows with < %d comments: %d", 1000000, info.changes);
 
-        function deleteCallback(context, err, cap) {
-            if (err) 
-                logger.log('error', "Database delete error for < %d: %o", cap, err);
-            else
-                logger.log('info', "Deleted rows with < %d comments: %d", cap, context.changes);
-        }
+        this._db.exec('VACUUM');
     }
 }
 

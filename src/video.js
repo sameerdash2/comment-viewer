@@ -105,46 +105,52 @@ class Video {
 
             this._startTime = new Date();
             if (this._logToDatabase) {
-                this._app.database.checkVideo(this._id, (row, actuallyInProgress) => {
-                    if (row) {
-                        // Comments exist in the database.
-                        if (row.inProgress) {
-                            this._socket.join('video-' + this._id);
-                            if (!actuallyInProgress) {
-                                // Comment set is stuck in an unfinished state.
-                                // Use nextPageToken to continue fetch if possible
-                                if (row.nextPageToken) {
-                                    logger.log('info', "Attempting to resume unfinished fetch process on %s", this._id);
-                                    this._indexedComments = row.commentCount;
-                                    this._app.database.reAddVideo(this._video, () => this.fetchAllComments(row.nextPageToken, false));
-                                }
-                                else {
-                                    this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
-                                }
+                const {row, actuallyInProgress} = this._app.database.checkVideo(this._id);
+                if (row) {
+                    // Comments exist in the database.
+                    if (row.inProgress) {
+                        this._socket.join('video-' + this._id);
+                        if (!actuallyInProgress) {
+                            // Comment set is stuck in an unfinished state.
+                            // Use nextPageToken to continue fetch if possible
+                            if (row.nextPageToken) {
+                                logger.log('info', "Attempting to resume unfinished fetch process on %s", this._id);
+                                this._indexedComments = row.commentCount;
+
+                                this._app.database.reAddVideo(this._video);
+                                this.fetchAllComments(row.nextPageToken, false);
+                            }
+                            else {
+                                this._app.database.deleteVideo(this._id);
+                                this._app.database.addVideo(this._video);
+                                this.startFetchProcess(false);
                             }
                         }
-                        // 5-minute cooldown before doing any new fetch
-                        else if ((now - row.lastUpdated) <= 5*60*1000) {
-                            this.sendLoadedComments("dateOldest", 0, -1, -1, false);
-                        }
-                        else if (this.shouldReFetch(row)) {
-                            this._app.database.resetVideo(this._video, () => this.startFetchProcess(false));
-                        }
-                        else {
-                            this._indexedComments = row.commentCount;
-                            this._app.database.reAddVideo(this._video, () => {
-                                this._app.database.getLastComment(this._id, (row) => {
-                                    this._lastComment = { id: row.id, publishedAt: row["MAX(publishedAt)"] };
-                                    this.startFetchProcess(true);
-                                });
-                            });
-                        }
                     }
+                    // 5-minute cooldown before doing any new fetch
+                    else if ((now - row.lastUpdated) <= 5*60*1000) {
+                        this.sendLoadedComments("dateOldest", 0, -1, -1, false);
+                    }
+                    // Re-fetch all comments from scratch if needed
+                    else if (this.shouldReFetch(row)) {
+                        this._app.database.deleteVideo(this._id);
+                        this._app.database.addVideo(this._video);
+                        this.startFetchProcess(false);
+                    }
+                    // Append to existing set of comments
                     else {
-                        // New video
-                        this._app.database.addVideo(this._video, () => this.startFetchProcess(false));
+                        this._indexedComments = row.commentCount;
+                        this._app.database.reAddVideo(this._video);
+                        const lastCommentRow = this._app.database.getLastComment(this._id);
+                        this._lastComment = { id: lastCommentRow.id, publishedAt: lastCommentRow["MAX(publishedAt)"] };
+                        this.startFetchProcess(true);
                     }
-                });
+                }
+                else {
+                    // New video
+                    this._app.database.addVideo(this._video);
+                    this.startFetchProcess(false);
+                }
             }
             else {
                 this.startFetchProcess(false);
@@ -323,56 +329,54 @@ class Video {
         // This works in 99.99% of cases (as long as said comments were fetched at the same time)
         sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
 
-        this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate, (err, rows) => {
-            if (err) {
-                logger.log('error', "Database getComments error: %o", err);
-            }
-            else {
-                this._loadComplete = true; // To permit statistics retrieval later
+        try {
+            const rows = this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate);
 
-                const more = rows.length == config.maxDisplay;
-                const subset = [];
-                const repliesPromises = [];
-                for (const commentThread of rows) {
-                    subset.push({
-                        id: commentThread.id,
-                        textDisplay: commentThread.textDisplay,
-                        authorDisplayName: commentThread.authorDisplayName,
-                        authorProfileImageUrl: commentThread.authorProfileImageUrl,
-                        authorChannelId: commentThread.authorChannelId,
-                        likeCount: commentThread.likeCount,
-                        publishedAt: commentThread.publishedAt,
-                        updatedAt: commentThread.updatedAt,
-                        totalReplyCount: commentThread.totalReplyCount
-                    });
+            this._loadComplete = true; // To permit statistics retrieval later
+            const more = rows.length == config.maxDisplay;
+            const subset = [];
+            const repliesPromises = [];
+            for (const commentThread of rows) {
+                subset.push({
+                    id: commentThread.id,
+                    textDisplay: commentThread.textDisplay,
+                    authorDisplayName: commentThread.authorDisplayName,
+                    authorProfileImageUrl: commentThread.authorProfileImageUrl,
+                    authorChannelId: commentThread.authorChannelId,
+                    likeCount: commentThread.likeCount,
+                    publishedAt: commentThread.publishedAt,
+                    updatedAt: commentThread.updatedAt,
+                    totalReplyCount: commentThread.totalReplyCount
+                });
 
-                    if (commentThread.totalReplyCount > 0 && config.maxDisplayedReplies > 0) {
-                        repliesPromises.push(this._app.ytapi.executeMinReplies(commentThread.id));
-                    }
+                if (commentThread.totalReplyCount > 0 && config.maxDisplayedReplies > 0) {
+                    repliesPromises.push(this._app.ytapi.executeMinReplies(commentThread.id));
                 }
-                
-                // Fetch a subset of the replies for each comment
-                const replies = {};
-                Promise.allSettled(repliesPromises).then((results) => {
-                    results.forEach((result) => {
-                        if (result.status == "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
-                            const parentId = result.value.data.items[0].id;
-                            const chosenReplies = result.value.data.items[0].replies.comments.slice(0, config.maxDisplayedReplies);
-                            replies[parentId] = [];
+            }
+            
+            // Fetch a subset of the replies for each comment
+            const replies = {};
+            Promise.allSettled(repliesPromises).then((results) => {
+                results.forEach((result) => {
+                    if (result.status == "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
+                        const parentId = result.value.data.items[0].id;
+                        const chosenReplies = result.value.data.items[0].replies.comments.slice(0, config.maxDisplayedReplies);
+                        replies[parentId] = [];
 
-                            chosenReplies.forEach((reply) => replies[parentId].push(convertComment(reply, true)));
-                        }
-                    });
-
-                    if (broadcast) {
-                        this._io.to('video-' + this._id).emit("groupComments", { reset: newSet, items: subset, replies: replies, showMore: more });
-                    }
-                    else {
-                        this._socket.emit("groupComments", { reset: newSet, items: subset, replies: replies, showMore: more });
+                        chosenReplies.forEach((reply) => replies[parentId].push(convertComment(reply, true)));
                     }
                 });
-            }
-        });
+
+                if (broadcast) {
+                    this._io.to('video-' + this._id).emit("groupComments", { reset: newSet, items: subset, replies: replies, showMore: more });
+                }
+                else {
+                    this._socket.emit("groupComments", { reset: newSet, items: subset, replies: replies, showMore: more });
+                }
+            });
+        } catch (err) {
+            logger.log('error', "Database getComments error: %o", err);
+        }
     }
 
     getReplies(commentId) {
@@ -407,38 +411,36 @@ class Video {
 
     getStatistics() {
         if (this._graphAvailable && this._loadComplete) {
-            Promise.all([this._app.database.getStatistics(this._id), this.makeGraphArray()]).then((results) => {
-                this._socket.emit("statsData", results);
-                results = undefined;
-            }, (err) => {
-                logger.log('error', "Statistics error on %s: %o", this._id, err);
+            const stats = this._app.database.getStatistics(this._id);
+            this.makeGraphArray().then((result) => {
+                this._socket.emit("statsData", [stats, result]);
+                result = undefined;
             });
         }
     }
 
     makeGraphArray() {
         // Form array of all dates
-        return new Promise((resolve) => {        
-            this._app.database.getAllDates(this._id, (rows) => {
-                const dates = new Array(rows.length);
+        return new Promise((resolve) => {
+            const rows = this._app.database.getAllDates(this._id);
+            const dates = new Array(rows.length);
 
-                // Populate dates array in chunks of 10000 to not block the CPU
-                let i = 0;
-                const processChunk = () => {
-                    let count = 0;
-                    while (count++ < 10000 && i < rows.length) {
-                        dates[i] = rows[i].publishedAt;
-                        i++;
-                    }
-                    if (i < rows.length) {
-                        setTimeout(processChunk, 0);
-                    }
-                    else {
-                        resolve(dates);
-                    }
+            // Populate dates array in chunks of 10000 to not block the thread
+            let i = 0;
+            const processChunk = () => {
+                let count = 0;
+                while (count++ < 10000 && i < rows.length) {
+                    dates[i] = rows[i].publishedAt;
+                    i++;
                 }
-                processChunk();
-            });
+                if (i < rows.length) {
+                    setTimeout(processChunk, 0);
+                }
+                else {
+                    resolve(dates);
+                }
+            }
+            processChunk();
         });
     }
 
