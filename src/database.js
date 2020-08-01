@@ -85,6 +85,13 @@ class Database {
                 .all(videoId, minDate, maxDate);
         }
         else {
+            // Ensure that any double quotes in search string are matched up (or tokenizer throws error).
+            // If not, remove the last instance of double quote
+            if ((searchTerms.split('"').length - 1) % 2 !== 0) {
+                const pos = searchTerms.lastIndexOf('"');
+                searchTerms = searchTerms.substring(0, pos) + searchTerms.substring(pos + 1);
+            }
+
             try {
                 count = this._db.prepare('SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?' +
                         ' AND publishedAt >= ? AND publishedAt <= ?')
