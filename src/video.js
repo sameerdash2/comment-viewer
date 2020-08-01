@@ -129,7 +129,7 @@ class Video {
                     }
                     // 5-minute cooldown before doing any new fetch
                     else if ((now - row.lastUpdated) <= 5*60*1000) {
-                        this.sendLoadedComments("dateOldest", 0, -1, -1, false);
+                        this.sendLoadedComments("dateOldest", 0, -1, -1, undefined, false);
                     }
                     // Re-fetch all comments from scratch if needed
                     else if (this.shouldReFetch(row)) {
@@ -229,7 +229,7 @@ class Video {
                     this._id, this._newComments, elapsed, (this._newComments / elapsed * 1000));
                 
                 // Send the first batch of comments
-                this.sendLoadedComments("dateOldest", 0, -1, -1, true);
+                this.sendLoadedComments("dateOldest", 0, -1, -1, undefined, true);
 
                 // Clear out the room
                 setTimeout(() => {
@@ -314,7 +314,7 @@ class Video {
         this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
-    sendLoadedComments(sort, commentIndex, minDate, maxDate, broadcast) {
+    sendLoadedComments(sort, commentIndex, minDate, maxDate, searchTerms, broadcast) {
         if (!this._id) return;
 
         const newSet = commentIndex == 0;
@@ -330,7 +330,8 @@ class Video {
         sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
 
         try {
-            const rows = this._app.database.getComments(this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate);
+            const {rows, count} = this._app.database.getComments(
+                this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate, searchTerms || undefined);
 
             this._loadComplete = true; // To permit statistics retrieval later
             const more = rows.length == config.maxDisplay;
@@ -368,10 +369,12 @@ class Video {
                 });
 
                 if (broadcast) {
-                    this._io.to('video-' + this._id).emit("groupComments", { reset: newSet, items: subset, replies: replies, showMore: more });
+                    this._io.to('video-' + this._id).emit("groupComments",
+                        { reset: newSet, items: subset, replies: replies, showMore: more, totalCount: count });
                 }
                 else {
-                    this._socket.emit("groupComments", { reset: newSet, items: subset, replies: replies, showMore: more });
+                    this._socket.emit("groupComments",
+                        { reset: newSet, items: subset, replies: replies, showMore: more, totalCount: count });
                 }
             });
         } catch (err) {

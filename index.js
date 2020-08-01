@@ -26,8 +26,11 @@ class App {
             socket.on("requestAll", () => {
                 videoInstance.handleLoad("dateOldest");
             });
-            socket.on("showMore", ({ sort, commentNum, minDate, maxDate }) => {
-                videoInstance.sendLoadedComments(sort, commentNum, minDate, maxDate, false);
+            socket.on("showMore", ({ sort, commentNum, minDate, maxDate, searchTerms }) => {
+                if (typeof searchTerms !== "undefined")  {
+                    searchTerms = searchTerms.substring(0, 255);
+                }
+                videoInstance.sendLoadedComments(sort, commentNum, minDate, maxDate, searchTerms, false);
             });
             socket.on("replyRequest", (id) => {
                 videoInstance.getReplies(id);

@@ -14,6 +14,30 @@ class Database {
             ' authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT,' +
             ' totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)').run();
 
+        this._db.prepare('CREATE VIRTUAL TABLE IF NOT EXISTS comments_fts USING fts4(content="comments", id PRIMARY KEY, textDisplay, authorDisplayName,' +
+                ' authorProfileImageUrl, authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount, videoId, tokenize=unicode61)').run();
+        // Create triggers to keep virtual FTS table up to date with comments table
+        this._db.exec(`
+            CREATE TRIGGER IF NOT EXISTS comments_bu BEFORE UPDATE ON comments BEGIN
+                DELETE FROM comments_fts WHERE docid=old.id;
+            END;
+            CREATE TRIGGER IF NOT EXISTS comments_bd BEFORE DELETE ON comments BEGIN
+                DELETE FROM comments_fts WHERE docid=old.id;
+            END;
+            CREATE TRIGGER IF NOT EXISTS comments_au AFTER UPDATE ON comments BEGIN
+                INSERT INTO comments_fts(docid, id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
+                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId)
+                VALUES(new.rowid, new.id, new.textDisplay, new.authorDisplayName, new.authorProfileImageUrl, new.authorChannelId,
+                    new.likeCount, new.publishedAt, new.updatedAt, new.totalReplyCount, new.videoId);
+            END;
+            CREATE TRIGGER IF NOT EXISTS comments_ai AFTER INSERT ON comments BEGIN
+                INSERT INTO comments_fts(docid, id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
+                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId)
+                VALUES(new.rowid, new.id, new.textDisplay, new.authorDisplayName, new.authorProfileImageUrl, new.authorChannelId,
+                    new.likeCount, new.publishedAt, new.updatedAt, new.totalReplyCount, new.videoId);
+            END;
+        `);
+
         this._db.prepare('CREATE INDEX IF NOT EXISTS comment_index ON comments(videoId, publishedAt, likeCount)').run();
 
         setInterval(() => this.cleanup(), 1 * DAY);
@@ -49,10 +73,29 @@ class Database {
         return this._db.prepare('SELECT id, MAX(publishedAt) FROM comments WHERE videoId = ?').get(videoId);
     }
 
-    getComments(videoId, limit, offset, sortBy, minDate, maxDate) {
-        return this._db.prepare(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?` +
-                ` ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
-            .all(videoId, minDate, maxDate);
+    getComments(videoId, limit, offset, sortBy, minDate, maxDate, searchTerms) {
+        searchTerms = searchTerms || undefined;
+        let rows;
+        let count;
+        if (typeof searchTerms === "undefined") {
+            count = this._db.prepare('SELECT COUNT(*) FROM comments WHERE videoId = ?').get(videoId)['COUNT(*)'];
+            rows = this._db.prepare(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?` +
+                    ` ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
+                .all(videoId, minDate, maxDate);
+        }
+        else {
+            try {
+                count = this._db.prepare('SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?')
+                    .get(videoId, searchTerms)['COUNT(*)'];
+                rows = this._db.prepare(`SELECT * FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?` +
+                        ` AND publishedAt >= ? AND publishedAt <= ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
+                    .all(videoId, searchTerms, minDate, maxDate);
+            } catch(err) {
+                logger.log('error', "Error getting comments for video %s with searchTerms %s: %o", videoId, searchTerms, err);
+                return this.getComments(videoId, limit, offset, sortBy, minDate, maxDate, undefined);
+            }
+        }
+        return {rows, count};
     }
 
     getAllDates(videoId) {

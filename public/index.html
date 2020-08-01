@@ -241,13 +241,17 @@
             <h5 class="card-header head py-2">
               <div class="row align-items-center">
                 <div class="col-sm-6">
-                  Comments
+                  Comments • <span id="headCount">0</span>
                 </div>
-                <div class="col-sm-6 input-group mt-2 mt-sm-0">
-                  <input class="form-control" type="text" id="searchBox" spellcheck="false" maxlength="255" placeholder="Search" aria-label="Search comments" />
-                  <div class="input-group-append">
-                    <button class="btn btn-primary" type="button"><i class="fas fa-search"></i></button>
-                  </div>
+                <div class="col-sm-6 mt-2 mt-sm-0">
+                  <form id="searchForm" autocomplete="off">
+                    <div class="input-group">
+                      <input class="form-control" type="text" id="searchBox" spellcheck="false" maxlength="255" placeholder="Search" aria-label="Search comments" />
+                      <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                      </div>
+                    </div>
+                  </form>
                 </div>
               </div>
             </h5>

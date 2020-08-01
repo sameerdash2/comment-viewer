@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let dateLeftBound = -1;
     let dateRightBound = -1;
+    let searchTerms = undefined;
 
     let statsAvailable = false;
 
@@ -59,7 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
     showMoreBtn.addEventListener('click', () => {
         showMoreBtn.disabled = true;
         showMoreBtn.textContent = "Loading..."
-        socket.emit("showMore", {sort: video.currentSort, commentNum: video.commentNum, minDate: dateLeftBound, maxDate: dateRightBound});
+        socket.emit("showMore", {sort: video.currentSort, commentNum: video.commentNum,
+            minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});
     });
     
     document.getElementById("sortLoaded").addEventListener('click', (event) => {
@@ -75,7 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
             showLoading();
 
             // Send request
-            socket.emit("showMore", {sort: video.currentSort, commentNum: 0, minDate: dateLeftBound, maxDate: dateRightBound});
+            socket.emit("showMore", {sort: video.currentSort, commentNum: 0,
+                minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});
         }
     });
 
@@ -114,9 +117,17 @@ document.addEventListener("DOMContentLoaded", () => {
             dateLeftBound = minDate.getTime();
             dateRightBound = maxDate.getTime();
 
-            socket.emit("showMore", {sort: video.currentSort, commentNum: 0, minDate: dateLeftBound, maxDate: dateRightBound});
+            socket.emit("showMore", {sort: video.currentSort, commentNum: 0,
+                minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});
             showLoading();
         }
+    });
+
+    document.getElementById("searchForm").addEventListener('submit', (event) => {
+        event.preventDefault();
+        searchTerms = document.getElementById("searchBox").value.trim();
+        socket.emit("showMore", {sort: video.currentSort, commentNum: 0,
+            minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});        
     });
 
     commentsSection.addEventListener('click', repliesButton);
@@ -185,12 +196,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));
 
-    socket.on("groupComments", ({ reset, items, replies, showMore }) => {      
+    socket.on("groupComments", ({ reset, items, replies, showMore, totalCount }) => {      
         message.innerHTML = "&nbsp;";
         if (reset) {
             hideLoading();
             commentsSection.innerHTML = "";
             loadStatus.style.display = "none";
+            document.getElementById("headCount").textContent = Number(totalCount).toLocaleString();
             document.getElementById("commentsCol").style.display = "block";
             document.getElementById("sortLoaded").style.display = "block";
             document.getElementById("filter").style.display = "block";
