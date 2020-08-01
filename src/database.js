@@ -15,7 +15,9 @@ class Database {
             ' totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)').run();
 
         this._db.prepare('CREATE VIRTUAL TABLE IF NOT EXISTS comments_fts USING fts4(content="comments", id PRIMARY KEY, textDisplay, authorDisplayName,' +
-                ' authorProfileImageUrl, authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount, videoId, tokenize=unicode61)').run();
+                ' authorProfileImageUrl, authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount, videoId, tokenize=unicode61,' +
+                ' notindexed=id, notindexed=authorProfileImageUrl, notindexed=authorChannelId, notindexed=likeCount, notindexed=publishedAt,' +
+                ' notindexed=updatedAt, notindexed=totalReplyCount, notindexed=videoId)').run();
         // Create triggers to keep virtual FTS table up to date with comments table
         this._db.exec(`
             CREATE TRIGGER IF NOT EXISTS comments_bu BEFORE UPDATE ON comments BEGIN
