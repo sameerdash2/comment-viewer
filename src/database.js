@@ -76,38 +76,53 @@ class Database {
     }
 
     getComments(videoId, limit, offset, sortBy, minDate, maxDate, searchTerms) {
-        searchTerms = searchTerms || undefined;
-        let rows;
-        let subCount;
+        let rows, subCount;
         const totalCount = this._db.prepare('SELECT COUNT(*) FROM comments WHERE videoId = ?').get(videoId)['COUNT(*)'];
-        if (typeof searchTerms === "undefined") {
-            subCount = this._db.prepare('SELECT COUNT(*) FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?')
-                .get(videoId, minDate, maxDate)['COUNT(*)'];
-            rows = this._db.prepare(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?` +
-                    ` ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
-                .all(videoId, minDate, maxDate);
-        }
-        else {
-            // Ensure that any double quotes in search string are matched up (or tokenizer throws error).
-            // If not, remove the last instance of double quote
-            if ((searchTerms.split('"').length - 1) % 2 !== 0) {
-                const pos = searchTerms.lastIndexOf('"');
-                searchTerms = searchTerms.substring(0, pos) + searchTerms.substring(pos + 1);
-            }
+        let subCountStatement, rowsStatement;
+        if (searchTerms[0]) {
+            searchTerms[0] = this.formatString(searchTerms[0]);
 
-            try {
-                subCount = this._db.prepare('SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?' +
-                        ' AND publishedAt >= ? AND publishedAt <= ?')
-                    .get(videoId, searchTerms, minDate, maxDate)['COUNT(*)'];
-                rows = this._db.prepare(`SELECT * FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?` +
-                        ` AND publishedAt >= ? AND publishedAt <= ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
-                    .all(videoId, searchTerms, minDate, maxDate);
-            } catch(err) {
-                logger.log('error', "Error getting comments for video %s with searchTerms %s: %o", videoId, searchTerms, err);
-                return this.getComments(videoId, limit, offset, sortBy, minDate, maxDate, undefined);
+            subCountStatement = this._db.prepare('SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?' +
+                    ' AND publishedAt >= ? AND publishedAt <= ?')
+                .bind(videoId, searchTerms[0], minDate, maxDate);
+            rowsStatement = this._db.prepare(`SELECT * FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?` +
+                    ` AND publishedAt >= ? AND publishedAt <= ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
+                .bind(videoId, searchTerms[0], minDate, maxDate);
+        }
+        else if (searchTerms[1]) {
+            searchTerms[1] = this.formatString(searchTerms[1]);
+
+            subCountStatement = this._db.prepare('SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND authorDisplayName MATCH ?' +
+                    ' AND publishedAt >= ? AND publishedAt <= ?')
+                .bind(videoId, searchTerms[1], minDate, maxDate);
+            rowsStatement = this._db.prepare(`SELECT * FROM comments_fts WHERE videoId = ? AND authorDisplayName MATCH ?` +
+                    ` AND publishedAt >= ? AND publishedAt <= ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
+                .bind(videoId, searchTerms[1], minDate, maxDate);
+        }
+        // No search
+        else {
+            subCountStatement = this._db.prepare('SELECT COUNT(*) FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?')
+                .bind(videoId, minDate, maxDate);
+            rowsStatement = this._db.prepare(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?` +
+                    ` ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
+                .bind(videoId, minDate, maxDate);
+        }
+
+        try {
+            subCount = subCountStatement.get()['COUNT(*)'];
+            rows = rowsStatement.all();
+            return {rows, subCount, totalCount};
+        } catch(err) {
+            logger.log('error', "Error getting comments for video %s with searchTerms %o: %o", videoId, searchTerms, err);
+
+            // If error occurred on a search, attempt the same query without search.
+            if (searchTerms[0] || searchTerms[1]) {
+                return this.getComments(videoId, limit, offset, sortBy, minDate, maxDate, ['', '']);
+            }
+            else {
+                return {rows: [], subCount: 0, totalCount: totalCount};
             }
         }
-        return {rows, subCount, totalCount};
     }
 
     getAllDates(videoId) {
@@ -165,6 +180,16 @@ class Database {
         logger.log('info', "Deleted rows with < %d comments: %d", 1000000, info.changes);
 
         this._db.exec('VACUUM');
+    }
+
+    formatString(str) {
+        // Ensure that any double quotes in search string are matched up (or tokenizer throws error).
+        // If not, remove the last instance of double quote
+        if ((str.split('"').length - 1) % 2 !== 0) {
+            const pos = str.lastIndexOf('"');
+            str = str.substring(0, pos) + str.substring(pos + 1);
+        }
+        return str;
     }
 }
 

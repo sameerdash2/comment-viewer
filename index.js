@@ -27,10 +27,8 @@ class App {
                 videoInstance.handleLoad("dateOldest");
             });
             socket.on("showMore", ({ sort, commentNum, minDate, maxDate, searchTerms }) => {
-                if (typeof searchTerms !== "undefined")  {
-                    searchTerms = searchTerms.substring(0, 255);
-                }
-                videoInstance.sendLoadedComments(sort, commentNum, minDate, maxDate, searchTerms, false);
+                searchTerms = searchTerms.map((term) => term.substring(0, 255));
+                videoInstance.sendLoadedComments(sort, commentNum, false, minDate, maxDate, searchTerms);
             });
             socket.on("replyRequest", (id) => {
                 videoInstance.getReplies(id);

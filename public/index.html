@@ -251,10 +251,27 @@
               <div class="row align-items-center">
                 <div class="col-12">
                   <form id="searchForm" class="p-2" autocomplete="off">
-                    <div class="input-group">
-                      <input class="form-control" type="text" id="searchBox" spellcheck="false" maxlength="255" placeholder="Search" aria-label="Search comments" />
-                      <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                    <div class="row align-items-center">
+                      <div class="col input-group">
+                        <input class="form-control" type="text" id="searchBox" spellcheck="false" maxlength="255" placeholder="Search" aria-label="Search comments" />
+                        <div class="input-group-append">
+                          <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                        </div>
+                      </div>
+                      <div class="col-auto dropdown pl-0">
+                        <span class="dropdown-toggle float-right cursor-default p-1" data-toggle="dropdown">Options</span>
+                        <div class="dropdown-menu anchor-right shadow p-2 mt-0">
+                          <h6 class="sub-title mb-2">Search by...</h6>
+                          <div class="custom-control custom-radio my-1">
+                            <input type="radio" class="custom-control-input" id="selectTexts" name="searchField" value="texts" checked />
+                            <label for="selectTexts" class="custom-control-label">Comment text</label>
+                          </div>
+          
+                          <div class="custom-control custom-radio my-1">
+                            <input type="radio" class="custom-control-input" id="selectAuthors" name="searchField" value="authors" />
+                            <label for="selectAuthors" class="custom-control-label">Author</label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </form>

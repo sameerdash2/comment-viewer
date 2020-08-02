@@ -129,7 +129,7 @@ class Video {
                     }
                     // 5-minute cooldown before doing any new fetch
                     else if ((now - row.lastUpdated) <= 5*60*1000) {
-                        this.sendLoadedComments("dateOldest", 0, -1, -1, undefined, false);
+                        this.sendLoadedComments("dateOldest", 0, false);
                     }
                     // Re-fetch all comments from scratch if needed
                     else if (this.shouldReFetch(row)) {
@@ -229,7 +229,7 @@ class Video {
                     this._id, this._newComments, elapsed, (this._newComments / elapsed * 1000));
                 
                 // Send the first batch of comments
-                this.sendLoadedComments("dateOldest", 0, -1, -1, undefined, true);
+                this.sendLoadedComments("dateOldest", 0, true);
 
                 // Clear out the room
                 setTimeout(() => {
@@ -314,11 +314,11 @@ class Video {
         this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
-    sendLoadedComments(sort, commentIndex, minDate, maxDate, searchTerms, broadcast) {
+    sendLoadedComments(sort, commentIndex, broadcast, minDate, maxDate, searchTerms = ['', '']) {
         if (!this._id) return;
 
         const newSet = commentIndex == 0;
-        if (minDate == undefined || minDate < 0) {
+        if (!minDate || minDate < 0) {
             minDate = 0;
             maxDate = 1e13;
         }

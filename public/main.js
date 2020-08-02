@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let dateLeftBound = -1;
     let dateRightBound = -1;
-    let searchTerms = undefined;
+    let searchTerms = ['', ''];
 
     let statsAvailable = false;
 
@@ -118,7 +118,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("searchForm").addEventListener('submit', (event) => {
         event.preventDefault();
-        searchTerms = document.getElementById("searchBox").value.trim();
+        searchTerms = ['', ''];
+        const searchBy = document.querySelector('input[name="searchField"]:checked').value;
+        const typeIndex = searchBy === "authors" ? 1 : 0;
+        searchTerms[typeIndex] = document.getElementById("searchBox").value.trim();
         
         sendCommentRequest(true);
     });
