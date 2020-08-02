@@ -330,7 +330,7 @@ class Video {
         sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
 
         try {
-            const {rows, count} = this._app.database.getComments(
+            const {rows, subCount, totalCount} = this._app.database.getComments(
                 this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate, searchTerms || undefined);
 
             this._loadComplete = true; // To permit statistics retrieval later
@@ -370,11 +370,11 @@ class Video {
 
                 if (broadcast) {
                     this._io.to('video-' + this._id).emit("groupComments",
-                        { reset: newSet, items: subset, replies: replies, showMore: more, totalCount: count });
+                        { reset: newSet, items: subset, replies: replies, showMore: more, subCount: subCount, totalCount: totalCount });
                 }
                 else {
                     this._socket.emit("groupComments",
-                        { reset: newSet, items: subset, replies: replies, showMore: more, totalCount: count });
+                        { reset: newSet, items: subset, replies: replies, showMore: more, subCount: subCount, totalCount: totalCount });
                 }
             });
         } catch (err) {

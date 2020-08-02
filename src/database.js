@@ -78,9 +78,10 @@ class Database {
     getComments(videoId, limit, offset, sortBy, minDate, maxDate, searchTerms) {
         searchTerms = searchTerms || undefined;
         let rows;
-        let count;
+        let subCount;
+        const totalCount = this._db.prepare('SELECT COUNT(*) FROM comments WHERE videoId = ?').get(videoId)['COUNT(*)'];
         if (typeof searchTerms === "undefined") {
-            count = this._db.prepare('SELECT COUNT(*) FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?')
+            subCount = this._db.prepare('SELECT COUNT(*) FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?')
                 .get(videoId, minDate, maxDate)['COUNT(*)'];
             rows = this._db.prepare(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?` +
                     ` ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
@@ -95,7 +96,7 @@ class Database {
             }
 
             try {
-                count = this._db.prepare('SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?' +
+                subCount = this._db.prepare('SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?' +
                         ' AND publishedAt >= ? AND publishedAt <= ?')
                     .get(videoId, searchTerms, minDate, maxDate)['COUNT(*)'];
                 rows = this._db.prepare(`SELECT * FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?` +
@@ -106,7 +107,7 @@ class Database {
                 return this.getComments(videoId, limit, offset, sortBy, minDate, maxDate, undefined);
             }
         }
-        return {rows, count};
+        return {rows, subCount, totalCount};
     }
 
     getAllDates(videoId) {

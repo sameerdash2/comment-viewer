@@ -238,13 +238,19 @@
 
         <div id="commentsCol" class="col-12">
           <div class="card">
-            <h5 class="card-header head py-2">
-              <div class="row align-items-center">
-                <div class="col-sm-6">
-                  Comments • <span id="headCount">0</span>
+            <h5 class="card-header head">
+              Comments
+            </h5>
+            <div class="card-body p-0">
+              <div id="spinnerContainer" class="justify-content-center">
+                <div id="spinner" class="spinner-border" role="status">
+                  <span class="sr-only">Loading...</span>
                 </div>
-                <div class="col-sm-6 mt-2 mt-sm-0">
-                  <form id="searchForm" autocomplete="off">
+              </div>
+
+              <div class="row align-items-center">
+                <div class="col-12">
+                  <form id="searchForm" class="p-2" autocomplete="off">
                     <div class="input-group">
                       <input class="form-control" type="text" id="searchBox" spellcheck="false" maxlength="255" placeholder="Search" aria-label="Search comments" />
                       <div class="input-group-append">
@@ -253,15 +259,15 @@
                     </div>
                   </form>
                 </div>
-              </div>
-            </h5>
-            <div class="card-body p-0">
-              <div id="spinnerContainer" class="justify-content-center">
-                <div id="spinner" class="spinner-border" role="status">
-                  <span class="sr-only">Loading...</span>
+                <div class="col-12 mb-2" id="resultCol">
+                  <span class="p-2">
+                    <span id="subCount" class="font-weight-bold">0</span> / <span id="totalCount">0</span> results
+                  </span>
                 </div>
               </div>
+
               <ul id="commentsSection" class="list-group comments-list"></ul>
+
               <div id="showMoreDiv" class="card-footer">
                 <button id="showMoreBtn" class="loadMore btn btn-primary">Show more comments...</button>
               </div>

@@ -196,13 +196,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));
 
-    socket.on("groupComments", ({ reset, items, replies, showMore, totalCount }) => {      
+    socket.on("groupComments", ({ reset, items, replies, showMore, subCount, totalCount }) => {      
         message.innerHTML = "&nbsp;";
         if (reset) {
             hideLoading();
             commentsSection.innerHTML = "";
             loadStatus.style.display = "none";
-            document.getElementById("headCount").textContent = Number(totalCount).toLocaleString();
+            if (subCount === totalCount) {
+                document.getElementById("resultCol").style.display = "none";
+            }
+            else {
+                document.getElementById("resultCol").style.display = "block";
+                document.getElementById("subCount").textContent = Number(subCount).toLocaleString();
+                document.getElementById("totalCount").textContent = Number(totalCount).toLocaleString();
+            }
             document.getElementById("commentsCol").style.display = "block";
             document.getElementById("sortLoaded").style.display = "block";
             document.getElementById("filter").style.display = "block";

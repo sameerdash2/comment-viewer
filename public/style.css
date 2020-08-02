@@ -85,6 +85,10 @@ div#info {
 .comment {
   border: none;
 }
+.comment:first-child {
+  border-top: 2px solid rgba(0, 0, 0, 0.25);
+  border-radius: 0;
+}
 .comment + .comment {
   border-top: 1px solid rgba(0, 0, 0, 0.25);
 }
