@@ -105,7 +105,7 @@ tr:first-child td,
 tr:first-child th {
   border-top: none;
 }
-#commentsSection {
+.comments-list {
   line-height: 1.5;
 }
 .vidTitle {
