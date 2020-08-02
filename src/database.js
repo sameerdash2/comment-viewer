@@ -5,7 +5,7 @@ const DAY = 24*60*60*1000;
 
 class Database {
     constructor() {
-        this._db = new sqlite('database.sql');
+        this._db = new sqlite('database.sqlite');
         this._videosInProgress = new Set();
 
         this._db.prepare('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT,' +
