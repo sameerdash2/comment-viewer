@@ -60,25 +60,20 @@ document.addEventListener("DOMContentLoaded", () => {
     showMoreBtn.addEventListener('click', () => {
         showMoreBtn.disabled = true;
         showMoreBtn.textContent = "Loading..."
-        socket.emit("showMore", {sort: video.currentSort, commentNum: video.commentNum,
-            minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});
+        sendCommentRequest(false);
     });
     
     document.getElementById("sortLoaded").addEventListener('click', (event) => {
         const closest = event.target.closest(".sendSort");
         if (closest) {
-            video.currentSort = closest.id.substring(2);
             // Enable all except the clicked button
             const items = document.querySelectorAll(".sendSort");
             items.forEach((elem) => {
                 elem.disabled = (elem.id == closest.id);
             });
 
-            showLoading();
-
-            // Send request
-            socket.emit("showMore", {sort: video.currentSort, commentNum: 0,
-                minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});
+            video.currentSort = closest.id.substring(2);
+            sendCommentRequest(true);
         }
     });
 
@@ -117,17 +112,15 @@ document.addEventListener("DOMContentLoaded", () => {
             dateLeftBound = minDate.getTime();
             dateRightBound = maxDate.getTime();
 
-            socket.emit("showMore", {sort: video.currentSort, commentNum: 0,
-                minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});
-            showLoading();
+            sendCommentRequest(true);
         }
     });
 
     document.getElementById("searchForm").addEventListener('submit', (event) => {
         event.preventDefault();
         searchTerms = document.getElementById("searchBox").value.trim();
-        socket.emit("showMore", {sort: video.currentSort, commentNum: 0,
-            minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});        
+        
+        sendCommentRequest(true);
     });
 
     commentsSection.addEventListener('click', repliesButton);
@@ -258,6 +251,16 @@ document.addEventListener("DOMContentLoaded", () => {
         message.textContent = "Quota exceeded. Please try again later";
         message.style.color = ERR;
     });
+
+    function sendCommentRequest(getNewSet) {
+        if (getNewSet) {
+            showLoading();
+        }
+        // Only reset video.commentNum when the comments are received, to ensure it's always in sync
+        const index = getNewSet ? 0 : video.commentNum;
+        socket.emit("showMore", {sort: video.currentSort, commentNum: index,
+            minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});
+    }
 
     function showLoading() {
         commentsSection.classList.add("reloading");
