@@ -179,7 +179,7 @@ div#spinner {
 }
 .reloading {
   opacity: 0.25;
-  transition: opacity 0.25s linear;
+  transition: opacity 0.1s linear;
   pointer-events: none;
 }
 #loadEta {
