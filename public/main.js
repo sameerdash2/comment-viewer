@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let dateRightBound = -1;
     let searchTerms = ['', ''];
 
+    let firstBatchReceived = false;
     let statsAvailable = false;
 
     document.getElementById("viewTerms").addEventListener('click', (event) => {
@@ -126,6 +127,20 @@ document.addEventListener("DOMContentLoaded", () => {
         sendCommentRequest(true);
     });
 
+    document.getElementById("resetFilters").addEventListener('click', () => {
+        // Reset date filter
+        dateLeftBound = -1;
+        dateRightBound = -1;
+        dateMin.value = dateMin.getAttribute('min');
+        dateMax.value = dateMax.getAttribute('max');
+
+        // Reset search
+        searchTerms = ['', ''];
+        document.getElementById("searchBox").value = "";
+
+        sendCommentRequest(true);
+    })
+
     commentsSection.addEventListener('click', repliesButton);
     linkedHolder.addEventListener('click', repliesButton);
     function repliesButton(event) {
@@ -145,24 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("intro").style.display = "none";
         if (videoObject !== -1) {
             video.display(videoObject);
-            // Apply values to HTML date picker which operates on YYYY-MM-DD format
-            const minDate = new Date(videoObject.snippet.publishedAt);
-            const maxDate = new Date();
-            let min, max;
-            if (video.options.timezone === "utc") {
-                min = minDate.toISOString().split('T')[0];
-                max = maxDate.toISOString().split('T')[0];
-            }
-            else {
-                min = new Date(minDate.getTime() - (minDate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
-                max = new Date(maxDate.getTime() - (maxDate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
-            }
-            dateMin.setAttribute("min", min);
-            dateMin.setAttribute("max", max);
-            dateMax.setAttribute("min", min);
-            dateMax.setAttribute("max", max);
-            dateMin.value = min;
-            dateMax.value = max;
         }
     }
 
@@ -194,10 +191,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("groupComments", ({ reset, items, replies, showMore, subCount, totalCount }) => {      
         message.innerHTML = "&nbsp;";
+        if (!firstBatchReceived) {
+            firstBatchReceived = true;
+
+            // Apply values to HTML date picker which operates on YYYY-MM-DD format
+            // **This code assumes the first batch is sorted oldest first**
+            const minDate = new Date(Math.min( new Date(video.videoPublished), new Date(items[0].publishedAt) ));
+            const maxDate = new Date();
+            let min, max;
+            if (video.options.timezone === "utc") {
+                min = minDate.toISOString().split('T')[0];
+                max = maxDate.toISOString().split('T')[0];
+            }
+            else {
+                min = new Date(minDate.getTime() - (minDate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
+                max = new Date(maxDate.getTime() - (maxDate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
+            }
+            dateMin.setAttribute("min", min);
+            dateMin.setAttribute("max", max);
+            dateMax.setAttribute("min", min);
+            dateMax.setAttribute("max", max);
+            dateMin.value = min;
+            dateMax.value = max;
+
+            // Display necessary elements
+            loadStatus.style.display = "none";
+            document.getElementById("commentsCol").style.display = "block";
+            document.getElementById("sortLoaded").style.display = "block";
+            document.getElementById("filter").style.display = "block";
+            document.getElementById("statsColumn").style.display = statsAvailable ? "block" : "none";
+
+        }
         if (reset) {
             hideLoading();
-            commentsSection.innerHTML = "";
-            loadStatus.style.display = "none";
+            commentsSection.innerHTML = "";            
             if (subCount === totalCount) {
                 document.getElementById("resultCol").style.display = "none";
             }
@@ -206,10 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("subCount").textContent = Number(subCount).toLocaleString();
                 document.getElementById("totalCount").textContent = Number(totalCount).toLocaleString();
             }
-            document.getElementById("commentsCol").style.display = "block";
-            document.getElementById("sortLoaded").style.display = "block";
-            document.getElementById("filter").style.display = "block";
-            document.getElementById("statsColumn").style.display = statsAvailable ? "block" : "none";
         }
         video.handleGroupComments(reset, items);
         video.handleMinReplies(replies);
