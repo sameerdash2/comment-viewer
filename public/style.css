@@ -75,6 +75,9 @@ option:disabled {
 .gray {
   color: #555;
 }
+.light-gray {
+  color: #999;
+}
 .red {
   color: #b00;
 }
@@ -94,6 +97,9 @@ div#info {
 }
 .dropdown:hover .dropdown-menu {
   display: block;
+}
+.highlight {
+  background-color: #ff9;
 }
 .anchor-right {
   left: unset;

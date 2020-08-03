@@ -135,7 +135,7 @@ export function formatComment(item, number, options, uploaderId, videoId, reply 
                 </span>
                 ${numSegment}
             </div>
-            <div class="commentText" dir="auto">${item.textDisplay}</div>
+            <div class="commentText" dir="auto">${item.snippet || item.textDisplay}</div>
             ${likeSegment}${replySegment}
         </div>`;
 

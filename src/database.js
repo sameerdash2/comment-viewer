@@ -85,8 +85,10 @@ class Database {
             subCountStatement = this._db.prepare('SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?' +
                     ' AND publishedAt >= ? AND publishedAt <= ?')
                 .bind(videoId, searchTerms[0], minDate, maxDate);
-            rowsStatement = this._db.prepare(`SELECT * FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?` +
-                    ` AND publishedAt >= ? AND publishedAt <= ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
+            rowsStatement = this._db.prepare(`
+                    SELECT *, snippet(comments_fts, '<span class="highlight">', '</span>', '<i class="light-gray">[clipped] </i>', 1, 64)
+                    AS snippet FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?
+                    AND publishedAt >= ? AND publishedAt <= ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
                 .bind(videoId, searchTerms[0], minDate, maxDate);
         }
         else if (searchTerms[1]) {

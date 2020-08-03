@@ -331,7 +331,7 @@ class Video {
 
         try {
             const {rows, subCount, totalCount} = this._app.database.getComments(
-                this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate, searchTerms || undefined);
+                this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate, searchTerms);
 
             this._loadComplete = true; // To permit statistics retrieval later
             const more = rows.length == config.maxDisplay;
@@ -341,6 +341,7 @@ class Video {
                 subset.push({
                     id: commentThread.id,
                     textDisplay: commentThread.textDisplay,
+                    snippet: commentThread.snippet || undefined,
                     authorDisplayName: commentThread.authorDisplayName,
                     authorProfileImageUrl: commentThread.authorProfileImageUrl,
                     authorChannelId: commentThread.authorChannelId,
