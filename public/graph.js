@@ -3,7 +3,7 @@ import { shiftDate, floorDate } from './util.js';
 
 const GRIDCOLOR = "rgba(0,0,0,0.1)";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const HOUR = 60*60*1000, DAY = 24 * HOUR, MONTH = 30 * DAY, YEAR = 365 * DAY;
+const HOUR = 60 * 60 * 1000, DAY = 24 * HOUR, MONTH = 30 * DAY, YEAR = 365 * DAY;
 
 export class Graph {
     constructor(video, socket) {
@@ -74,7 +74,7 @@ export class Graph {
             this._interval = newInterval;
 
             this._graphInstance.setData(this._datasets[newInterval], false);
-            this._graphInstance.setScale("x", { min:leftIndex, max:rightIndex });
+            this._graphInstance.setScale("x", { min: leftIndex, max: rightIndex });
         }
     }
 
@@ -92,12 +92,12 @@ export class Graph {
     handleGraphButton() {
         if (this._graphDisplayState == 2) {
             document.getElementById("statsContainer").style.display = "none";
-            document.getElementById("viewGraph").innerHTML = "&#x25BC; Statistics";
+            document.getElementById("viewGraph").textContent = "\u25BC Statistics";
             this._graphDisplayState = 1;
         }
         else if (this._graphDisplayState == 1) {
             document.getElementById("statsContainer").style.display = "block";
-            document.getElementById("viewGraph").innerHTML = "&#x25B2; Statistics";
+            document.getElementById("viewGraph").textContent = "\u25B2 Statistics";
             this._graphDisplayState = 2;
         }
         else {
@@ -114,7 +114,7 @@ export class Graph {
     buildDataArray(interval) {
         const dateMap = {};
         const isUtc = this._video.options.timezone == "utc";
-        
+
         const startDate = floorDate(new Date(this._leftBound), interval, isUtc);
         const endDate = floorDate(new Date(), interval, isUtc);
 
@@ -143,7 +143,7 @@ export class Graph {
         this._rawDates = dates;
 
         // Begin from video publish date, or the first comment if its date precedes the video's
-        this._leftBound = Math.min( new Date(this._video.videoPublished), new Date(this._rawDates[this._rawDates.length - 1]) );
+        this._leftBound = Math.min(new Date(this._video.videoPublished), new Date(this._rawDates[this._rawDates.length - 1]));
         const graphDomainLength = new Date().getTime() - new Date(this._leftBound).getTime();
 
         // Make available only the intervals that result in the graph having more than 1 point
@@ -168,12 +168,12 @@ export class Graph {
         this._graphDisplayState = 2;
         clearInterval(this._loadingInterval);
         document.getElementById("viewGraph").disabled = false;
-        document.getElementById("viewGraph").innerHTML = "&#x25B2; Statistics";
+        document.getElementById("viewGraph").textContent = "\u25B2 Statistics";
     }
 
     makeLabel(rawValue, isUtc) {
         let output = "";
-        const date = new Date(rawValue*1000);
+        const date = new Date(rawValue * 1000);
         switch (this._interval) {
             case "year":
                 output = isUtc ? date.getUTCFullYear() : date.getFullYear();

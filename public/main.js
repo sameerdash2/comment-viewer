@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("submitAll").addEventListener('click', () => {
         document.getElementById("chooseLoad").style.display = "none";
         video.prepareLoadStatus();
-        
+
         socket.emit("requestAll");
     });
     showMoreBtn.addEventListener('click', () => {
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showMoreBtn.textContent = "Loading..."
         sendCommentRequest(false);
     });
-    
+
     document.getElementById("sortLoaded").addEventListener('click', (event) => {
         const closest = event.target.closest(".sendSort");
         if (closest) {
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const searchBy = document.querySelector('input[name="searchField"]:checked').value;
         const typeIndex = searchBy === "authors" ? 1 : 0;
         searchTerms[typeIndex] = document.getElementById("searchBox").value.trim();
-        
+
         sendCommentRequest(true);
     });
 
@@ -163,18 +163,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    socket.on("commentsInfo", ({num, disabled, commence, max, graph}) => {
+    socket.on("commentsInfo", ({ num, disabled, commence, max, graph }) => {
         const commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
         statsAvailable = graph;
         if (disabled) {
-            commentInfo.innerHTML = `<i class="fas fa-comment"></i> <span class="gray">Comments are disabled.</span>`;
+            commentInfo.innerHTML = `<span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
-                commentInfo.innerHTML += ` <span class="red">(${Number(num).toLocaleString()} hidden comments)</span>`;
+                commentInfo.innerHTML += `<span class="red">(${Number(num).toLocaleString()} hidden comments)</span>`;
             }
         }
         else {
-            commentInfo.innerHTML = `<i class="fas fa-comment"></i> ${Number(num).toLocaleString()} comments`;
+            commentInfo.textContent = `${Number(num).toLocaleString()} comments`;
 
             if (commence && num > 0) video.prepareLoadStatus();
 
@@ -189,14 +189,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));
 
-    socket.on("groupComments", ({ reset, items, replies, showMore, subCount, totalCount }) => {      
-        message.innerHTML = "&nbsp;";
+    socket.on("groupComments", ({ reset, items, replies, showMore, subCount, totalCount }) => {
+        message.textContent = "\u00A0";
         if (!firstBatchReceived) {
             firstBatchReceived = true;
 
             // Apply values to HTML date picker which operates on YYYY-MM-DD format
             // **This code assumes the first batch is sorted oldest first**
-            const minDate = new Date(Math.min( new Date(video.videoPublished), new Date(items[0].publishedAt) ));
+            const minDate = new Date(Math.min(new Date(video.videoPublished), new Date(items[0].publishedAt)));
             const maxDate = new Date();
             let min, max;
             if (video.options.timezone === "utc") {
@@ -204,8 +204,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 max = maxDate.toISOString().split('T')[0];
             }
             else {
-                min = new Date(minDate.getTime() - (minDate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
-                max = new Date(maxDate.getTime() - (maxDate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
+                min = new Date(minDate.getTime() - (minDate.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+                max = new Date(maxDate.getTime() - (maxDate.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
             }
             dateMin.setAttribute("min", min);
             dateMin.setAttribute("max", max);
@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (reset) {
             hideLoading();
-            commentsSection.innerHTML = "";            
+            commentsSection.textContent = "";
             if (subCount === totalCount) {
                 document.getElementById("resultCol").style.display = "none";
             }
@@ -252,28 +252,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("resetPage", resetPage);
     function resetPage() {
-        linkedHolder.innerHTML = "";
-        commentsSection.innerHTML = "";
-        document.getElementById("limitMessage").innerHTML = "";
+        linkedHolder.textContent = "";
+        commentsSection.textContent = "";
+        document.getElementById("limitMessage").textContent = "";
         document.getElementById("loadPercentage").textContent = "0%";
-        document.getElementById("loadEta").innerHTML = '';
+        document.getElementById("loadEta").textContent = '';
         document.getElementById("progressGreen").style.width = "0%";
-        
+
         document.getElementById("chooseLoad").style.display = "none";
         document.getElementById("sortLoaded").style.display = "none";
         document.getElementById("statsColumn").style.display = "none";
         document.getElementById("showMoreDiv").style.display = "none";
-        
+
         document.getElementById("b_likesMost").disabled = false;
         document.getElementById("b_dateNewest").disabled = false;
         document.getElementById("b_dateOldest").disabled = true;
         document.getElementById("statsContainer").style.display = "none";
-        document.getElementById("graphSpace").innerHTML = "";
-        
-        video.reset();
-    }    
+        document.getElementById("graphSpace").textContent = "";
 
-    socket.on("quotaExceeded", () => {             
+        video.reset();
+    }
+
+    socket.on("quotaExceeded", () => {
         message.textContent = "Quota exceeded. Please try again later";
         message.style.color = ERR;
     });
@@ -284,8 +284,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         // Only reset video.commentNum when the comments are received, to ensure it's always in sync
         const index = getNewSet ? 0 : video.commentNum;
-        socket.emit("showMore", {sort: video.currentSort, commentNum: index,
-            minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms});
+        socket.emit("showMore", {
+            sort: video.currentSort, commentNum: index,
+            minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms
+        });
     }
 
     function showLoading() {

@@ -1,7 +1,5 @@
 export function formatTitle(video, options) {
     const liveState = video.snippet.liveBroadcastContent;
-
-    // casting in order to use toLocaleString
     const viewCount = Number(video.statistics.viewCount);
     const likeCount = Number(video.statistics.likeCount);
     const dislikeCount = Number(video.statistics.dislikeCount);
@@ -23,7 +21,7 @@ export function formatTitle(video, options) {
         document.getElementById("ratings").innerHTML = `<i class="fas fa-thumbs-up"></i> <span class="gray">Ratings have been hidden.</span>`;
     }
     else {
-        document.getElementById("ratings").innerHTML = 
+        document.getElementById("ratings").innerHTML =
             `<i class="fas fa-thumbs-up"></i> ${likeCount.toLocaleString()}&nbsp;&nbsp;&nbsp;&nbsp;
             <i class="fas fa-thumbs-down"></i> ${dislikeCount.toLocaleString()}`;
     }
@@ -35,7 +33,7 @@ export function formatTitle(video, options) {
         viewcountSec += `<span class="red">${concurrentViewers.toLocaleString()} watching now</span> / ${viewCount.toLocaleString()} total views`;
 
         const startTime = new Date(video.liveStreamingDetails.actualStartTime);
-        const duration = (new Date().getTime() - startTime.getTime());
+        const duration = new Date().getTime() - startTime.getTime();
         timestampSec += `<i class="fas fa-clock"></i> <b>Stream start time:</b> ${parseTimestamp(startTime.toISOString(), options.timezone)}
             (Elapsed: ${parseDurationHMMSS(Math.floor(duration / 1000))})`;
     }
@@ -45,11 +43,11 @@ export function formatTitle(video, options) {
             <i class="fas fa-clock"></i> <b>Scheduled start time:</b> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
     }
     else {
-        // YT premium shows don't return viewcount
+        // Handle missing viewcount (seen in YT premium shows)
         viewcountSec += (typeof video.statistics.viewCount === "undefined")
             ? ` <span class="gray">View count unavailable</span>`
             : `${viewCount.toLocaleString()} views`;
-        
+
         timestampSec += `<b><i class="fas fa-calendar"></i> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
 
         if (typeof video.liveStreamingDetails !== "undefined") {
@@ -57,7 +55,7 @@ export function formatTitle(video, options) {
                 ${parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)}</div>`;
         }
 
-        document.getElementById("commentInfo").innerHTML = `<i class="fas fa-comment"></i> <span class="gray">Loading comment information...</span>`;
+        document.getElementById("commentInfo").innerHTML = `<span class="gray">Loading comment information...</span>`;
     }
     document.getElementById("viewcount").innerHTML = viewcountSec;
     document.getElementById("vidTimestamp").innerHTML = timestampSec;
@@ -81,18 +79,21 @@ export function formatComment(item, number, options, uploaderId, videoId, reply 
     let opSegment = "";
     let pfpSegment = "";
 
+    const totalReplyCount = Number(item.totalReplyCount);
+    const likeCount = Number(item.likeCount);
+
     let timeString = parseTimestamp(item.publishedAt, options.timezone);
     if (item.publishedAt != item.updatedAt) {
         timeString += ` ( <i class="fas fa-pencil-alt"></i> edited ${parseTimestamp(item.updatedAt, options.timezone)})`;
     }
-    
+
     // second condition included for safety
     if (item.totalReplyCount > 0 && !reply) {
         replySegment = `
             <div id="replies-${item.id}" class="commentRepliesDiv">
                 <div class="repliesExpanderCollapsed">
                     <button id="getReplies-${item.id}" class="showHideButton btn btn-link font-weight-bold p-0" type="button">
-                        &#x25BC; Load ${item.totalReplyCount} replies
+                        &#x25BC; Load ${totalReplyCount.toLocaleString()} replies
                     </button>
                 </div>
                 <div id="repliesEE-${item.id}" class="repliesExpanderExpanded"></div>
@@ -101,7 +102,7 @@ export function formatComment(item, number, options, uploaderId, videoId, reply 
     }
 
     likeSegment += (item.likeCount)
-        ? `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ${item.likeCount.toLocaleString()}</div>`
+        ? `<div class="commentFooter"><i class="fas fa-thumbs-up"></i> ${likeCount.toLocaleString()}</div>`
         : `<div class="commentFooter"></div>`;
 
     if (number > 0) {
@@ -112,11 +113,11 @@ export function formatComment(item, number, options, uploaderId, videoId, reply 
     }
 
     let authorClass = "authorName";
-    if (item.authorChannelId == uploaderId) { 
+    if (item.authorChannelId === uploaderId) {
         opSegment += `class="authorNameCreator"`;
         authorClass = "authorNameOp";
     }
-    
+
     if (options.showImg) {
         pfpSegment +=
             `<a class="channelPfpLink" href="${channelUrl}">
@@ -124,7 +125,7 @@ export function formatComment(item, number, options, uploaderId, videoId, reply 
             </a>`;
     }
 
-    content += 
+    content +=
         `${pfpSegment}` +
         `<div class="${contentClass}">
             <div class="commentHeader">

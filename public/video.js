@@ -25,17 +25,17 @@ export class Video {
         this._videoId = video.id;
         this.videoPublished = video.snippet.publishedAt; // for graph bound
         this._uploaderId = video.snippet.channelId; // for highlighting OP comments
-        document.getElementById("message").innerHTML = "&nbsp;";
+        document.getElementById("message").textContent = "\u00A0";
         formatTitle(video, this.options);
         document.getElementById("videoColumn").style.display = "block";
     }
 
     prepareLoadStatus() {
-        document.getElementById("linkedHolder").innerHTML = "";
+        document.getElementById("linkedHolder").textContent = "";
         document.getElementById("linkedColumn").style.display = "none";
         this._linkedParent = this._currentLinked = null;
 
-        document.getElementById("loadPercentage").innerHTML = "Initializing...";
+        document.getElementById("loadPercentage").textContent = "Initializing...";
 
         document.getElementById("loadStatus").style.display = "block";
         document.getElementById("progressIndeterminate").style.display = "block";
@@ -44,7 +44,7 @@ export class Video {
 
     updateLoadStatus(count) {
         if (count === -1) {
-            document.getElementById("limitMessage").innerHTML =
+            document.getElementById("limitMessage").textContent =
                 `Loading is in progress. Please check back later`;
         }
         else {
@@ -53,16 +53,16 @@ export class Video {
                 document.getElementById("progressGreen").style.display = "block";
                 this._waiting = false;
             }
-            
+
             // Determine percentage precision based on total comment count
             const precision = Math.max(0, Math.floor(Math.log10(this._totalExpected)) - 3);
             const percentage = (count / this._totalExpected * 100).toFixed(precision) + '%';
 
             // Offset to make sure the first change does its transition
             setTimeout(() => document.getElementById("progressGreen").style.width = percentage, 5);
-            document.getElementById("loadPercentage").innerHTML = percentage;
+            document.getElementById("loadPercentage").textContent = percentage;
             if (this._totalExpected > 1000) {
-                document.getElementById("loadEta").innerHTML = '~'
+                document.getElementById("loadEta").textContent = '~'
                     + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
             }
         }
@@ -81,9 +81,9 @@ export class Video {
             this._replyCounts[items[i].id] = items[i].totalReplyCount;
             // Skip comment if it's the linked one. (obsolete)
             if (this._linkedParent == items[i].id) continue;
-    
+
             add += `<li class="list-group-item comment py-2 px-${paddingX}">`
-                + formatComment(items[i], this.commentNum, this.options, this._uploaderId, this._videoId, false) + `</li>`;		
+                + formatComment(items[i], this.commentNum, this.options, this._uploaderId, this._videoId, false) + `</li>`;
         }
         document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
     }
@@ -93,7 +93,7 @@ export class Video {
         for (const id in allReplies) {
             content = "";
             allReplies[id].forEach((reply) => {
-                content +=`<div class="mt-2">`
+                content += `<div class="mt-2">`
                     + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, true) + `</div>`
             });
             document.getElementById("repliesEE-" + id).innerHTML = content;
@@ -116,18 +116,18 @@ export class Video {
         if (this._storedReplies[commentId]) {
             if (this._displayedReplies.has(commentId)) {
                 document.getElementById("repliesEE-" + commentId).style.display = "none";
-                button.innerHTML = "&#x25BC; Show " + this._storedReplies[commentId].length + " replies";
+                button.textContent = `\u25BC Show ${this._storedReplies[commentId].length} replies`;
                 this._displayedReplies.delete(commentId);
             }
             else {
                 document.getElementById("repliesEE-" + commentId).style.display = "block";
-                button.innerHTML = "&#x25B2; Hide " + this._storedReplies[commentId].length + " replies";
+                button.textContent = `\u25B2 Hide ${this._storedReplies[commentId].length} replies`;
                 this._displayedReplies.add(commentId);
             }
         }
         else {
             button.disabled = true;
-            button.innerHTML = "Loading...";
+            button.textContent = "Loading...";
             this._socket.emit("replyRequest", commentId);
         }
     }
@@ -138,20 +138,20 @@ export class Video {
         let lClass;
         for (let i = len - 1; i >= 0; i--) {
             lClass = this._storedReplies[commentId][i].id === this._currentLinked ? " linked" : "";
-            newContent +=`<div class="mt-2${lClass}">`
+            newContent += `<div class="mt-2${lClass}">`
                 + formatComment(this._storedReplies[commentId][i], len - i, this.options,
                     this._uploaderId, this._videoId, true) + `</div>`;
         }
         document.getElementById("repliesEE-" + commentId).innerHTML = newContent;
         this._displayedReplies.add(commentId);
-        document.getElementById("getReplies-" + commentId).innerHTML = "&#x25B2; Hide " + len + " replies";
+        document.getElementById("getReplies-" + commentId).textContent = `\u25B2 Hide ${len} replies`;
         document.getElementById("getReplies-" + commentId).disabled = false;
     }
 
     handleLinkedComment(parent, reply) {
         this._linkedParent = parent.id;
         this._currentLinked = reply ? reply.id : parent.id;
-        
+
         document.getElementById("linkedHolder").innerHTML =
             formatComment(parent, -1, this.options, this._uploaderId, this._videoId, false);
         if (reply) {
@@ -169,7 +169,7 @@ export class Video {
         document.getElementById("s_totalLikes").textContent = data[0].totalLikes.toLocaleString();
         document.getElementById("s_avgLikes").textContent = (data[0].totalLikes / data[0].comments).toFixed(2).toLocaleString();
 
-        const videoAge = (new Date().getTime() - new Date(this.videoPublished).getTime()) / (24*60*60*1000);
+        const videoAge = (new Date().getTime() - new Date(this.videoPublished).getTime()) / (24 * 60 * 60 * 1000);
         const commentsPerDay = data[1].length / Math.ceil(videoAge);
         document.getElementById("s_avgPerDay").textContent = commentsPerDay.toFixed(2).toLocaleString();
 
