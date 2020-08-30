@@ -1,3 +1,6 @@
+**3.1.1** (29 Aug 2020)
+- Improved graph behavior when changing intervals
+
 **3.1.0** (03 Aug 2020)
 - Added a search bar. All comments can be searched by text or author name, and the resulting subsets can be further sorted and/or filtered.
     - ~~Longer comments may show `[clipped]` due to sqlite's [snippet()](https://www.sqlite.org/fts3.html#the_snippet_function) function having a limit of 64 tokens. It would be ideal to use the [highlight()](https://www.sqlite.org/fts5.html#the_highlight_function) function (which has no token limit), but it's only available when using FTS5 and I'm using FTS4 as I couldn't get FTS5's tokenizer to work :/~~ **Update**: Highlighting is temporarily removed due to it cutting off HTML tags in comments
