@@ -46,12 +46,8 @@ export class Graph {
 
             const xMax = new Date(this._graphInstance.series[0].max * 1000);
             // Increment the right bound to make sure the entire range is spanned.
-            // Example: interval is "month" & right bound is June 2020 (6/1/2020, 12:00 AM)
-            // When switching to "day", the resulting range would only go until June 1 (not June 30 as expected)
-            // Solve this by incrementing the right bound to July 2020 (7/1/2020 12:00 AM)
+            // Example (when switching interval from month to day): 6/1/2020 --> 7/1/2020 --> 6/30/2020
             shiftDate(xMax, this._interval, 1, isUtc);
-            // Now "day" would cover until July 1, an extra day past June 30
-            // Solve this by decrementing using the new interval
             shiftDate(xMax, newInterval, -1, isUtc);
             const rightBound = xMax.getTime() / 1000;
 
@@ -65,10 +61,14 @@ export class Graph {
                 leftIndex--;
             }
             if (leftIndex === rightIndex) {
-                // Due to distr: 2, the graph can't show only one data point
-                // Widen the range by 1 on each side if possible
-                leftIndex = Math.max(0, leftIndex - 1);
-                rightIndex = Math.min(len - 1, rightIndex + 1);
+                // The graph can't show only 1 data point
+                // Widen the range by 1 if possible
+                if (rightIndex < len - 1) {
+                    rightIndex++;
+                }
+                else {
+                    leftIndex = Math.max(0, leftIndex - 1);
+                }
             }
 
             this._interval = newInterval;
