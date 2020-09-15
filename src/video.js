@@ -14,6 +14,7 @@ class Video {
     reset() {
         this._indexedComments = 0; // All retrieved comments + their reply counts
         this._newComments = 0;
+        this._newCommentThreads = 0;
         this._loadComplete = false;
     }
 
@@ -101,6 +102,7 @@ class Video {
     handleLoad(type) {
         if (this._commentsEnabled && this._commentCount < config.maxLoad && this._commentCount > 0 && type == "dateOldest") {
             this._newComments = 0;
+            this._newCommentThreads = 0;
             const now = new Date().getTime();
 
             this._startTime = new Date();
@@ -205,6 +207,7 @@ class Video {
                 newIndexed = 1 + commentThread.snippet.totalReplyCount;
                 this._indexedComments += newIndexed;
                 this._newComments += newIndexed;
+                this._newCommentThreads++;
             }
 
             if (convertedComments.length > 0 && this._logToDatabase) {
@@ -222,11 +225,11 @@ class Video {
             }
             else {
                 // Finished retrieving all comment threads.
-                this._app.database.markVideoComplete(this._id);
-
                 const elapsed = new Date().getTime() - this._startTime.getTime();
                 logger.log('info', "Retrieved video %s, %d comments in %dms, CPS = %d",
                     this._id, this._newComments, elapsed, (this._newComments / elapsed * 1000));
+                    
+                this._app.database.markVideoComplete(this._id, this._video.snippet.title, elapsed, this._newComments, this._newCommentThreads);
                 
                 // Send the first batch of comments
                 this.sendLoadedComments("dateOldest", 0, true);

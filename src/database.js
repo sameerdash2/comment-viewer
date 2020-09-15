@@ -6,6 +6,7 @@ const DAY = 24*60*60*1000;
 class Database {
     constructor() {
         this._db = new sqlite('database.sqlite');
+        this._statsDb = new sqlite('stats.sqlite');
         this._videosInProgress = new Set();
 
         this._db.prepare('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT,' +
@@ -41,6 +42,8 @@ class Database {
         `);
 
         this._db.prepare('CREATE INDEX IF NOT EXISTS comment_index ON comments(videoId, publishedAt, likeCount)').run();
+
+        this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT, finishedAt BIGINT, commentCount INT, commentThreads INT)').run();
 
         setInterval(() => this.cleanup(), 1 * DAY);
     }
@@ -165,9 +168,12 @@ class Database {
             .run(newCommentCount, new Date().getTime(), nextPageToken || null, videoId);
     }
 
-    markVideoComplete(videoId) {
+    markVideoComplete(videoId, videoTitle, elapsed, newComments, newCommentThreads) {
         this._db.prepare('UPDATE videos SET inProgress = false WHERE id = ?').run(videoId);
         this._videosInProgress.delete(videoId);
+
+        this._statsDb.prepare('INSERT INTO stats(id, title, duration, finishedAt, commentCount, commentThreads) VALUES (?,?,?,?,?,?)')
+            .run(videoId, videoTitle.substring(0, 100), elapsed, new Date().getTime(), newComments, newCommentThreads);
     }
 
     cleanup() {
