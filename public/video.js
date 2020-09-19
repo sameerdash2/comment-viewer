@@ -61,6 +61,7 @@ export class Video {
             // Offset to make sure the first change does its transition
             setTimeout(() => document.getElementById("progressGreen").style.width = percentage, 5);
             document.getElementById("loadPercentage").textContent = percentage;
+            document.title = percentage + " complete | YouTube Comment Viewer";
             if (this._totalExpected > 1000) {
                 document.getElementById("loadEta").textContent = '~'
                     + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';

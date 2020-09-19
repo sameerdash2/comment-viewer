@@ -220,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("sortLoaded").style.display = "block";
             document.getElementById("filter").style.display = "block";
             document.getElementById("statsColumn").style.display = statsAvailable ? "block" : "none";
-
+            document.title = "YouTube Comment Viewer";
         }
         if (reset) {
             hideLoading();
