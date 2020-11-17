@@ -4,7 +4,7 @@
   "description": "View and analyze YouTube comments easily.",
   "main": "index.js",
   "engines": {
-    "node": "^12.9.0"
+    "node": "14.x"
   },
   "repository": {
     "type": "git",
