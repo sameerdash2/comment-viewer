@@ -236,8 +236,8 @@ class Video {
 
                 // Clear out the room
                 setTimeout(() => {
-                    this._io.of('/').in('video-' + this._id).clients( (_error, clientIds) => {
-                        clientIds.forEach((clientId) => this._io.sockets.sockets[clientId].leave('video-' + this._id));
+                    this._io.of('/').in('video-' + this._id).allSockets().then(clientIds => {
+                        clientIds.forEach((clientId) => this._io.sockets.sockets.get(clientId).leave('video-' + this._id));
                     });
                 }, 1000);
             }
