@@ -231,7 +231,8 @@ export class Graph {
             tzDate: (ts) => isUtc ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),
             scales: {
                 'y': {
-                    range: (_self, _min, max) => [0, Math.max(5, Math.ceil(max * 1.02))]
+                    // Force min to be 0 & let uPlot compute max normally
+                    range: (_self, _min, max) => uPlot.rangeNum(0, max, 0.1, true)
                 }
             },
             axes: [
@@ -241,7 +242,9 @@ export class Graph {
                 },
                 {
                     ...axis,
-                    size: 60
+                    size: 60,
+                    // Only allow whole numbers on y axis
+                    space: (_self, _axisIdx, _scaleMin, scaleMax, plotDim) => Math.max(plotDim / scaleMax, 30)
                 }
             ],
             series: [
