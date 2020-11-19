@@ -164,17 +164,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     socket.on("commentsInfo", ({ num, disabled, commence, max, graph }) => {
-        const commentInfo = document.getElementById("commentInfo");
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
         statsAvailable = graph;
+        let newCommentInfo = `<i class="fas fa-comment"></i>&nbsp;`;
         if (disabled) {
-            commentInfo.innerHTML = `<span class="gray">Comments are disabled.</span>`;
+            newCommentInfo = `<span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
-                commentInfo.innerHTML += `<span class="red">(${Number(num).toLocaleString()} hidden comments)</span>`;
+                newCommentInfo += `<span class="red">(${Number(num).toLocaleString()} hidden comments)</span>`;
             }
         }
         else {
-            commentInfo.textContent = `${Number(num).toLocaleString()} comments`;
+            newCommentInfo += `${Number(num).toLocaleString()} comments`;
 
             if (commence && num > 0) video.prepareLoadStatus();
 
@@ -185,6 +185,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     (Stay tuned for the future!)`;
             }
         }
+
+        document.getElementById("commentInfo").innerHTML = newCommentInfo;
     });
 
     socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));

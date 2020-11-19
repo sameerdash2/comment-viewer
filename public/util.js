@@ -28,16 +28,16 @@ export function formatTitle(video, options) {
 
     let viewcountSec = `<i class="fas fa-eye"></i> `;
     let timestampSec = ``;
-    if (liveState == "live") {
+    if (liveState === "live") {
         const concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
-        viewcountSec += `<span class="red">${concurrentViewers.toLocaleString()} watching now</span> / ${viewCount.toLocaleString()} total views`;
+        viewcountSec += `<span class="red">${concurrentViewers.toLocaleString()} watching now</span> / ${viewCount.toLocaleString()} views`;
 
         const startTime = new Date(video.liveStreamingDetails.actualStartTime);
         const duration = new Date().getTime() - startTime.getTime();
         timestampSec += `<i class="fas fa-clock"></i> <b>Stream start time:</b> ${parseTimestamp(startTime.toISOString(), options.timezone)}
             (Elapsed: ${parseDurationHMMSS(Math.floor(duration / 1000))})`;
     }
-    else if (liveState == "upcoming") {
+    else if (liveState === "upcoming") {
         viewcountSec += `<span class="red">Upcoming live stream</span>`;
         timestampSec += `<b><i class="fas fa-calendar"></i> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
             <i class="fas fa-clock"></i> <b>Scheduled start time:</b> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
@@ -55,7 +55,7 @@ export function formatTitle(video, options) {
                 ${parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)}</div>`;
         }
 
-        document.getElementById("commentInfo").innerHTML = `<span class="gray">Loading comment information...</span>`;
+        document.getElementById("commentInfo").innerHTML = `<i class="fas fa-comment"></i>&nbsp;<span class="gray">Loading comment information...</span>`;
     }
     document.getElementById("viewcount").innerHTML = viewcountSec;
     document.getElementById("vidTimestamp").innerHTML = timestampSec;
