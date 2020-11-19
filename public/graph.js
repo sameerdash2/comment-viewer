@@ -138,8 +138,7 @@ export class Graph {
         // Pick an interval based on the graph domain length
         this._interval = "hour";
         if (graphDomainLength > 2 * DAY) this._interval = "day";
-        if (graphDomainLength > 1 * YEAR) this._interval = "month";
-        if (graphDomainLength > 10 * YEAR) this._interval = "year";
+        if (graphDomainLength > 3 * YEAR) this._interval = "month";
 
         document.getElementById("intervalSelect").value = this._interval;
 
