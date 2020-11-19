@@ -33,48 +33,31 @@ export class Graph {
 
     intervalChange() {
         const newInterval = document.getElementById("intervalSelect").value;
-        if (newInterval != this._interval) {
-            const isUtc = this._video.options.timezone === "utc";
-
+        if (newInterval !== this._interval) {
             // Build the graph data array if needed
             if (!this._datasets[newInterval]) {
                 this.buildDataArray(newInterval);
             }
 
-            // Save the left & right graph bounds to keep the zoomed space.
-            const leftBound = this._graphInstance.series[0].min;
+            const currentTimestamps = this._graphInstance.data[0];
+            const isZoomed = this._graphInstance.scales.x.min > currentTimestamps[0]
+                || this._graphInstance.scales.x.max < currentTimestamps[currentTimestamps.length - 1];
 
-            const xMax = new Date(this._graphInstance.series[0].max * 1000);
-            // Increment the right bound to make sure the entire range is spanned.
-            // Example (when switching interval from month to day): 6/1/2020 --> 7/1/2020 --> 6/30/2020
-            shiftDate(xMax, this._interval, 1, isUtc);
-            shiftDate(xMax, newInterval, -1, isUtc);
-            const rightBound = xMax.getTime() / 1000;
+            const newIntervalTimestamps = this._datasets[newInterval][0];
+            const newLen = newIntervalTimestamps.length;
+            let leftBound = newIntervalTimestamps[0];
+            let rightBound = newIntervalTimestamps[newLen - 1];
 
-            // Determine new left & right indexes based on the bounds
-            const len = this._datasets[newInterval][0].length;
-            let leftIndex = len - 1, rightIndex = 0;
-            while (rightIndex < len - 1 && this._datasets[newInterval][0][rightIndex] < rightBound) {
-                rightIndex++;
-            }
-            while (leftIndex > 0 && this._datasets[newInterval][0][leftIndex] > leftBound) {
-                leftIndex--;
-            }
-            if (leftIndex === rightIndex) {
-                // The graph can't show only 1 data point
-                // Widen the range by 1 if possible
-                if (rightIndex < len - 1) {
-                    rightIndex++;
-                }
-                else {
-                    leftIndex = Math.max(0, leftIndex - 1);
-                }
+            if (isZoomed) {
+                // Save the current scale's min & max (only if they're within the new x range)
+                leftBound = Math.max(this._graphInstance.scales.x.min, leftBound);
+                rightBound = Math.min(this._graphInstance.scales.x.max, rightBound);
             }
 
+            // Commence interval change
             this._interval = newInterval;
-
             this._graphInstance.setData(this._datasets[newInterval], false);
-            this._graphInstance.setScale("x", { min: leftIndex, max: rightIndex });
+            this._graphInstance.setScale("x", { min: leftBound, max: rightBound });
         }
     }
 
@@ -113,7 +96,7 @@ export class Graph {
 
     buildDataArray(interval) {
         const dateMap = {};
-        const isUtc = this._video.options.timezone == "utc";
+        const isUtc = this._video.options.timezone === "utc";
 
         const startDate = floorDate(new Date(this._leftBound), interval, isUtc);
         const endDate = floorDate(new Date(), interval, isUtc);
@@ -193,10 +176,47 @@ export class Graph {
         return output;
     }
 
+    calcAxisSpace(scaleMin, scaleMax, plotDim) {
+        const rangeSecs = scaleMax - scaleMin;
+        let space = 50;
+        switch (this._interval) {
+            case "year": {
+                // ensure minimum y-axis gap is 360 days' worth of pixels
+                const rangeDays = rangeSecs / 86400;
+                const pxPerDay = plotDim / rangeDays;
+                space = pxPerDay * 360;
+                break;
+            }
+            case "month": {
+                // 28 days
+                const rangeDays = rangeSecs / 86400;
+                const pxPerDay = plotDim / rangeDays;
+                space = pxPerDay * 28;
+                break;
+            }
+            case "day": {
+                // 23 hours
+                const rangeHours = rangeSecs / 3600;
+                const pxPerHour = plotDim / rangeHours;
+                space = pxPerHour * 23;
+                break;
+            }
+            case "hour": {
+                // 59 minutes
+                const rangeMins = rangeSecs / 60;
+                const pxPerMin = plotDim / rangeMins;
+                space = pxPerMin * 59;
+                break;
+            }
+        }
+        // Use a minimum gap of 50 pixels
+        return Math.max(50, space);
+    }
+
     drawGraph(interval) {
         if (this._graphInstance) this._graphInstance.destroy();
 
-        const isUtc = this._video.options.timezone == "utc";
+        const isUtc = this._video.options.timezone === "utc";
         const axis = {
             font: "14px Open Sans",
             grid: { stroke: GRIDCOLOR },
@@ -211,11 +231,15 @@ export class Graph {
             ...this.getGraphSize(),
             tzDate: (ts) => isUtc ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),
             scales: {
-                'x': { distr: 2 },
-                'y': { range: (_self, _min, max) => [0, Math.max(5, Math.ceil(max * 1.02))] }
+                'y': {
+                    range: (_self, _min, max) => [0, Math.max(5, Math.ceil(max * 1.02))]
+                }
             },
             axes: [
-                axis,
+                {
+                    ...axis,
+                    space: (_self, _axisIdx, scaleMin, scaleMax, plotDim) => this.calcAxisSpace(scaleMin, scaleMax, plotDim),
+                },
                 {
                     ...axis,
                     size: 60
