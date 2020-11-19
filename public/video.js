@@ -168,11 +168,13 @@ export class Video {
     handleStatsData(data) {
         document.getElementById("s_comments").textContent = data[0].comments.toLocaleString();
         document.getElementById("s_totalLikes").textContent = data[0].totalLikes.toLocaleString();
-        document.getElementById("s_avgLikes").textContent = (data[0].totalLikes / data[0].comments).toFixed(2).toLocaleString();
+        document.getElementById("s_avgLikes").textContent = (data[0].totalLikes / data[0].comments)
+            .toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
         const videoAge = (new Date().getTime() - new Date(this.videoPublished).getTime()) / (24 * 60 * 60 * 1000);
         const commentsPerDay = data[1].length / Math.ceil(videoAge);
-        document.getElementById("s_avgPerDay").textContent = commentsPerDay.toFixed(2).toLocaleString();
+        document.getElementById("s_avgPerDay").textContent = commentsPerDay
+            .toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
         this._graph.constructGraph(data[1]);
     }
