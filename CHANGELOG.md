@@ -1,3 +1,13 @@
+**3.1.2** (19 Nov 2020)
+- Switched graphs to `distr: 1`, making interval changes smoother and improving x-axis temporal labels
+- Prefer smaller intervals for the graph
+- Limited graph y-axis to only whole numbers
+- Added progress percentage in the tab title
+- Fixed missing comma separators in statistics data
+- Fixed lone comment icon showing up for live streams
+- Updated to Node.js 14
+- Updated various dependencies
+
 **3.1.1** (29 Aug 2020)
 - Improved graph behavior when changing intervals
 
