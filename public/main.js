@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
         statsAvailable = graph;
         let newCommentInfo = `<i class="fas fa-comment"></i>&nbsp;`;
         if (disabled) {
-            newCommentInfo = `<span class="gray">Comments are disabled.</span>`;
+            newCommentInfo += `<span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
                 newCommentInfo += `<span class="red">(${Number(num).toLocaleString()} hidden comments)</span>`;
             }
