@@ -180,7 +180,7 @@ export class Graph {
         let space = 50;
         switch (this._interval) {
             case "year": {
-                // ensure minimum y-axis gap is 360 days' worth of pixels
+                // ensure minimum x-axis gap is 360 days' worth of pixels
                 const rangeDays = rangeSecs / 86400;
                 const pxPerDay = plotDim / rangeDays;
                 space = pxPerDay * 360;
