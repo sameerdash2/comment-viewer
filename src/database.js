@@ -188,8 +188,6 @@ class Database {
         this.cleanupSet(30 * DAY, 1000000);
         this.cleanupSet(60 * DAY, 10000000);
 
-        // Rebuild the FTS4 table to vacuum properly
-        this._db.prepare(`INSERT INTO comments_fts(comments_fts) VALUES('rebuild')`).run();
         this._db.exec('VACUUM');
 
         logger.log('info', "Finished database cleanup");
