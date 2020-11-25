@@ -45,7 +45,7 @@ class Database {
 
         this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT, finishedAt BIGINT, commentCount INT, commentThreads INT)').run();
 
-        setInterval(() => this.cleanup(), 1 * DAY);
+        setInterval(() => this.cleanup(), 3 * DAY);
     }
 
     checkVideo(videoId) {
@@ -178,22 +178,39 @@ class Database {
 
     cleanup() {
         // Remove any videos with:
-        // - under 10,000 comments & > 2 days untouched
+        // - under 10,000 comments & > 3 days untouched
         // - under 1M comments     & > 30 days untouched
+        // - under 10M comments    & > 60 days untouched
 
         logger.log('info', "Starting database cleanup");
-        const now = new Date().getTime();
-        let info;
 
-        info = this._db.prepare('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 10000 OR inProgress = true)')
-            .run(now - 2*DAY);
-        logger.log('info', "Deleted rows with < %d comments: %d", 10000, info.changes);
+        this.cleanupSet(3 * DAY, 10000, true);
+        this.cleanupSet(30 * DAY, 1000000);
+        this.cleanupSet(60 * DAY, 10000000);
 
-        info = this._db.prepare('DELETE FROM videos WHERE (lastUpdated < ?) AND (commentCount < 1000000)')
-            .run(now - 30*DAY);
-        logger.log('info', "Deleted rows with < %d comments: %d", 1000000, info.changes);
-
+        // Rebuild the FTS4 table to vacuum properly
+        this._db.prepare(`INSERT INTO comments_fts(comments_fts) VALUES('rebuild')`).run();
         this._db.exec('VACUUM');
+
+        logger.log('info', "Finished database cleanup");
+    }
+
+    cleanupSet(age, commentCount, includeInProgress = false) {
+        const now = Date.now();
+        const inProgressClause = includeInProgress ? `OR inProgress = true` : '';
+
+        const rows = this._db.prepare(`SELECT id FROM videos WHERE (lastUpdated < ?) AND (commentCount < ? ${inProgressClause})`)
+            .all(now - age, commentCount);
+        const placeholders = rows.map(() => '?').join(',');
+        const deleteCount = this._db.prepare(`SELECT COUNT(*) FROM comments WHERE videoId IN (${placeholders})`)
+            .get(rows.map((row) => row.id))['COUNT(*)'];
+
+        for (const row of rows) {
+            this._db.prepare('DELETE FROM videos WHERE id = ?').run(row.id);
+        }
+
+        logger.log('info', "Deleted rows with < %s comments: %s videos, %s comments",
+            commentCount.toLocaleString(), rows.length, deleteCount.toLocaleString());
     }
 
     formatString(str) {
