@@ -179,10 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (commence && num > 0) video.prepareLoadStatus();
 
             if (max > 0) {
-                document.getElementById("noteColumn").style.display = "block";
-                document.getElementById("limitMessage").textContent =
-                    `Videos with over ${max.toLocaleString()} comments are not currently supported.
-                    (Stay tuned for the future!)`;
+                displayNote(`Videos with over ${max.toLocaleString()} comments are not currently supported.
+                    (Stay tuned for the future!)`);
             }
         }
 
@@ -276,8 +274,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     socket.on("quotaExceeded", () => {
-        message.textContent = "Quota exceeded. Please try again later";
-        message.style.color = ERR;
+        if (video._videoId) {
+            displayNote("Quota exceeded. Please try again later");
+        }
+        else {
+            message.textContent = "Quota exceeded. Please try again later";
+            message.style.color = ERR;
+        }
     });
 
     function sendCommentRequest(getNewSet) {
@@ -300,5 +303,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function hideLoading() {
         commentsSection.classList.remove("reloading");
         document.getElementById("spinnerContainer").style.display = "none";
+    }
+
+    function displayNote(note) {
+        document.getElementById("noteColumn").style.display = "block";
+        document.getElementById("limitMessage").textContent = note;
     }
 });

@@ -43,6 +43,7 @@ class Video {
             logger.log('error', "Video execute error on %s: %o", idString, err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
+                this._socket.emit("quotaExceeded");
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
                 setTimeout(() => this.fetchTitle(idString), 1);
@@ -67,6 +68,7 @@ class Video {
         }, (err) => {
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
+                this._socket.emit("quotaExceeded");
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
                 setTimeout(() => this.fetchTestComment(allowCommence), 1);
@@ -247,6 +249,7 @@ class Video {
                     const error = err.response.data.error.errors[0];
                     if (error.reason == "quotaExceeded") {
                         this._app.ytapi.quotaExceeded();
+                        this._socket.emit("quotaExceeded");
                     }
                     else {
                         // Retry
@@ -306,6 +309,7 @@ class Video {
             logger.log('error', "Linked comment execute error on %s: %o", parentId, err.response.data.error);
             if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
+                this._socket.emit("quotaExceeded");
             }
             else if (err.response.data.error.errors[0].reason == "processingFailure") {
                 setTimeout(() => this.fetchLinkedComment(idString, parentId, replyId), 1);
@@ -405,6 +409,7 @@ class Video {
                 logger.log('error', "Replies execute error on %s: %o", this._id, err.response.data.error);
                 if (err.response.data.error.errors[0].reason == "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
+                    this._socket.emit("quotaExceeded");
                 }
                 else if (err.response.data.error.errors[0].reason == "processingFailure") {
                     setTimeout(() => this.fetchReplies(commentId, pageToken, silent, replies), 1);
