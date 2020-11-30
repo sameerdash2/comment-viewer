@@ -45,7 +45,7 @@ class Database {
 
         this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT, finishedAt BIGINT, commentCount INT, commentThreads INT)').run();
 
-        setInterval(() => this.cleanup(), 3 * DAY);
+        setInterval(() => this.cleanup(), 2 * DAY);
     }
 
     checkVideo(videoId) {
