@@ -244,23 +244,27 @@ class Video {
                 }, 1000);
             }
         }, (err) => {
+            const error = err.response.data.error.errors[0];
+            if (error.reason !== "quotaExceeded") {
                 logger.log('error', "Comments execute error on %s: %o", this._id, err.response.data.error);
-                if (consecutiveErrors < 20) {
-                    const error = err.response.data.error.errors[0];
-                    if (error.reason == "quotaExceeded") {
-                        this._app.ytapi.quotaExceeded();
-                        this._socket.emit("quotaExceeded");
-                    }
-                    else {
-                        // Retry
-                        setTimeout(() => this.fetchAllComments(pageToken, appending, ++consecutiveErrors), 1);
-                    }
+            }
+
+            if (consecutiveErrors < 20) {                
+                if (error.reason === "quotaExceeded") {
+                    this._app.ytapi.quotaExceeded();
+                    this._app.abortVideo(this._id);
+                    this._socket.emit("quotaExceeded");
                 }
                 else {
-                    logger.log('warn', "Ending fetch process on %s due to %d consecutive errors.", this._id, consecutiveErrors);
-                    this._app.database.abortVideo(this._id);
+                    // Retry
+                    setTimeout(() => this.fetchAllComments(pageToken, appending, ++consecutiveErrors), 1);
                 }
-            });
+            }
+            else {
+                logger.log('warn', "Ending fetch process on %s due to %d consecutive errors.", this._id, consecutiveErrors);
+                this._app.database.abortVideo(this._id);
+            }
+        });
     }
 
     fetchLinkedComment(idString, parentId, replyId) {

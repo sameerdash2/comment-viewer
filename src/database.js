@@ -72,7 +72,9 @@ class Database {
         this._db.prepare('DELETE FROM videos WHERE id = ?').run(videoId);
     }
 
-    abortVideo(videoId) { this._videosInProgress.delete(videoId); }
+    abortVideo(videoId) {
+        this._videosInProgress.delete(videoId);
+    }
 
     getLastComment(videoId) {
         return this._db.prepare('SELECT id, MAX(publishedAt) FROM comments WHERE videoId = ?').get(videoId);
