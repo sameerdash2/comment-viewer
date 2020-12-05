@@ -45,7 +45,7 @@ class Database {
 
         this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT, finishedAt BIGINT, commentCount INT, commentThreads INT)').run();
 
-        setInterval(() => this.cleanup(), 2 * DAY);
+        this.scheduleCleanup();
     }
 
     checkVideo(videoId) {
@@ -178,21 +178,37 @@ class Database {
             .run(videoId, videoTitle.substring(0, 100), elapsed, new Date().getTime(), newComments, newCommentThreads);
     }
 
+    scheduleCleanup() {
+        // Cleanup database every Saturday at 09:00 UTC
+        const nextCleanup = new Date();
+        const diff = 6 - nextCleanup.getUTCDay();
+        nextCleanup.setUTCDate(nextCleanup.getUTCDate() + diff);
+        nextCleanup.setUTCHours(9, 0, 0, 0);
+        const now = Date.now();
+        if (nextCleanup <= now) {
+            nextCleanup.setUTCDate(nextCleanup.getUTCDate() + 7);
+        }
+        const timeToNextCleanup = nextCleanup - now;
+
+        setTimeout(() => this.cleanup(), timeToNextCleanup);
+        logger.log('info', "Next database cleanup scheduled for %s, in %d hours",
+            nextCleanup.toISOString(), (timeToNextCleanup / 1000 / 60 / 60).toFixed(3));
+    }
+
     cleanup() {
         // Remove any videos with:
-        // - under 10,000 comments & > 3 days untouched
+        // - under 10,000 comments & > 2 days untouched
         // - under 1M comments     & > 30 days untouched
         // - under 10M comments    & > 60 days untouched
 
         logger.log('info', "Starting database cleanup");
 
-        this.cleanupSet(3 * DAY, 10000, true);
+        this.cleanupSet(2 * DAY, 10000, true);
         this.cleanupSet(30 * DAY, 1000000);
         this.cleanupSet(60 * DAY, 10000000);
 
-        this._db.exec('VACUUM');
-
         logger.log('info', "Finished database cleanup");
+        this.scheduleCleanup();
     }
 
     cleanupSet(age, commentCount, includeInProgress = false) {
