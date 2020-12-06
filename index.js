@@ -19,6 +19,10 @@ class App {
     createServer() {
         io.on('connection', (socket) => {
             const videoInstance = new Video(this, io, socket);
+            let throttled = false;
+            const throttleMs = 500;
+            let unThrottleTimestamp = 0;
+            let queueTimeout = undefined;
 
             socket.on("idSent", (inputId) => {
                 if (!checkSendID(inputId.substring(0, 255))) socket.emit("idInvalid");
@@ -26,10 +30,26 @@ class App {
             socket.on("requestAll", () => {
                 videoInstance.handleLoad("dateOldest");
             });
-            socket.on("showMore", ({ sort, commentNum, minDate, maxDate, searchTerms }) => {
+
+            socket.on("showMore", requestSendComments);
+            function requestSendComments({ sort, commentNum, minDate, maxDate, searchTerms }) {
+                if (throttled) {
+                    clearTimeout(queueTimeout);
+                    queueTimeout = setTimeout(() => requestSendComments({ sort, commentNum, minDate, maxDate, searchTerms }),
+                        unThrottleTimestamp - Date.now());
+                }
+                else {
+                    throttled = true;
+                    sendComments({ sort, commentNum, minDate, maxDate, searchTerms });
+                    setTimeout(() => throttled = false, throttleMs);
+                    unThrottleTimestamp = Date.now() + throttleMs + 20;
+                }
+            }
+            function sendComments({ sort, commentNum, minDate, maxDate, searchTerms }) {
                 searchTerms = searchTerms.map((term) => term.substring(0, 255));
                 videoInstance.sendLoadedComments(sort, commentNum, false, minDate, maxDate, searchTerms);
-            });
+            }
+
             socket.on("replyRequest", (id) => {
                 videoInstance.getReplies(id);
             });
