@@ -4,4 +4,6 @@ dist/
 config.json
 *.sqlite
 *.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
 *.log
