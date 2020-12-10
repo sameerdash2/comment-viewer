@@ -11,6 +11,8 @@ class Database {
 
         this._db.pragma('journal_mode=WAL;');
         this._db.pragma('secure_delete=0;');
+        this._db.pragma('synchronous=NORMAL');
+        this._db.pragma('cache_size=5000');
 
         this._db.prepare('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT,' +
             ' commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT, rawObject TEXT)').run();
@@ -58,7 +60,7 @@ class Database {
     }
 
     addVideo(video) {
-        const now = new Date().getTime();
+        const now = Date.now();
         this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, retrievedAt, lastUpdated, rawObject, inProgress)' +
                 ' VALUES(?, ?, ?, ?, ?, true)')
             .run(video.id, video.statistics.commentCount, now, now, JSON.stringify(video));
@@ -67,7 +69,7 @@ class Database {
 
     reAddVideo(video) {
         this._db.prepare('UPDATE videos SET lastUpdated = ?, rawObject = ?, inProgress = true WHERE id = ?')
-            .run(new Date().getTime(), JSON.stringify(video), video.id);
+            .run(Date.now(), JSON.stringify(video), video.id);
         this._videosInProgress.add(video.id);
     }
 
@@ -170,7 +172,7 @@ class Database {
         statement.run(insert);
 
         this._db.prepare('UPDATE videos SET commentCount = ?, lastUpdated = ?, nextPageToken = ? WHERE id = ?')
-            .run(newCommentCount, new Date().getTime(), nextPageToken || null, videoId);
+            .run(newCommentCount, Date.now(), nextPageToken || null, videoId);
     }
 
     markVideoComplete(videoId, videoTitle, elapsed, newComments, newCommentThreads) {
@@ -178,7 +180,7 @@ class Database {
         this._videosInProgress.delete(videoId);
 
         this._statsDb.prepare('INSERT INTO stats(id, title, duration, finishedAt, commentCount, commentThreads) VALUES (?,?,?,?,?,?)')
-            .run(videoId, videoTitle.substring(0, 100), elapsed, new Date().getTime(), newComments, newCommentThreads);
+            .run(videoId, videoTitle.substring(0, 100), elapsed, Date.now(), newComments, newCommentThreads);
     }
 
     scheduleCleanup() {
