@@ -2,6 +2,7 @@ const sqlite = require('better-sqlite3');
 const logger = require('./logger');
 
 const DAY = 24*60*60*1000;
+const timer = ms => new Promise(res => setTimeout(res, ms));
 
 class Database {
     constructor() {
@@ -48,7 +49,8 @@ class Database {
 
         this._db.prepare('CREATE INDEX IF NOT EXISTS comment_index ON comments(videoId, publishedAt, likeCount)').run();
 
-        this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT, finishedAt BIGINT, commentCount INT, commentThreads INT)').run();
+        this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT,' +
+            ' finishedAt BIGINT, commentCount INT, commentThreads INT)').run();
 
         this.scheduleCleanup();
     }
@@ -200,7 +202,7 @@ class Database {
             nextCleanup.toISOString(), (timeToNextCleanup / 1000 / 60 / 60).toFixed(3));
     }
 
-    cleanup() {
+    async cleanup() {
         // Remove any videos with:
         // - under 10,000 comments & > 2 days untouched
         // - under 1M comments     & > 30 days untouched
@@ -208,15 +210,15 @@ class Database {
 
         logger.log('info', "Starting database cleanup");
 
-        this.cleanupSet(2 * DAY, 10000, true);
-        this.cleanupSet(30 * DAY, 1000000);
-        this.cleanupSet(60 * DAY, 10000000);
+        await this.cleanupSet(2 * DAY, 10000, true);
+        await this.cleanupSet(30 * DAY, 1000000);
+        await this.cleanupSet(60 * DAY, 10000000);
 
         logger.log('info', "Finished database cleanup");
         this.scheduleCleanup();
     }
 
-    cleanupSet(age, commentCount, includeInProgress = false) {
+    async cleanupSet(age, commentCount, includeInProgress = false) {
         const now = Date.now();
         const inProgressClause = includeInProgress ? `OR inProgress = true` : '';
 
@@ -228,6 +230,7 @@ class Database {
 
         for (const row of rows) {
             this._db.prepare('DELETE FROM videos WHERE id = ?').run(row.id);
+            await(timer(500));
         }
 
         logger.log('info', "Deleted rows with < %s comments: %s videos, %s comments",
