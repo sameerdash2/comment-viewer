@@ -10,10 +10,11 @@ class Database {
         this._statsDb = new sqlite('stats.sqlite');
         this._videosInProgress = new Set();
 
-        this._db.pragma('journal_mode=WAL;');
-        this._db.pragma('secure_delete=0;');
+        this._db.pragma('journal_mode=WAL');
+        this._db.pragma('secure_delete=0');
         this._db.pragma('synchronous=NORMAL');
         this._db.pragma('cache_size=5000');
+        this._db.pragma('journal_size_limit=10000000');
 
         this._db.prepare('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT,' +
             ' commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT, rawObject TEXT)').run();
