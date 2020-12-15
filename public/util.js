@@ -34,7 +34,8 @@ export function formatTitle(video, options) {
 
         const startTime = new Date(video.liveStreamingDetails.actualStartTime);
         const duration = new Date().getTime() - startTime.getTime();
-        timestampSec += `<i class="fas fa-clock"></i> <b>Stream start time:</b> ${parseTimestamp(startTime.toISOString(), options.timezone)}
+        timestampSec += `<b><i class="fas fa-calendar"></i> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
+            <i class="fas fa-clock"></i> <b>Stream start time:</b> ${parseTimestamp(startTime.toISOString(), options.timezone)}
             (Elapsed: ${parseDurationHMMSS(Math.floor(duration / 1000))})`;
     }
     else if (liveState === "upcoming") {
