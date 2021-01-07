@@ -18,6 +18,12 @@ function convertComment(object, isReply = false) {
     });
 }
 
+function printTimestamp(date) {
+    return date.toLocaleString('en-ca-u-hc-h23',
+        {timeZone: "America/Los_Angeles", timeZoneName: "short"}).replace(',', '');
+}
+
 module.exports = {
-    convertComment
+    convertComment,
+    printTimestamp
 }

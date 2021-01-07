@@ -1,5 +1,6 @@
 const sqlite = require('better-sqlite3');
 const logger = require('./logger');
+const { printTimestamp } = require('./utils');
 
 const DAY = 24*60*60*1000;
 const timer = ms => new Promise(res => setTimeout(res, ms));
@@ -200,7 +201,7 @@ class Database {
 
         setTimeout(() => this.cleanup(), timeToNextCleanup);
         logger.log('info', "Next database cleanup scheduled for %s, in %d hours",
-            nextCleanup.toISOString(), (timeToNextCleanup / 1000 / 60 / 60).toFixed(3));
+            printTimestamp(nextCleanup), (timeToNextCleanup / 1000 / 60 / 60).toFixed(3));
     }
 
     async cleanup() {

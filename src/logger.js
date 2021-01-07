@@ -1,4 +1,5 @@
 const winston = require('winston');
+const { printTimestamp } = require('./utils');
 
 const logger = winston.createLogger({
     transports: [
@@ -8,7 +9,9 @@ const logger = winston.createLogger({
     format: winston.format.combine(
         winston.format.splat(),
         winston.format.simple(),
-        winston.format.timestamp(),
+        winston.format.timestamp({
+            format: () => printTimestamp(new Date())
+        }),
         winston.format.printf((info) => `[${info.timestamp}] (${info.level}) ${info.message}`)
     )
 });

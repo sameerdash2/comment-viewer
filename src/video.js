@@ -228,11 +228,12 @@ class Video {
             else {
                 // Finished retrieving all comment threads.
                 const elapsed = new Date().getTime() - this._startTime.getTime();
-                logger.log('info', "Retrieved video %s, %d comments in %dms, CPS = %d",
-                    this._id, this._newComments, elapsed, (this._newComments / elapsed * 1000));
-                    
+                const cpsString = this._newCommentThreads > 200 ? ', CPS = %d' : '';
+                logger.log('info', 'Retrieved video %s, %d comments in %ds' + cpsString,
+                    this._id, this._newComments, elapsed / 1000, (this._newComments / elapsed * 1000).toFixed(0));
+
                 this._app.database.markVideoComplete(this._id, this._video.snippet.title, elapsed, this._newComments, this._newCommentThreads);
-                
+
                 // Send the first batch of comments
                 this.sendLoadedComments("dateOldest", 0, true);
 
