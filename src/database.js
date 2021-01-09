@@ -188,7 +188,7 @@ class Database {
     }
 
     scheduleCleanup() {
-        // Cleanup database every Saturday at 09:00 UTC
+        // Clean up database every Saturday at 09:00 UTC
         const nextCleanup = new Date();
         const diff = 6 - nextCleanup.getUTCDay();
         nextCleanup.setUTCDate(nextCleanup.getUTCDate() + diff);
@@ -207,14 +207,14 @@ class Database {
     async cleanup() {
         // Remove any videos with:
         // - under 10,000 comments & > 2 days untouched
-        // - under 1M comments     & > 30 days untouched
-        // - under 10M comments    & > 60 days untouched
+        // - under 1M comments     & > 14 days untouched
+        // - under 10M comments    & > 30 days untouched
 
         logger.log('info', "Starting database cleanup");
 
         await this.cleanupSet(2 * DAY, 10000, true);
-        await this.cleanupSet(30 * DAY, 1000000);
-        await this.cleanupSet(60 * DAY, 10000000);
+        await this.cleanupSet(14 * DAY, 1000000);
+        await this.cleanupSet(30 * DAY, 10000000);
 
         logger.log('info', "Finished database cleanup");
         this.scheduleCleanup();
