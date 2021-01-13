@@ -189,6 +189,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));
 
+    socket.on("searchError", () => {
+        hideLoading();
+        document.getElementById("searchErrorCol").style.display = "block";
+    });
+
     socket.on("groupComments", ({ reset, items, replies, showMore, subCount, totalCount }) => {
         message.textContent = "\u00A0";
         if (!firstBatchReceived) {
@@ -234,6 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("totalCount").textContent = Number(totalCount).toLocaleString();
             }
         }
+        document.getElementById("searchErrorCol").style.display = "none";
         video.handleGroupComments(reset, items);
         video.handleMinReplies(replies);
         document.getElementById("showMoreDiv").style.display = showMore ? "block" : "none";
@@ -290,8 +296,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Only reset video.commentNum when the comments are received, to ensure it's always in sync
         const index = getNewSet ? 0 : video.commentNum;
         socket.emit("showMore", {
-            sort: video.currentSort, commentNum: index,
-            minDate: dateLeftBound, maxDate: dateRightBound, searchTerms: searchTerms
+            sort: video.currentSort,
+            commentNum: index,
+            minDate: dateLeftBound,
+            maxDate: dateRightBound,
+            searchTerms: searchTerms
         });
     }
 

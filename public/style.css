@@ -118,6 +118,7 @@ div#info {
 #loadStatus,
 #linkedColumn, 
 #noteColumn,
+#searchErrorCol,
 #filter {
   display: none;
 }

@@ -145,17 +145,11 @@ class Database {
         try {
             subCount = subCountStatement.get()['COUNT(*)'];
             rows = rowsStatement.all();
-            return {rows, subCount, totalCount};
-        } catch(err) {
-            logger.log('error', "Error getting comments for video %s with searchTerms %o: %o", videoId, searchTerms, err);
-
-            // If error occurred on a search, attempt the same query without search.
-            if (searchTerms[0] || searchTerms[1]) {
-                return this.getComments(videoId, limit, offset, sortBy, minDate, maxDate, ['', '']);
-            }
-            else {
-                return {rows: [], subCount: 0, totalCount: totalCount};
-            }
+            return {rows, subCount, totalCount, error: false};
+        } catch (err) {
+            logger.log('error', "Error getting comments for video %s with searchTerms %O: '%s', %s",
+                videoId, searchTerms, err.code, err.message);
+            return {rows: [], subCount: 0, totalCount: totalCount, error: true};
         }
     }
 

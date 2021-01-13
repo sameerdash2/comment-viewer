@@ -342,8 +342,13 @@ class Video {
         sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
 
         try {
-            const {rows, subCount, totalCount} = this._app.database.getComments(
+            const {rows, subCount, totalCount, error} = this._app.database.getComments(
                 this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate, searchTerms);
+            if (error) {
+                // This is most likely a search error, so broadcast should hopefully be false
+                this._socket.emit("searchError");
+                return;
+            }
 
             this._loadComplete = true; // To permit statistics retrieval later
             const more = rows.length == config.maxDisplay;
@@ -383,11 +388,11 @@ class Video {
 
                 if (broadcast) {
                     this._io.to('video-' + this._id).emit("groupComments",
-                        { reset: newSet, items: subset, replies: replies, showMore: more, subCount: subCount, totalCount: totalCount });
+                        {reset: newSet, items: subset, replies: replies, showMore: more, subCount: subCount, totalCount: totalCount});
                 }
                 else {
                     this._socket.emit("groupComments",
-                        { reset: newSet, items: subset, replies: replies, showMore: more, subCount: subCount, totalCount: totalCount });
+                        {reset: newSet, items: subset, replies: replies, showMore: more, subCount: subCount, totalCount: totalCount});
                 }
             });
         } catch (err) {
