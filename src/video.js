@@ -20,7 +20,7 @@ class Video {
 
     handleNewVideo(item, allowCommence = true) {
         this.reset();
-        if (item != -1) {
+        if (item !== -1) {
             this._video = item;
             this._id = this._video.id;
             this._commentCount = this._video.statistics.commentCount;
@@ -40,12 +40,14 @@ class Video {
                 this._socket.emit("idInvalid");
             }
         }, (err) => {
-            logger.log('error', "Video execute error on %s: %o", idString, err.response.data.error);
-            if (err.response.data.error.errors[0].reason == "quotaExceeded") {
+            logger.log('error', "Video execute error on %s: %d ('%s') - '%s'",
+                idString, err.code, err.errors[0].reason, err.errors[0].message);
+
+            if (err.errors[0].reason === "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
                 this._socket.emit("quotaExceeded");
             }
-            else if (err.response.data.error.errors[0].reason == "processingFailure") {
+            else if (err.errors[0].reason === "processingFailure") {
                 setTimeout(() => this.fetchTitle(idString), 1);
             }
         });
@@ -55,7 +57,7 @@ class Video {
         this._app.ytapi.executeTestComment(this._video.id).then(() => {
             this._commentsEnabled = true;
             // for upcoming/live streams, disregard a 0 count.
-            if (!(this._video.snippet.liveBroadcastContent != "none" && this._commentCount == 0)) {
+            if (!(this._video.snippet.liveBroadcastContent !== "none" && this._commentCount === 0)) {
                 const beginLoad = this._commentCount < 200 && allowCommence;
                 // Make graph available if 1 hour has passed, to ensure at least 2 points on the graph
                 this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 60*60*1000);
@@ -66,14 +68,14 @@ class Video {
                 }
             }
         }, (err) => {
-            if (err.response.data.error.errors[0].reason == "quotaExceeded") {
+            if (err.errors[0].reason === "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
                 this._socket.emit("quotaExceeded");
             }
-            else if (err.response.data.error.errors[0].reason == "processingFailure") {
+            else if (err.errors[0].reason === "processingFailure") {
                 setTimeout(() => this.fetchTestComment(allowCommence), 1);
             }
-            else if (this._video.snippet.liveBroadcastContent == "none" && err.response.data.error.errors[0].reason == "commentsDisabled") {
+            else if (this._video.snippet.liveBroadcastContent === "none" && err.errors[0].reason === "commentsDisabled") {
                 this._commentsEnabled = false;
                 this._socket.emit("commentsInfo", {num: this._commentCount, disabled: true,
                     commence: false, max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1, graph: false });
@@ -102,7 +104,7 @@ class Video {
     }
 
     handleLoad(type) {
-        if (this._commentsEnabled && this._commentCount < config.maxLoad && this._commentCount > 0 && type == "dateOldest") {
+        if (this._commentsEnabled && this._commentCount < config.maxLoad && this._commentCount > 0 && type === "dateOldest") {
             this._newComments = 0;
             this._newCommentThreads = 0;
             const now = new Date().getTime();
@@ -245,12 +247,13 @@ class Video {
                 }, 1000);
             }
         }, (err) => {
-            const error = err.response.data.error.errors[0];
+            const error = err.errors[0];
             if (error.reason !== "quotaExceeded") {
-                logger.log('error', "Comments execute error on %s: %o", this._id, err.response.data.error);
+                logger.log('error', "Comments execute error on %s: %d ('%s') - '%s'",
+                    this._id, err.code, err.errors[0].reason, err.errors[0].message);
             }
 
-            if (consecutiveErrors < 20) {                
+            if (consecutiveErrors < 20) {
                 if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._app.abortVideo(this._id);
@@ -282,7 +285,7 @@ class Video {
                 if (replyId) {
                     // Fetch the video info & linked reply at the same time
                     Promise.all([this._app.ytapi.executeSingleReply(replyId), getVideo(videoId)]).then((responses) => {
-                        const videoObject = (responses[1] == -1) ? -1 : responses[1].data.items[0];
+                        const videoObject = (responses[1] === -1) ? -1 : responses[1].data.items[0];
                         this.handleNewVideo(videoObject, false);
 
                         if (responses[0].data.items[0]) {
@@ -294,16 +297,16 @@ class Video {
                             // Send only parent
                             this.sendLinkedComment(convertComment(this._linkedParent), null, videoObject);
                         }
-                    }, (err) => logger.log('error', "Linked reply/video error on replyId %s, video %s: %o",
+                    }, (err) => logger.log('error', "Linked reply/video error on replyId %s, video %s: %O",
                             replyId, videoId, err.response.data.error));
                 }
                 else {
                     getVideo(videoId).then((res) => {
-                        const videoObject = (res == -1) ? -1 : res.data.items[0];
+                        const videoObject = (res === -1) ? -1 : res.data.items[0];
                         this.handleNewVideo(videoObject, false);
                         // Send linked comment
                         this.sendLinkedComment(convertComment(response.data.items[0]), null, videoObject);
-                    }, (err) => logger.log('error', "Linked video error on %s: %o", videoId, err.response.data.error));
+                    }, (err) => logger.log('error', "Linked video error on %s: %O", videoId, err.response.data.error));
                 }
             }
             else {
@@ -311,12 +314,14 @@ class Video {
                 this.fetchTitle(idString, false);
             }
         }, (err) => {
-            logger.log('error', "Linked comment execute error on %s: %o", parentId, err.response.data.error);
-            if (err.response.data.error.errors[0].reason == "quotaExceeded") {
+            logger.log('error', "Linked comment execute error on %s: %d ('%s') - '%s'",
+                parentId, err.code, err.errors[0].reason, err.errors[0].message);
+
+            if (err.errors[0].reason === "quotaExceeded") {
                 this._app.ytapi.quotaExceeded();
                 this._socket.emit("quotaExceeded");
             }
-            else if (err.response.data.error.errors[0].reason == "processingFailure") {
+            else if (err.errors[0].reason === "processingFailure") {
                 setTimeout(() => this.fetchLinkedComment(idString, parentId, replyId), 1);
             }
         });
@@ -329,17 +334,17 @@ class Video {
     sendLoadedComments(sort, commentIndex, broadcast, minDate, maxDate, searchTerms = ['', '']) {
         if (!this._id) return;
 
-        const newSet = commentIndex == 0;
+        const newSet = commentIndex === 0;
         if (!minDate || minDate < 0) {
             minDate = 0;
             maxDate = 1e13;
         }
 
         // might make this less ugly later
-        let sortBy = (sort == "likesMost" || sort == "likesLeast") ? "likeCount" : "publishedAt";
+        let sortBy = (sort === "likesMost" || sort === "likesLeast") ? "likeCount" : "publishedAt";
         // Including rowid ensures that any comments with identical timestamps will follow their original insertion order.
         // This works in 99.99% of cases (as long as said comments were fetched at the same time)
-        sortBy += (sort == "dateOldest" || sort == "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
+        sortBy += (sort === "dateOldest" || sort === "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
 
         try {
             const {rows, subCount, totalCount, error} = this._app.database.getComments(
@@ -351,7 +356,7 @@ class Video {
             }
 
             this._loadComplete = true; // To permit statistics retrieval later
-            const more = rows.length == config.maxDisplay;
+            const more = rows.length === config.maxDisplay;
             const subset = [];
             const repliesPromises = [];
             for (const commentThread of rows) {
@@ -372,12 +377,12 @@ class Video {
                     repliesPromises.push(this._app.ytapi.executeMinReplies(commentThread.id));
                 }
             }
-            
+
             // Fetch a subset of the replies for each comment
             const replies = {};
             Promise.allSettled(repliesPromises).then((results) => {
                 results.forEach((result) => {
-                    if (result.status == "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
+                    if (result.status === "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
                         const parentId = result.value.data.items[0].id;
                         const chosenReplies = result.value.data.items[0].replies.comments.slice(0, config.maxDisplayedReplies);
                         replies[parentId] = [];
@@ -396,7 +401,7 @@ class Video {
                 }
             });
         } catch (err) {
-            logger.log('error', "Database getComments error: %o", err);
+            logger.log('error', "Database getComments error: %O", err);
         }
     }
 
@@ -416,12 +421,14 @@ class Video {
                 this.sendReplies(commentId, replies);
             }
         }, (err) => {
-                logger.log('error', "Replies execute error on %s: %o", this._id, err.response.data.error);
-                if (err.response.data.error.errors[0].reason == "quotaExceeded") {
+                logger.log('error', "Replies execute error on %s: %d ('%s') - '%s'",
+                    this._id, err.code, err.errors[0].reason, err.errors[0].message);
+
+                if (err.errors[0].reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._socket.emit("quotaExceeded");
                 }
-                else if (err.response.data.error.errors[0].reason == "processingFailure") {
+                else if (err.errors[0].reason === "processingFailure") {
                     setTimeout(() => this.fetchReplies(commentId, pageToken, silent, replies), 1);
                 }                                
             });
