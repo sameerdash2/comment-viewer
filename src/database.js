@@ -190,7 +190,7 @@ class Database {
         this._videosInProgress.delete(videoId);
 
         this._statsDb.prepare('INSERT INTO stats(id, title, duration, finishedAt, commentCount, commentThreads) VALUES (?,?,?,?,?,?)')
-            .run(videoId, videoTitle.substring(0, 100), elapsed, Date.now(), newComments, newCommentThreads);
+            .run(videoId, videoTitle.substring(0, 50), elapsed, Date.now(), newComments, newCommentThreads);
     }
 
     scheduleCleanup() {
@@ -213,13 +213,13 @@ class Database {
     async cleanup() {
         // Remove any videos with:
         // - under 10,000 comments & > 2 days untouched
-        // - under 1M comments     & > 14 days untouched
+        // - under 1M comments     & > 7 days untouched
         // - under 10M comments    & > 30 days untouched
 
         logger.log('info', "Starting database cleanup");
 
         await this.cleanupSet(2 * DAY, 10000, true);
-        await this.cleanupSet(14 * DAY, 1000000);
+        await this.cleanupSet(7 * DAY, 1000000);
         await this.cleanupSet(30 * DAY, 10000000);
 
         logger.log('info', "Finished database cleanup");
