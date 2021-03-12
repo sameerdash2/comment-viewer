@@ -1,4 +1,3 @@
-import io from 'socket.io-client';
 import { Video } from "./video.js";
 import { shiftDate } from './util.js';
 
@@ -6,6 +5,7 @@ const ERR = "#A00";
 const LOAD = "#666";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // eslint-disable-next-line no-undef
     const socket = io(undefined, {
         reconnectionDelayMax: 30000,
         randomizationFactor: 0

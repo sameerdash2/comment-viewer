@@ -35,6 +35,8 @@
       gtag("config", "UA-82745335-2");
     </script>
 
+    <!-- Force parcel bundler to ignore socket script -->
+    <script>document.write(`<script defer src="/socket.io/socket.io.min.js"><` + `/script>`)</script>
     <script defer src="./main.js"></script>
   </head>
 
