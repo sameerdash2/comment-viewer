@@ -1,3 +1,8 @@
+**3.1.4** (13 Mar 2021)
+- Separated socket.io client script from bundled JS (improves load time)
+- Icons are now served directly instead of loading from CDN
+- Removed graph resize throttling
+
 **3.1.3** (10 Jan 2021)
 - Better handling for YouTube API quota being exceeded
 - Enabled SQLite WAL mode for better performance
