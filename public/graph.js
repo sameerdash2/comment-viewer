@@ -28,7 +28,6 @@ export class Graph {
             "month": undefined,
             "year": undefined
         };
-        this._throttled = false;
     }
 
     intervalChange() {
@@ -272,21 +271,8 @@ export class Graph {
     }
 
     requestResize() {
-        // Throttle resize events at every 100 ms
         if (this._graphInstance) {
-            // Debounce if throttled
-            if (this._throttled) {
-                setTimeout(() => this.requestResize(), 100);
-            }
-            else {
-                this._throttled = true;
-                this.resize();
-                setTimeout(() => this._throttled = false, 100);
-            }
+            this._graphInstance.setSize(this.getGraphSize());
         }
-    }
-
-    resize = () => {
-        this._graphInstance.setSize(this.getGraphSize());
     }
 }
