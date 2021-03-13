@@ -11,10 +11,14 @@ export class Video {
         this._graph.reset();
         this.commentNum = 0;
         this.currentSort = "dateOldest";
+
         this.options = {
             timezone: document.querySelector('input[name="timezone"]:checked').value,
             showImg: !document.getElementById("noImg").checked,
         };
+        this.options.timezone === 'utc' && gtag('event', 'timezone_utc', { 'event_category': 'options' });
+        this.options.showImg === false && gtag('event', 'no_images', { 'event_category': 'options' });
+
         this._replyCounts = {};
         this._storedReplies = {};
         this._displayedReplies = new Set();
@@ -109,6 +113,10 @@ export class Video {
 
     handleNewReplies(id, items) {
         this._storedReplies[id] = items;
+        gtag('event', 'replies', {
+            'event_category': 'data_request',
+            'value': items.length
+        });
         this.populateReplies(id);
     }
 
@@ -169,12 +177,12 @@ export class Video {
         document.getElementById("s_comments").textContent = data[0].comments.toLocaleString();
         document.getElementById("s_totalLikes").textContent = data[0].totalLikes.toLocaleString();
         document.getElementById("s_avgLikes").textContent = (data[0].totalLikes / data[0].comments)
-            .toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         const videoAge = (new Date().getTime() - new Date(this.videoPublished).getTime()) / (24 * 60 * 60 * 1000);
         const commentsPerDay = data[1].length / Math.ceil(videoAge);
         document.getElementById("s_avgPerDay").textContent = commentsPerDay
-            .toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         this._graph.constructGraph(data[1]);
     }

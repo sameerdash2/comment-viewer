@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("viewTerms").addEventListener('click', (event) => {
         event.preventDefault();
         terms.style.display = "block";
+        gtag('event', 'view_terms');
     });
     document.getElementById("closeTerms").addEventListener('click', () => terms.style.display = "none");
     window.addEventListener('click', (event) => {
@@ -75,6 +76,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             video.currentSort = closest.id.substring(2);
             sendCommentRequest(true);
+            gtag('event', 'sort', {
+                'event_category': 'filters',
+                'event_label': video.currentSort
+            });
         }
     });
 
@@ -114,6 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
             dateRightBound = maxDate.getTime();
 
             sendCommentRequest(true);
+            gtag('event', 'date', { 'event_category': 'filters' });
         }
     });
 
@@ -125,6 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
         searchTerms[typeIndex] = document.getElementById("searchBox").value.trim();
 
         sendCommentRequest(true);
+        gtag('event', 'search_' + searchBy, { 'event_category': 'filters' });
     });
 
     document.getElementById("resetFilters").addEventListener('click', () => {
@@ -139,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("searchBox").value = "";
 
         sendCommentRequest(true);
+        gtag('event', 'reset', { 'event_category': 'filters' });
     })
 
     commentsSection.addEventListener('click', repliesButton);
@@ -160,27 +168,37 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("intro").style.display = "none";
         if (videoObject !== -1) {
             video.display(videoObject);
+            gtag('event', 'video', { 'event_category': 'data_request' });
         }
     }
 
     socket.on("commentsInfo", ({ num, disabled, commence, max, graph }) => {
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
+        num = Number(num) || 0;
         statsAvailable = graph;
         let newCommentInfo = `<span class="icon-comment"></span>&nbsp;`;
         if (disabled) {
             newCommentInfo += `<span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
-                newCommentInfo += `<span class="red">(${Number(num).toLocaleString()} hidden comments)</span>`;
+                newCommentInfo += `<span class="red">(${num.toLocaleString()} hidden comments)</span>`;
+                gtag('event', 'hidden_comments', {
+                    'event_category': 'data_request',
+                    'value': num
+                });
             }
         }
         else {
-            newCommentInfo += `${Number(num).toLocaleString()} comments`;
+            newCommentInfo += `${num.toLocaleString()} comments`;
 
             if (commence && num > 0) video.prepareLoadStatus();
 
             if (max > 0) {
                 displayNote(`Videos with over ${max.toLocaleString()} comments are not currently supported.
                     (Stay tuned for the future!)`);
+                gtag('event', 'max_comments', {
+                    'event_category': 'data_request',
+                    'value': num
+                });
             }
         }
 
@@ -254,6 +272,9 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("linkedComment", ({ parent, hasReply, reply, videoObject }) => {
         displayVideo(videoObject);
         video.handleLinkedComment(parent, hasReply ? reply : null);
+
+        const action = hasReply ? 'linked_reply' : 'linked_comment';
+        gtag('event', action, { 'event_category': 'data_request' });
     });
 
     socket.on("resetPage", resetPage);

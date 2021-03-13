@@ -57,6 +57,11 @@ export class Graph {
             this._interval = newInterval;
             this._graphInstance.setData(this._datasets[newInterval], false);
             this._graphInstance.setScale("x", { min: leftBound, max: rightBound });
+
+            gtag('event', 'interval_change', {
+                'event_category': 'stats',
+                'event_label': newInterval
+            });
         }
     }
 
@@ -90,6 +95,7 @@ export class Graph {
                 document.getElementById("viewGraph").textContent = "Loading" + '.'.repeat(this._loadingDots);
             }, 200);
             this._socket.emit("graphRequest");
+            gtag('event', 'stats', { 'event_category': 'data_request' });
         }
     }
 
