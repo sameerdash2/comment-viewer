@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("commentsInfo", ({ num, disabled, commence, max, graph }) => {
         document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
         statsAvailable = graph;
-        let newCommentInfo = `<i class="fas fa-comment"></i>&nbsp;`;
+        let newCommentInfo = `<span class="icon-comment"></span>&nbsp;`;
         if (disabled) {
             newCommentInfo += `<span class="gray">Comments are disabled.</span>`;
             if (num > 0) {

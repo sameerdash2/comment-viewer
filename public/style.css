@@ -1,5 +1,7 @@
 @import url(uplot/dist/uPlot.min.css);
 
+@import url(./icons.css);
+
 .uplot {
   font-family: inherit;
 }
