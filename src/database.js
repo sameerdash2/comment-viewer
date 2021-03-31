@@ -2,7 +2,7 @@ const sqlite = require('better-sqlite3');
 const logger = require('./logger');
 const { printTimestamp } = require('./utils');
 
-const DAY = 24*60*60*1000;
+const DAY = 24 * 60 * 60 * 1000;
 const timer = ms => new Promise(res => setTimeout(res, ms));
 
 class Database {
@@ -75,13 +75,13 @@ class Database {
     checkVideo(videoId) {
         const actuallyInProgress = this._videosInProgress.has(videoId);
         const row = this._db.prepare('SELECT * FROM videos WHERE id = ?').get(videoId);
-        return {row, actuallyInProgress};
+        return { row, actuallyInProgress };
     }
 
     addVideo(video) {
         const now = Date.now();
         this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, retrievedAt, lastUpdated, rawObject, inProgress)' +
-                ' VALUES(?, ?, ?, ?, ?, true)')
+            ' VALUES(?, ?, ?, ?, ?, true)')
             .run(video.id, video.statistics.commentCount, now, now, JSON.stringify(video));
         this._videosInProgress.add(video.id);
     }
@@ -145,11 +145,13 @@ class Database {
         try {
             subCount = subCountStatement.get()['COUNT(*)'];
             rows = rowsStatement.all();
-            return {rows, subCount, totalCount, error: false};
+            return { rows, subCount, totalCount, error: false };
         } catch (err) {
-            logger.log('error', "Error getting comments for video %s with searchTerms %O: '%s', %s",
-                videoId, searchTerms, err.code, err.message);
-            return {rows: [], subCount: 0, totalCount: totalCount, error: true};
+            if (err.message !== 'SQLITE_CORRUPT_VTAB') {
+                logger.log('error', "Error getting comments for video %s with searchTerms %O: '%s', %s",
+                    videoId, searchTerms, err.code, err.message);
+            }
+            return { rows: [], subCount: 0, totalCount: totalCount, error: true };
         }
     }
 
