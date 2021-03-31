@@ -147,7 +147,7 @@ class Database {
             rows = rowsStatement.all();
             return { rows, subCount, totalCount, error: false };
         } catch (err) {
-            if (err.message !== 'SQLITE_CORRUPT_VTAB') {
+            if (err.code !== 'SQLITE_CORRUPT_VTAB') {
                 logger.log('error', "Error getting comments for video %s with searchTerms %O: '%s', %s",
                     videoId, searchTerms, err.code, err.message);
             }
