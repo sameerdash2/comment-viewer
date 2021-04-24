@@ -67,6 +67,11 @@ button.nostyle {
   width: 100%;
   text-align: left;
 }
+#enterVideo {
+  transform: translateY(-50%);
+  top: 50%;
+  position: relative;
+}
 span#graphDesc {
   font-size: 14px;
   float: right;

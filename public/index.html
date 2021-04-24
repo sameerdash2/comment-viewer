@@ -43,17 +43,19 @@
     <main class="container-xl">
       <h1><a href="" target="_self" class="noColor">YouTube Comment Viewer</a></h1>
       <div class="row" id="intro">
-        <div class="col-md-8">
-          <div class="card mb-3">
+        <div class="col-md-8 mb-3">
+          <div class="card h-100">
             <h5 class="card-header head">Enter video</h5>
             <div class="card-body">
-              <form id="videoForm" autocomplete="off" onsubmit="return false">
-                <div id="inputRow">
-                  <input class="form-control form-control-lg" type="text" id="enterID" autofocus spellcheck="false"
-                    maxlength="255" placeholder="Video or comment URL" aria-label="Video or comment URL" />
-                </div>
-              </form>
-              <p id="message" class="card-text mt-1">&nbsp;</p>
+              <div id="enterVideo">
+                <form id="videoForm" autocomplete="off" onsubmit="return false">
+                  <div id="inputRow">
+                    <input class="form-control form-control-lg" type="text" id="enterID" autofocus spellcheck="false"
+                      maxlength="255" placeholder="Video or comment URL" aria-label="Video or comment URL" />
+                  </div>
+                </form>
+                <p id="message" class="card-text mt-2">&nbsp;</p>
+              </div>
             </div>
           </div>
         </div>
@@ -82,6 +84,11 @@
               </form>
             </div>
           </div>
+        </div>
+        <div class="col text-center">
+          <a target="_blank" href="https://docs.google.com/forms/d/e/1FAIpQLScBbg5MDGhBEAbZ9GMDGTB4xLveV6dYDBqjGUrB2tNliId8mg/viewform?usp=sf_link">
+            Contact&nbsp;<span class="icon-external-link"></span>
+          </a>
         </div>
       </div>
 
