@@ -60,7 +60,7 @@ class Video {
             if (!(this._video.snippet.liveBroadcastContent !== "none" && this._commentCount === 0)) {
                 const beginLoad = this._commentCount < 200 && allowCommence;
                 // Make graph available if 1 hour has passed, to ensure at least 2 points on the graph
-                this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (new Date().getTime() - 60*60*1000);
+                this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (Date.now() - 60*60*1000);
                 this._socket.emit("commentsInfo", { num: this._commentCount, disabled: false,
                     commence: beginLoad, max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1, graph: this._graphAvailable });
                 if (beginLoad && this._commentCount > 0) {
@@ -84,13 +84,12 @@ class Video {
     }
 
     shouldReFetch = (row) => {
-        const now = new Date().getTime();
+        const now = Date.now();
         const videoAge = now - new Date(this._video.snippet.publishedAt).getTime();
         const currentCommentsAge = now - row.retrievedAt;
-        const MONTH = 30*24*60*60*1000;
+        const MONTH = 30 * 24 * 60 * 60 * 1000;
 
-        // Determine whether the comment set should be re-fetched
-        // by seeing if it meets at least 1 condition.
+        // Determine whether the comment set should be re-fetched by seeing if it meets at least 1 condition.
         // These will probably change over time
         const doReFetch = (
             // Comment count has changed by 1.5x (50% increase)
@@ -98,8 +97,13 @@ class Video {
             // Video's age has doubled since initial fetch
             || currentCommentsAge * 2 > videoAge
             // 6 months have passed since initial fetch
-            || now - row.retrievedAt > 6*MONTH
+            || currentCommentsAge > 6 * MONTH
         );
+
+        if (doReFetch) {
+            logger.log('info', "Re-fetching video %s. initialCommentCount %d, current commentCount %d, current comments age %d, video age %d.",
+                this._id, row.initialCommentCount, this._commentCount, currentCommentsAge, videoAge);
+        }
         return doReFetch;
     }
 
@@ -107,9 +111,9 @@ class Video {
         if (this._commentsEnabled && this._commentCount < config.maxLoad && this._commentCount > 0 && type === "dateOldest") {
             this._newComments = 0;
             this._newCommentThreads = 0;
-            const now = new Date().getTime();
+            const now = Date.now();
+            this._startTime = now;
 
-            this._startTime = new Date();
             if (this._logToDatabase) {
                 const {row, actuallyInProgress} = this._app.database.checkVideo(this._id);
                 if (row) {
@@ -127,6 +131,7 @@ class Video {
                                 this.fetchAllComments(row.nextPageToken, false);
                             }
                             else {
+                                logger.log('info', "Could not resume unfinished fetch process on %s. Restarting.", this._id);
                                 this._app.database.deleteVideo(this._id);
                                 this._app.database.addVideo(this._video);
                                 this.startFetchProcess(false);
@@ -145,6 +150,8 @@ class Video {
                     }
                     // Append to existing set of comments
                     else {
+                        logger.log('info', "Appending to video %s. %d indexed comments, %d total commentCount.",
+                            this._id, row.commentCount, this._commentCount);
                         this._indexedComments = row.commentCount;
                         this._app.database.reAddVideo(this._video);
                         const lastCommentRow = this._app.database.getLastComment(this._id);
@@ -193,7 +200,7 @@ class Video {
                 if (appending && new Date(response.data.items[0].snippet.topLevelComment.snippet.publishedAt).getTime() < this._lastComment.publishedAt) {
                     convertedComments.push(convertComment(response.data.items.shift()));
                 }
-                
+
             }
             let newIndexed;
             for (const commentThread of response.data.items) {
@@ -229,7 +236,7 @@ class Video {
             }
             else {
                 // Finished retrieving all comment threads.
-                const elapsed = new Date().getTime() - this._startTime.getTime();
+                const elapsed = Date.now() - this._startTime;
                 const cpsString = this._newCommentThreads > 200 ? ', CPS = %d' : '';
                 logger.log('info', 'Retrieved video %s, %d comments in %ds' + cpsString,
                     this._id, this._newComments, elapsed / 1000, (this._newComments / elapsed * 1000).toFixed(0));
