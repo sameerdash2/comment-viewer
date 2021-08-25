@@ -79,6 +79,18 @@ span#graphDesc {
   font-size: 14px;
   float: right;
 }
+#tooltip {
+  pointer-events: none;
+  position: absolute;
+  padding: 4px 8px;
+  background-color: #fff;
+  box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  border: 1px solid #0005;
+  white-space: pre;
+  z-index: 105;
+  /* transition: all 100ms ease; */
+}
 option:disabled {
   color: #999;
 }

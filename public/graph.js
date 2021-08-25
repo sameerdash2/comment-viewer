@@ -1,8 +1,8 @@
 import uPlot from 'uplot';
 import { shiftDate, floorDate } from './util.js';
+import { tooltipPlugin, calcAxisSpace } from './graphUtils.js';
 
 const GRIDCOLOR = "rgba(0,0,0,0.1)";
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const HOUR = 60 * 60 * 1000, DAY = 24 * HOUR, MONTH = 30 * DAY, YEAR = 365 * DAY;
 
 export class Graph {
@@ -21,7 +21,6 @@ export class Graph {
         this._loadingInterval = undefined;
         this._rawDates = [];
         this._leftBound = undefined;
-        this._interval = undefined;
         this._datasets = {
             "hour": undefined,
             "day": undefined,
@@ -32,7 +31,7 @@ export class Graph {
 
     intervalChange() {
         const newInterval = document.getElementById("intervalSelect").value;
-        if (newInterval !== this._interval) {
+        if (newInterval !== this._graphInstance.cvInterval) {
             // Build the graph data array if needed
             if (!this._datasets[newInterval]) {
                 this.buildDataArray(newInterval);
@@ -54,7 +53,7 @@ export class Graph {
             }
 
             // Commence interval change
-            this._interval = newInterval;
+            this._graphInstance.cvInterval = newInterval;
             this._graphInstance.setData(this._datasets[newInterval], false);
             this._graphInstance.setScale("x", { min: leftBound, max: rightBound });
 
@@ -141,80 +140,22 @@ export class Graph {
         document.getElementById("optYear").disabled = graphDomainLength < 1 * YEAR;
 
         // Pick an interval based on the graph domain length
-        this._interval = "hour";
-        if (graphDomainLength > 2 * DAY) this._interval = "day";
-        if (graphDomainLength > 3 * YEAR) this._interval = "month";
+        let interval = "hour";
+        if (graphDomainLength > 2 * DAY) interval = "day";
+        if (graphDomainLength > 3 * YEAR) interval = "month";
 
-        document.getElementById("intervalSelect").value = this._interval;
+        document.getElementById("intervalSelect").value = interval;
 
-        this.buildDataArray(this._interval);
+        this.buildDataArray(interval);
 
-        this.drawGraph(this._interval);
+        this.drawGraph(interval);
+        this._graphInstance.cvInterval = interval;
 
         document.getElementById("statsContainer").style.display = "block";
         this._graphDisplayState = 2;
         clearInterval(this._loadingInterval);
         document.getElementById("viewGraph").disabled = false;
         document.getElementById("viewGraph").textContent = "\u25B2 Statistics";
-    }
-
-    makeLabel(rawValue, isUtc) {
-        let output = "";
-        const date = new Date(rawValue * 1000);
-        switch (this._interval) {
-            case "year":
-                output = isUtc ? date.getUTCFullYear() : date.getFullYear();
-                break;
-            case "month":
-                output = isUtc ? MONTHS[date.getUTCMonth()] + " " + date.getUTCFullYear()
-                    : MONTHS[date.getMonth()] + " " + date.getFullYear();
-                break;
-            case "day":
-                output = isUtc ? date.toISOString().substring(0, 10) : date.toLocaleDateString();
-                break;
-            case "hour":
-                output = isUtc ? date.toISOString().replace("T", " ").substring(0, 16)
-                    : date.toLocaleDateString(undefined, { hour: "numeric", hour12: true });
-                break;
-        }
-        return output;
-    }
-
-    calcAxisSpace(scaleMin, scaleMax, plotDim) {
-        const rangeSecs = scaleMax - scaleMin;
-        let space = 50;
-        switch (this._interval) {
-            case "year": {
-                // ensure minimum x-axis gap is 360 days' worth of pixels
-                const rangeDays = rangeSecs / 86400;
-                const pxPerDay = plotDim / rangeDays;
-                space = pxPerDay * 360;
-                break;
-            }
-            case "month": {
-                // 28 days
-                const rangeDays = rangeSecs / 86400;
-                const pxPerDay = plotDim / rangeDays;
-                space = pxPerDay * 28;
-                break;
-            }
-            case "day": {
-                // 23 hours
-                const rangeHours = rangeSecs / 3600;
-                const pxPerHour = plotDim / rangeHours;
-                space = pxPerHour * 23;
-                break;
-            }
-            case "hour": {
-                // 59 minutes
-                const rangeMins = rangeSecs / 60;
-                const pxPerMin = plotDim / rangeMins;
-                space = pxPerMin * 59;
-                break;
-            }
-        }
-        // Use a minimum gap of 50 pixels
-        return Math.max(50, space);
     }
 
     drawGraph(interval) {
@@ -234,6 +175,9 @@ export class Graph {
         const opts = {
             ...this.getGraphSize(),
             tzDate: (ts) => isUtc ? uPlot.tzDate(new Date(ts * 1000), "Etc/UTC") : new Date(ts * 1000),
+            plugins: [
+                tooltipPlugin(isUtc)
+            ],
             scales: {
                 'y': {
                     // Force min to be 0 & let uPlot compute max normally
@@ -243,7 +187,7 @@ export class Graph {
             axes: [
                 {
                     ...axis,
-                    space: (_self, _axisIdx, scaleMin, scaleMax, plotDim) => this.calcAxisSpace(scaleMin, scaleMax, plotDim),
+                    space: (self, _axisIdx, scaleMin, scaleMax, plotDim) => calcAxisSpace(self.cvInterval, scaleMin, scaleMax, plotDim),
                 },
                 {
                     ...axis,
@@ -253,20 +197,15 @@ export class Graph {
                 }
             ],
             series: [
-                {
-                    // x series
-                    label: "Date",
-                    value: (_self, rawValue) => this.makeLabel(rawValue, isUtc),
-                },
+                {},
                 {
                     // y series
-                    label: "Comments",
-                    value: (_self, rawValue) => rawValue.toLocaleString(),
                     stroke: "blue",
                     width: 2,
                     points: { show: false }
                 },
             ],
+            legend: { show: false },
             cursor: {
                 y: false,
                 drag: { dist: 5 }
