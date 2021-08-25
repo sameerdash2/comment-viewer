@@ -202,19 +202,6 @@ div.pbar {
 .snap {
   transition: width 0.25s;
 }
-div#progressIndeterminate {
-  position: relative;
-  width: 25%;
-  animation: movingGreen 1.5s cubic-bezier(0.4, 0.6, 0.6, 0.4) infinite;
-}
-@keyframes movingGreen {
-  from {
-    left: -25%;
-  }
-  to {
-    left: 100%;
-  }
-}
 div#chooseLoad {
   display: none;
 }

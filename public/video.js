@@ -42,34 +42,24 @@ export class Video {
         document.getElementById("loadPercentage").textContent = "Initializing...";
 
         document.getElementById("loadStatus").style.display = "block";
-        document.getElementById("progressIndeterminate").style.display = "block";
-        this._waiting = true;
     }
 
     updateLoadStatus(count) {
-        if (count === -1) {
-            document.getElementById("limitMessage").textContent =
-                `Loading is in progress. Please check back later`;
-        }
-        else {
-            if (this._waiting) {
-                document.getElementById("progressIndeterminate").style.display = "none";
-                document.getElementById("progressGreen").style.display = "block";
-                this._waiting = false;
-            }
+        // Determine percentage precision based on total comment count
+        // An "update" includes 100 or more comments
+        // 1,000+ comments takes at least 10 updates, so use 2 digits (no decimals)
+        // 10,000+ comments takes at least 100 updates, so use 3 digits (1 decimal place)
+        const precision = Math.max(0, Math.floor(Math.log10(this._totalExpected)) - 3);
+        const percentage = (count / this._totalExpected * 100).toFixed(precision) + '%';
 
-            // Determine percentage precision based on total comment count
-            const precision = Math.max(0, Math.floor(Math.log10(this._totalExpected)) - 3);
-            const percentage = (count / this._totalExpected * 100).toFixed(precision) + '%';
+        document.getElementById("progressGreen").style.width = percentage;
+        document.getElementById("progressGreen").ariaValueNow = percentage;
 
-            // Offset to make sure the first change does its transition
-            setTimeout(() => document.getElementById("progressGreen").style.width = percentage, 5);
-            document.getElementById("loadPercentage").textContent = percentage;
-            document.title = percentage + " complete | YouTube Comment Viewer";
-            if (this._totalExpected > 1000) {
-                document.getElementById("loadEta").textContent = '~'
-                    + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
-            }
+        document.getElementById("loadPercentage").textContent = percentage;
+        document.title = percentage + " complete | YouTube Comment Viewer";
+        if (this._totalExpected > 1000) {
+            document.getElementById("loadEta").textContent = '~'
+                + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
         }
     }
 
