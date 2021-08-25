@@ -72,6 +72,9 @@ button.nostyle {
   top: 50%;
   position: relative;
 }
+button#viewGraph {
+  padding-left: 0.75rem!important;
+}
 span#graphDesc {
   font-size: 14px;
   float: right;

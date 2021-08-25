@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (disabled) {
             newCommentInfo += `<span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
-                newCommentInfo += `<span class="red">(${num.toLocaleString()} hidden comments)</span>`;
+                newCommentInfo += ` <span class="red">(${num.toLocaleString()} hidden comments)</span>`;
                 gtag('event', 'hidden_comments', {
                     'event_category': 'data_request',
                     'value': num
