@@ -147,7 +147,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         sendCommentRequest(true);
         gtag('event', 'reset', { 'event_category': 'filters' });
-    })
+    });
+
+    document.getElementById("clearSearch").addEventListener('click', () => {
+        searchTerms = ['', ''];
+        document.getElementById("searchBox").value = "";
+
+        sendCommentRequest(true);
+        gtag('event', 'reset_search', { 'event_category': 'filters' });
+    });
 
     commentsSection.addEventListener('click', repliesButton);
     linkedHolder.addEventListener('click', repliesButton);
