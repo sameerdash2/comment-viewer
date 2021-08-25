@@ -256,7 +256,7 @@ class Video {
             if (consecutiveErrors < 20) {
                 if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
-                    this._app.abortVideo(this._id);
+                    this._app.database.abortVideo(this._id);
                     this._socket.emit("quotaExceeded");
                 }
                 else {
