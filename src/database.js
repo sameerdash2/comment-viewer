@@ -23,44 +23,29 @@ class Database {
             ' authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT,' +
             ' totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)').run();
 
-        this._db.prepare('CREATE VIRTUAL TABLE IF NOT EXISTS comments_fts USING fts5(content="comments", id UNINDEXED, textDisplay,' +
-            ' authorDisplayName, authorProfileImageUrl UNINDEXED, authorChannelId UNINDEXED, likeCount UNINDEXED,' +
-            ' publishedAt UNINDEXED, updatedAt UNINDEXED, totalReplyCount UNINDEXED, videoId UNINDEXED)').run();
+        this._db.prepare('CREATE VIRTUAL TABLE IF NOT EXISTS comments_fts USING fts4(content="comments", id PRIMARY KEY, textDisplay, authorDisplayName,' +
+            ' authorProfileImageUrl, authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount, videoId, tokenize=unicode61,' +
+            ' notindexed=id, notindexed=authorProfileImageUrl, notindexed=authorChannelId, notindexed=likeCount, notindexed=publishedAt,' +
+            ' notindexed=updatedAt, notindexed=totalReplyCount, notindexed=videoId)').run();
         // Create triggers to keep virtual FTS table up to date with comments table
         this._db.exec(`
-            CREATE TRIGGER IF NOT EXISTS comments_ai AFTER INSERT ON comments BEGIN
-                INSERT INTO comments_fts(
-                    id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
-                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId
-                ) VALUES (
-                    new.id, new.textDisplay, new.authorDisplayName, new.authorProfileImageUrl, new.authorChannelId,
-                    new.likeCount, new.publishedAt, new.updatedAt, new.totalReplyCount, new.videoId
-                );
+            CREATE TRIGGER IF NOT EXISTS comments_bu BEFORE UPDATE ON comments BEGIN
+                DELETE FROM comments_fts WHERE docid=old.id;
             END;
-            CREATE TRIGGER IF NOT EXISTS comments_ad AFTER DELETE ON comments BEGIN
-                INSERT INTO comments_fts(
-                    comments_fts, rowid, id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
-                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId
-                ) VALUES (
-                    'delete', old.rowid, old.id, old.textDisplay, old.authorDisplayName, old.authorProfileImageUrl, old.authorChannelId,
-                    old.likeCount, old.publishedAt, old.updatedAt, old.totalReplyCount, old.videoId
-                );
+            CREATE TRIGGER IF NOT EXISTS comments_bd BEFORE DELETE ON comments BEGIN
+                DELETE FROM comments_fts WHERE docid=old.id;
             END;
             CREATE TRIGGER IF NOT EXISTS comments_au AFTER UPDATE ON comments BEGIN
-                INSERT INTO comments_fts(
-                    comments_fts, rowid, id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
-                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId
-                ) VALUES (
-                    'delete', old.rowid, old.id, old.textDisplay, old.authorDisplayName, old.authorProfileImageUrl, old.authorChannelId,
-                    old.likeCount, old.publishedAt, old.updatedAt, old.totalReplyCount, old.videoId
-                );
-                INSERT INTO comments_fts(
-                    id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
-                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId
-                ) VALUES (
-                    new.id, new.textDisplay, new.authorDisplayName, new.authorProfileImageUrl, new.authorChannelId,
-                    new.likeCount, new.publishedAt, new.updatedAt, new.totalReplyCount, new.videoId
-                );
+                INSERT INTO comments_fts(docid, id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
+                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId)
+                VALUES(new.rowid, new.id, new.textDisplay, new.authorDisplayName, new.authorProfileImageUrl, new.authorChannelId,
+                    new.likeCount, new.publishedAt, new.updatedAt, new.totalReplyCount, new.videoId);
+            END;
+            CREATE TRIGGER IF NOT EXISTS comments_ai AFTER INSERT ON comments BEGIN
+                INSERT INTO comments_fts(docid, id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
+                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId)
+                VALUES(new.rowid, new.id, new.textDisplay, new.authorDisplayName, new.authorProfileImageUrl, new.authorChannelId,
+                    new.likeCount, new.publishedAt, new.updatedAt, new.totalReplyCount, new.videoId);
             END;
         `);
 
@@ -147,10 +132,8 @@ class Database {
             rows = rowsStatement.all();
             return { rows, subCount, totalCount, error: false };
         } catch (err) {
-            if (err.code !== 'SQLITE_CORRUPT_VTAB') {
-                logger.log('error', "Error getting comments for video %s with searchTerms %O: '%s', %s",
-                    videoId, searchTerms, err.code, err.message);
-            }
+            logger.log('error', "Error getting comments for video %s with searchTerms %O: '%s', %s",
+                videoId, searchTerms, err.code, err.message);
             return { rows: [], subCount: 0, totalCount: totalCount, error: true };
         }
     }
@@ -254,8 +237,7 @@ class Database {
             const pos = str.lastIndexOf('"');
             str = str.substring(0, pos) + str.substring(pos + 1);
         }
-        // Enclose string in double quotes to force tokenizer to treat it as a single string
-        return `"${str}"`;
+        return str;
     }
 }
 
