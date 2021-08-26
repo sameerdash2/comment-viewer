@@ -175,7 +175,7 @@ class Database {
         this._videosInProgress.delete(videoId);
 
         this._statsDb.prepare('INSERT INTO stats(id, title, duration, finishedAt, commentCount, commentThreads) VALUES (?,?,?,?,?,?)')
-            .run(videoId, videoTitle.substring(0, 50), elapsed, Date.now(), newComments, newCommentThreads);
+            .run(videoId, videoTitle, elapsed, Date.now(), newComments, newCommentThreads);
     }
 
     scheduleCleanup() {
