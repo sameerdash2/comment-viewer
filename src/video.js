@@ -18,7 +18,7 @@ class Video {
         this._loadComplete = false;
     }
 
-    handleNewVideo(item, allowCommence = true) {
+    handleNewVideo(item) {
         this.reset();
         if (item !== -1) {
             this._video = item;
@@ -26,7 +26,7 @@ class Video {
             this._commentCount = this._video.statistics.commentCount;
             // this._logToDatabase = this._commentCount >= 500;
             this._logToDatabase = true; // Currently needed as comments are only sent from database
-            this.fetchTestComment(allowCommence);
+            this.fetchTestComment();
         }
     }
 
@@ -53,19 +53,19 @@ class Video {
         });
     }
 
-    fetchTestComment(allowCommence) {
+    fetchTestComment() {
         this._app.ytapi.executeTestComment(this._video.id).then(() => {
             this._commentsEnabled = true;
             // for upcoming/live streams, disregard a 0 count.
             if (!(this._video.snippet.liveBroadcastContent !== "none" && this._commentCount === 0)) {
-                const beginLoad = this._commentCount < 200 && allowCommence;
                 // Make graph available if 1 hour has passed, to ensure at least 2 points on the graph
-                this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (Date.now() - 60*60*1000);
-                this._socket.emit("commentsInfo", { num: this._commentCount, disabled: false,
-                    commence: beginLoad, max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1, graph: this._graphAvailable });
-                if (beginLoad && this._commentCount > 0) {
-                    this.handleLoad("dateOldest");
-                }
+                this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (Date.now() - 60 * 60 * 1000);
+                this._socket.emit("commentsInfo", {
+                    num: this._commentCount,
+                    disabled: false,
+                    max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1,
+                    graph: this._graphAvailable
+                });
             }
         }, (err) => {
             if (err.errors[0].reason === "quotaExceeded") {
@@ -73,12 +73,16 @@ class Video {
                 this._socket.emit("quotaExceeded");
             }
             else if (err.errors[0].reason === "processingFailure") {
-                setTimeout(() => this.fetchTestComment(allowCommence), 1);
+                setTimeout(() => this.fetchTestComment(), 1);
             }
             else if (this._video.snippet.liveBroadcastContent === "none" && err.errors[0].reason === "commentsDisabled") {
                 this._commentsEnabled = false;
-                this._socket.emit("commentsInfo", {num: this._commentCount, disabled: true,
-                    commence: false, max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1, graph: false });
+                this._socket.emit("commentsInfo", {
+                    num: this._commentCount,
+                    disabled: true,
+                    max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1,
+                    graph: false
+                });
             }
         });
     }
@@ -293,7 +297,7 @@ class Video {
                     // Fetch the video info & linked reply at the same time
                     Promise.all([this._app.ytapi.executeSingleReply(replyId), getVideo(videoId)]).then((responses) => {
                         const videoObject = (responses[1] === -1) ? -1 : responses[1].data.items[0];
-                        this.handleNewVideo(videoObject, false);
+                        this.handleNewVideo(videoObject);
 
                         if (responses[0].data.items[0]) {
                             // Send parent comment & linked reply
@@ -310,7 +314,7 @@ class Video {
                 else {
                     getVideo(videoId).then((res) => {
                         const videoObject = (res === -1) ? -1 : res.data.items[0];
-                        this.handleNewVideo(videoObject, false);
+                        this.handleNewVideo(videoObject);
                         // Send linked comment
                         this.sendLinkedComment(convertComment(response.data.items[0]), null, videoObject);
                     }, (err) => logger.log('error', "Linked video error on %s: %O", videoId, err.response.data.error));

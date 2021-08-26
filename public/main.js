@@ -180,8 +180,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    socket.on("commentsInfo", ({ num, disabled, commence, max, graph }) => {
-        document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
+    socket.on("commentsInfo", ({ num, disabled, max, graph }) => {
+        document.getElementById("chooseLoad").style.display = (!disabled && max < 0) ? "block" : "none";
         num = Number(num) || 0;
         statsAvailable = graph;
         let newCommentInfo = `<span class="icon-comment"></span>&nbsp;`;
@@ -198,11 +198,9 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
             newCommentInfo += `${num.toLocaleString()} comments`;
 
-            if (commence && num > 0) video.prepareLoadStatus();
-
             if (max > 0) {
                 displayNote(`Videos with over ${max.toLocaleString()} comments are not currently supported.
-                    (Stay tuned for the future!)`);
+                    (This may change in the future)`);
                 gtag('event', 'max_comments', {
                     'event_category': 'data_request',
                     'value': num
