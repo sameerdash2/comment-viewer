@@ -72,9 +72,24 @@ button.nostyle {
   top: 50%;
   position: relative;
 }
+button#viewGraph {
+  padding-left: 0.75rem!important;
+}
 span#graphDesc {
   font-size: 14px;
   float: right;
+}
+#tooltip {
+  pointer-events: none;
+  position: absolute;
+  padding: 4px 8px;
+  background-color: #fff;
+  box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  border: 1px solid #0005;
+  white-space: pre;
+  z-index: 105;
+  /* transition: all 100ms ease; */
 }
 option:disabled {
   color: #999;
@@ -201,19 +216,6 @@ div.pbar {
 }
 .snap {
   transition: width 0.25s;
-}
-div#progressIndeterminate {
-  position: relative;
-  width: 25%;
-  animation: movingGreen 1.5s cubic-bezier(0.4, 0.6, 0.6, 0.4) infinite;
-}
-@keyframes movingGreen {
-  from {
-    left: -25%;
-  }
-  to {
-    left: 100%;
-  }
 }
 div#chooseLoad {
   display: none;

@@ -147,7 +147,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         sendCommentRequest(true);
         gtag('event', 'reset', { 'event_category': 'filters' });
-    })
+    });
+
+    document.getElementById("clearSearch").addEventListener('click', () => {
+        searchTerms = ['', ''];
+        document.getElementById("searchBox").value = "";
+
+        sendCommentRequest(true);
+        gtag('event', 'reset_search', { 'event_category': 'filters' });
+    });
 
     commentsSection.addEventListener('click', repliesButton);
     linkedHolder.addEventListener('click', repliesButton);
@@ -172,15 +180,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    socket.on("commentsInfo", ({ num, disabled, commence, max, graph }) => {
-        document.getElementById("chooseLoad").style.display = (!disabled && !commence && max < 0) ? "block" : "none";
+    socket.on("commentsInfo", ({ num, disabled, max, graph }) => {
+        document.getElementById("chooseLoad").style.display = (!disabled && max < 0) ? "block" : "none";
         num = Number(num) || 0;
         statsAvailable = graph;
         let newCommentInfo = `<span class="icon-comment"></span>&nbsp;`;
         if (disabled) {
             newCommentInfo += `<span class="gray">Comments are disabled.</span>`;
             if (num > 0) {
-                newCommentInfo += `<span class="red">(${num.toLocaleString()} hidden comments)</span>`;
+                newCommentInfo += ` <span class="red">(${num.toLocaleString()} hidden comments)</span>`;
                 gtag('event', 'hidden_comments', {
                     'event_category': 'data_request',
                     'value': num
@@ -190,11 +198,9 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
             newCommentInfo += `${num.toLocaleString()} comments`;
 
-            if (commence && num > 0) video.prepareLoadStatus();
-
             if (max > 0) {
                 displayNote(`Videos with over ${max.toLocaleString()} comments are not currently supported.
-                    (Stay tuned for the future!)`);
+                    (This may change in the future)`);
                 gtag('event', 'max_comments', {
                     'event_category': 'data_request',
                     'value': num

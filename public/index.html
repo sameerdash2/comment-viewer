@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>YouTube Comment Viewer</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous" />
+    <link href="bootstrap-purged.min.css" rel="stylesheet" />
     <link href="./style.css" rel="stylesheet" type="text/css" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -127,15 +127,10 @@
 
         <div class="col-12" id="statsColumn">
           <div class="card mb-3">
-            <h5 class="card-header head">
-              <button id="viewGraph" class="btn text-reset nostyle" type="button" data-toggle="collapse">&#x25BC; Statistics</button>
+            <h5 class="card-header head p-0">
+              <button id="viewGraph" class="btn text-reset nostyle p-3" type="button" data-toggle="collapse">&#x25BC; View graph & statistics</button>
             </h5>
             <div class="card-body p-2" id="statsContainer">
-              <div class="row">
-                <div class="col">
-                  <div id="graphSpace"></div>
-                </div>
-              </div>
               <div class="row px-2 align-items-center">
                 <div class="col-sm-6">
                   <label for="intervalSelect">Aggregate by:</label>
@@ -148,6 +143,11 @@
                 </div>
                 <div class="col-sm-6">
                   <span id="graphDesc">Drag to zoom, double-click to reset</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <div id="graphSpace"></div>
                 </div>
               </div>
               <hr class="half-dark" />
@@ -203,8 +203,8 @@
               <span id="loadPercentage" class="card-text">0.0%</span>
               <span id="loadEta" class="card-text"></span>
               <div id="progress" class="progress pbar mt-2">
-                <div id="progressIndeterminate" class="progress-bar"></div>
-                <div id="progressGreen" class="progress-bar snap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                <div id="progressGreen" class="progress-bar snap" role="progressbar" aria-label="Load status" aria-valuenow="0"
+                  aria-valuemin="0" aria-valuemax="100"></div>
               </div>
             </div>
           </div>
@@ -263,7 +263,7 @@
                       <div class="col input-group">
                         <input class="form-control" type="text" id="searchBox" spellcheck="false" maxlength="255" placeholder="Search" aria-label="Search comments" />
                         <div class="input-group-append">
-                          <button class="btn btn-primary" type="submit"><span class="icon-search"></span></button>
+                          <button class="btn btn-primary" type="submit" title="Search"><span class="icon-search"></span></button>
                         </div>
                       </div>
                       <div class="col-auto dropdown pl-0">
@@ -286,7 +286,8 @@
                 </div>
                 <div class="col-12 mb-1" id="searchErrorCol">
                   <span class="p-2">
-                    <i class="red">Could not process search query.</i>
+                    <i class="red">Could not process search query.</i> •
+                    <button id="clearSearch" class="btn btn-link font-weight-bold align-baseline p-0" type="button">Clear</button>
                   </span>
                 </div>
                 <div class="col-12 mb-2" id="resultCol">
@@ -310,7 +311,7 @@
 
     <footer>
       <div class="container-xl">
-        <span>v3.1.4</span>
+        <span>v3.2.0</span>
         <span>|</span>
         <span><a id="viewTerms" href="#">Terms of Service</a></span>
         <span>|</span>

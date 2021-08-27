@@ -1,3 +1,17 @@
+**3.2.0** (26 Aug 2021)
+- Added new hover tooltip on graph
+- Removed unused styles from Bootstrap CSS. This shaves off 138 KB (28% of page size)
+- Switched SQLite search engine back to FTS4 from FTS5.
+    - Since switching to FTS5 in January, the database has been throwing `SQLITE_CORRUPT_VTAB` "database disk image is malformed" errors on about 50% of text searches. This is difficult to reproduce, but it may have something to do with this [delete trigger](https://github.com/FrozenKite/comment-viewer/blob/7aabdda5a0cccdf6d756030d94063bc5fb3c48a1/src/database.js#L40-L48). 3.2.0 reverts to the FTS4 implementation which didn't have this issue, though we'll have to see if it scales well. This will also require the database to be reset once.
+- Added button to clear search on search error
+- Moved graph tools ("Aggregate by") to above the graph
+- Removed "Initializing" progress bar animation
+- Turned off auto retrieval for videos with <200 comments
+- Refined statistics button
+- Added logging for different possible states of video (appending to stored comments, re-fetching video, etc.)
+- Fixed missing whitespace before "x hidden comments"
+- Updated dependencies
+
 **3.1.4** (13 Mar 2021)
 - Separated socket.io client script from bundled JS (improves load time)
 - Icons are now served directly instead of loading from CDN
