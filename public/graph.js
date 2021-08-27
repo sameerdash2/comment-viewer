@@ -50,6 +50,15 @@ export class Graph {
                 // Save the current scale's min & max (only if they're within the new x range)
                 leftBound = Math.max(this._graphInstance.scales.x.min, leftBound);
                 rightBound = Math.min(this._graphInstance.scales.x.max, rightBound);
+
+                // Catch case where old left bound exceeds new right bound.
+                // Ex: Graph shows 2021-08-10 to 2021-08-20 on "day" interval, then switches to
+                // "month" interval which only goes until 2021-08-01
+                if (leftBound > newIntervalTimestamps[newLen - 1]) {
+                    // Walk back a point, to show at least 2 points on graph
+                    const newLeftIndex = Math.max(newLen - 2, 0);
+                    leftBound = newIntervalTimestamps[newLeftIndex];
+                }
             }
 
             // Commence interval change

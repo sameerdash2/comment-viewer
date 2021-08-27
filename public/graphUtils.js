@@ -18,7 +18,7 @@ export function tooltipPlugin(isUtc) {
 
     function setCursor(u) {
         const { left, top, idx } = u.cursor;
-        if (idx === null) return;
+        if (idx === null || !u.data[0][idx]) return;
 
         // Update text
         const xVal = u.data[0][idx];
