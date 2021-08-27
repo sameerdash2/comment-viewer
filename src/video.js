@@ -259,10 +259,8 @@ class Video {
             }
         }, (err) => {
             const error = err.errors[0];
-            if (error.reason !== "quotaExceeded") {
-                logger.log('error', "Comments execute error on %s: %d ('%s') - '%s'",
-                    this._id, err.code, err.errors[0].reason, err.errors[0].message);
-            }
+            logger.log('error', "Comments execute error on %s: %d ('%s') - '%s'",
+                this._id, err.code, err.errors[0].reason, err.errors[0].message);
 
             if (consecutiveErrors < 20) {
                 if (error.reason === "quotaExceeded") {
