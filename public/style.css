@@ -94,6 +94,9 @@ button.nostyle {
   top: 50%;
   position: relative;
 }
+button:hover {
+  background-color: #e4e4e4;
+}
 button#viewGraph {
   padding-left: 0.75rem!important;
 }
