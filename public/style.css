@@ -12,6 +12,28 @@
 * {
   margin: 0;
 }
+#reloadAlert {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 16px 8px;
+  z-index: 101;
+}
+#innerMessage {
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.5);
+}
+#closeAlert {
+  font-size: 32px;
+  opacity: 0.75;
+  line-height: 0.75;
+}
+#closeAlert:focus {
+  outline: none;
+}
 a:link,
 a:visited {
   color: #00e;
@@ -166,21 +188,8 @@ h6.sub-title {
   font-weight: 600;
   margin: 0;
 }
-button {
-  font: inherit;
-  border: 1px solid rgba(0, 0, 0, 0.5);
-  outline: 0;
-  background-color: #eee;
-}
-button:hover {
-  cursor: pointer;
-  background-color: #e4e4e4;
-}
 button.sendSort {
   padding: 0.25rem 0.5rem;
-}
-button:disabled {
-  pointer-events: none;
 }
 h5.head {
   text-transform: uppercase;

@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const showMoreBtn = document.getElementById("showMoreBtn");
     const linkedHolder = document.getElementById("linkedHolder");
     const terms = document.getElementById("terms");
+    const reloadAlert = document.getElementById("reloadAlert");
     const dateMin = document.getElementById("dateMin");
     const dateMax = document.getElementById("dateMax");
 
@@ -315,6 +316,10 @@ document.addEventListener("DOMContentLoaded", () => {
             message.style.color = ERR;
         }
     });
+
+    socket.on("disconnect", () => reloadAlert.style.display = "block");
+
+    document.getElementById("closeAlert").addEventListener('click', () => reloadAlert.style.display = "none");
 
     function sendCommentRequest(getNewSet) {
         if (getNewSet) {
