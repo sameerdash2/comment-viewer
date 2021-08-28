@@ -23,7 +23,7 @@ class Video {
         if (item !== -1) {
             this._video = item;
             this._id = this._video.id;
-            this._commentCount = this._video.statistics.commentCount;
+            this._commentCount = Number(this._video.statistics.commentCount);
             // this._logToDatabase = this._commentCount >= 500;
             this._logToDatabase = true; // Currently needed as comments are only sent from database
             this.fetchTestComment();
@@ -89,6 +89,7 @@ class Video {
 
     shouldReFetch = (row) => {
         const now = Date.now();
+        const initialCommentCount = Number(row.initialCommentCount);
         const videoAge = now - new Date(this._video.snippet.publishedAt).getTime();
         const currentCommentsAge = now - row.retrievedAt;
         const MONTH = 30 * 24 * 60 * 60 * 1000;
@@ -97,7 +98,7 @@ class Video {
         // These will probably change over time
         const doReFetch = (
             // Comment count has changed by 1.5x (50% increase)
-            row.initialCommentCount * 1.5 < this._commentCount
+            initialCommentCount * 1.5 < this._commentCount
             // Video's age has doubled since initial fetch
             || currentCommentsAge * 2 > videoAge
             // 6 months have passed since initial fetch
@@ -105,8 +106,8 @@ class Video {
         );
 
         if (doReFetch) {
-            logger.log('info', "Re-fetching video %s. initialCommentCount %d, current commentCount %d, current comments age %d, video age %d.",
-                this._id, row.initialCommentCount, this._commentCount, currentCommentsAge, videoAge);
+            logger.log('info', "Re-fetching video %s. initialCommentCount %s; current commentCount %s; current comments age %d; video age %d.",
+                this._id, (initialCommentCount).toLocaleString(), (this._commentCount).toLocaleString(), currentCommentsAge, videoAge);
         }
         return doReFetch;
     }
@@ -154,8 +155,8 @@ class Video {
                     }
                     // Append to existing set of comments
                     else {
-                        logger.log('info', "Appending to video %s. %d indexed comments, %d total commentCount.",
-                            this._id, row.commentCount, this._commentCount);
+                        logger.log('info', "Appending to video %s. %s total; %s new.",
+                            this._id, (this._commentCount).toLocaleString(), (this._commentCount - row.commentCount).toLocaleString());
                         this._indexedComments = row.commentCount;
                         this._app.database.reAddVideo(this._video);
                         const lastCommentRow = this._app.database.getLastComment(this._id);
@@ -241,9 +242,9 @@ class Video {
             else {
                 // Finished retrieving all comment threads.
                 const elapsed = Date.now() - this._startTime;
-                const cpsString = this._newCommentThreads > 200 ? ', CPS = %d' : '';
-                logger.log('info', 'Retrieved video %s, %d comments in %ds' + cpsString,
-                    this._id, this._newComments, elapsed / 1000, (this._newComments / elapsed * 1000).toFixed(0));
+                const cpsString = this._newCommentThreads > 800 ? ('; CPS = ' + (this._newComments / elapsed * 1000).toFixed(0)) : '';
+                logger.log('info', 'Retrieved video %s; %s comments in %ds' + cpsString,
+                    this._id, (this._newComments).toLocaleString(), (elapsed / 1000).toFixed(1));
 
                 this._app.database.markVideoComplete(this._id, this._video.snippet.title, elapsed, this._newComments, this._newCommentThreads);
 
