@@ -26,21 +26,18 @@ export function tooltipPlugin(isUtc) {
         u.cursortt.innerHTML = `<b>${makeLabel(xVal, u.cvInterval, isUtc)}</b><br>Comments: ${yVal.toLocaleString()}`;
 
         // Update positioning
-        // Set instant timeout to allow the text width to update
-        setTimeout(() => {
-            let xPos = left + 10;
-            const yPos = top + 10;
+        let xPos = left + 10;
+        const yPos = top + 10;
 
-            const tooltipWidth = u.cursortt.offsetWidth;
-            const graphOffset = u.root.querySelector(".u-over").getBoundingClientRect().left;
+        const tooltipWidth = u.cursortt.offsetWidth;
+        const graphOffset = u.root.querySelector(".u-over").getBoundingClientRect().left;
 
-            if ((graphOffset + xPos + tooltipWidth * 1.2) > document.documentElement.clientWidth) {
-                xPos -= (tooltipWidth + 20);
-            }
+        if ((graphOffset + xPos + tooltipWidth * 1.2) > document.documentElement.clientWidth) {
+            xPos -= (tooltipWidth + 20);
+        }
 
-            u.cursortt.style.left = xPos + "px";
-            u.cursortt.style.top = yPos + "px";
-        }, 0);
+        u.cursortt.style.left = xPos + "px";
+        u.cursortt.style.top = yPos + "px";
     }
 
     return {
