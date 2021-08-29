@@ -97,17 +97,18 @@ class Video {
         // Determine whether the comment set should be re-fetched by seeing if it meets at least 1 condition.
         // These will probably change over time
         const doReFetch = (
-            // Comment count has changed by 1.5x (50% increase)
-            initialCommentCount * 1.5 < this._commentCount
-            // Video's age has doubled since initial fetch
-            || currentCommentsAge * 2 > videoAge
+            // Comment count has doubled
+            initialCommentCount * 2 < this._commentCount
             // 6 months have passed since initial fetch
             || currentCommentsAge > 6 * MONTH
         );
 
-        if (doReFetch) {
-            logger.log('info', "Re-fetching video %s. initialCommentCount %s; current commentCount %s; current comments age %d; video age %d.",
-                this._id, (initialCommentCount).toLocaleString(), (this._commentCount).toLocaleString(), currentCommentsAge, videoAge);
+        if (doReFetch && this._commentCount > 5000) {
+            const commentsAgeHours = currentCommentsAge / 1000 / 60 / 60;
+            const videoAgeHours = videoAge / 1000 / 60 / 60;
+            logger.log('info', "Re-fetching video %s. initialCommentCount %s; current commentCount %s; current comments age %sh; video age %sh.",
+                this._id, (initialCommentCount).toLocaleString(), (this._commentCount).toLocaleString(),
+                commentsAgeHours.toLocaleString(), videoAgeHours.toLocaleString());
         }
         return doReFetch;
     }
