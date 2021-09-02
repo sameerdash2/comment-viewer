@@ -46,7 +46,8 @@ class App {
                 }
             }
             function sendComments({ sort, commentNum, minDate, maxDate, searchTerms }) {
-                searchTerms = searchTerms.map((term) => term.substring(0, 255));
+                // searchTerms = searchTerms.map((term) => term.substring(0, 255));
+                searchTerms = ['', ''];
                 videoInstance.sendLoadedComments(sort, commentNum, false, minDate, maxDate, searchTerms);
             }
 

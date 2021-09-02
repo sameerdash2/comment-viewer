@@ -169,6 +169,9 @@ div#info {
 #filter {
   display: none;
 }
+#searchForm {
+  display: none;
+}
 tr:first-child td,
 tr:first-child th {
   border-top: none;
