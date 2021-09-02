@@ -19,10 +19,12 @@
   left: 0;
   width: 100%;
   padding: 16px 8px;
+  pointer-events: none;
   z-index: 101;
 }
 #innerMessage {
   max-width: 800px;
+  pointer-events: auto;
   margin: 0 auto;
   box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.5);
 }
