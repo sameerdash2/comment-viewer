@@ -1,3 +1,10 @@
+**3.2.1** (02 Sep 2021)
+- Disabled searching for now. Search queries were taking up to 30 seconds (much longer than normal) and blocking the main thread, making the entire site unresponsive. :( This probably won't be restored unless a feasible solution becomes available.
+- Made criteria for fully re-fetching a video less strict. This means new, fast-rising videos will not have to start from 0% as often.
+- Added an alert to reload the page after WebSocket connection lost
+- Fixed lag on graph tooltip's position update
+- Fixed a graph interval-change case where old left bound exceeds new right bound
+
 **3.2.0** (26 Aug 2021)
 - Added new hover tooltip on graph
 - Removed unused styles from Bootstrap CSS. This shaves off 138 KB (28% of page size)
