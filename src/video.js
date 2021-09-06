@@ -53,7 +53,7 @@ class Video {
         });
     }
 
-    fetchTestComment() {
+    fetchTestComment(consecutiveErrors = 0) {
         this._app.ytapi.executeTestComment(this._video.id).then(() => {
             this._commentsEnabled = true;
             // for upcoming/live streams, disregard a 0 count.
@@ -68,21 +68,28 @@ class Video {
                 });
             }
         }, (err) => {
-            if (err.errors[0].reason === "quotaExceeded") {
-                this._app.ytapi.quotaExceeded();
-                this._socket.emit("quotaExceeded");
-            }
-            else if (err.errors[0].reason === "processingFailure") {
-                setTimeout(() => this.fetchTestComment(), 1);
-            }
-            else if (this._video.snippet.liveBroadcastContent === "none" && err.errors[0].reason === "commentsDisabled") {
-                this._commentsEnabled = false;
-                this._socket.emit("commentsInfo", {
-                    num: this._commentCount,
-                    disabled: true,
-                    max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1,
-                    graph: false
-                });
+            logger.log('error', "TEST COMMENT execute error on %s: %d ('%s') - '%s'",
+                this._id, err.code, err.errors[0].reason, err.errors[0].message);
+
+            if (consecutiveErrors < 5) {
+                if (err.errors[0].reason === "quotaExceeded") {
+                    this._app.ytapi.quotaExceeded();
+                    this._socket.emit("quotaExceeded");
+                }
+                else if (err.errors[0].reason === "processingFailure") {
+                    setTimeout(() => this.fetchTestComment(++consecutiveErrors), 1);
+                }
+                else if (this._video.snippet.liveBroadcastContent === "none" && err.errors[0].reason === "commentsDisabled") {
+                    this._commentsEnabled = false;
+                    this._socket.emit("commentsInfo", {
+                        num: this._commentCount,
+                        disabled: true,
+                        max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1,
+                        graph: false
+                    });
+                }
+            } else {
+                logger.log('warn', "Giving up TEST comment fetch on %s due to %d consecutive errors.", this._id, consecutiveErrors);
             }
         });
     }
