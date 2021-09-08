@@ -250,7 +250,7 @@ class Video {
             else {
                 // Finished retrieving all comment threads.
                 const elapsed = Date.now() - this._startTime;
-                const cpsString = this._newCommentThreads > 800 ? ('; CPS = ' + (this._newComments / elapsed * 1000).toFixed(0)) : '';
+                const cpsString = this._newCommentThreads > 800 ? ('; TRUE CPS = ' + (this._newCommentThreads / elapsed * 1000).toFixed(0)) : '';
                 logger.log('info', 'Retrieved video %s; %s comments in %ds' + cpsString,
                     this._id, (this._newComments).toLocaleString(), (elapsed / 1000).toFixed(1));
 
