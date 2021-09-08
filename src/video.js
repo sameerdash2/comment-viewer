@@ -34,7 +34,8 @@ class Video {
         return this._app.ytapi.executeVideo(idString).then((response) => {
             if (response.data.pageInfo.totalResults > 0) {
                 this.handleNewVideo(response.data.items[0]);
-                this._socket.emit("videoInfo", { videoObject:this._video });
+                // After receiving video info, frontend will wait for the commentsInfo event (except for live streams)
+                this._socket.emit("videoInfo", { videoObject: this._video });
             }
             else {
                 this._socket.emit("idInvalid");
@@ -59,11 +60,19 @@ class Video {
             // for upcoming/live streams, disregard a 0 count.
             if (!(this._video.snippet.liveBroadcastContent !== "none" && this._commentCount === 0)) {
                 // Make graph available if 1 hour has passed, to ensure at least 2 points on the graph
-                this._graphAvailable = this._commentCount >= 10 && new Date(this._video.snippet.publishedAt).getTime() <= (Date.now() - 60 * 60 * 1000);
+                this._graphAvailable = this._commentCount >= 10
+                    && new Date(this._video.snippet.publishedAt).getTime() <= (Date.now() - 60 * 60 * 1000);
+
+                // Check if video's comment count exceeds the set maximum.
+                // If so, make sure the video isn't already retrieved (from when it had fewer comments).
+                this._commentCountTooLarge = this._commentCount > config.maxLoad
+                    && typeof this._app.database.checkVideo(this._id).row === "undefined";
+
+                // Pass data to frontend
                 this._socket.emit("commentsInfo", {
                     num: this._commentCount,
                     disabled: false,
-                    max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1,
+                    max: (this._commentCountTooLarge) ? config.maxLoad : -1,
                     graph: this._graphAvailable
                 });
             }
@@ -84,7 +93,7 @@ class Video {
                     this._socket.emit("commentsInfo", {
                         num: this._commentCount,
                         disabled: true,
-                        max: (this._commentCount > config.maxLoad) ? config.maxLoad : -1,
+                        max: -1,
                         graph: false
                     });
                 }
@@ -121,7 +130,7 @@ class Video {
     }
 
     handleLoad(type) {
-        if (this._commentsEnabled && this._commentCount < config.maxLoad && this._commentCount > 0 && type === "dateOldest") {
+        if (this._commentsEnabled && !this._commentCountTooLarge && this._commentCount > 0 && type === "dateOldest") {
             this._newComments = 0;
             this._newCommentThreads = 0;
             const now = Date.now();
