@@ -1,11 +1,11 @@
-**3.2.1** (02 Sep 2021)
+### 3.2.1 (02 Sep 2021)
 - Disabled searching for now. Search queries were taking up to 30 seconds (much longer than normal) and blocking the main thread, making the entire site unresponsive. :( This probably won't be restored unless a feasible solution becomes available.
 - Made criteria for fully re-fetching a video less strict. This means new, fast-rising videos will not have to start from 0% as often.
 - Added an alert to reload the page after WebSocket connection lost
 - Fixed lag on graph tooltip's position update
 - Fixed a graph interval-change case where old left bound exceeds new right bound
 
-**3.2.0** (26 Aug 2021)
+### 3.2.0 (26 Aug 2021)
 - Added new hover tooltip on graph
 - Removed unused styles from Bootstrap CSS. This shaves off 138 KB (28% of page size)
 - Switched SQLite search engine back to FTS4 from FTS5.
@@ -19,12 +19,12 @@
 - Fixed missing whitespace before "x hidden comments"
 - Updated dependencies
 
-**3.1.4** (13 Mar 2021)
+### 3.1.4 (13 Mar 2021)
 - Separated socket.io client script from bundled JS (improves load time)
 - Icons are now served directly instead of loading from CDN
 - Removed graph resize throttling
 
-**3.1.3** (10 Jan 2021)
+### 3.1.3 (10 Jan 2021)
 - Better handling for YouTube API quota being exceeded
 - Enabled SQLite WAL mode for better performance
 - Switched search engine from FTS4 to FTS5 in hopes of better scalability
@@ -32,7 +32,7 @@
 - Database cleanup is also stricter now (stores comments for less time than before) due to increased traffic
 - Published date now shows for upcoming streams
 
-**3.1.2** (19 Nov 2020)
+### 3.1.2 (19 Nov 2020)
 - Switched graphs to `distr: 1`, making interval changes smoother and improving x-axis temporal labels
 - Prefer smaller intervals for the graph
 - Limited graph y-axis to only whole numbers
@@ -42,10 +42,10 @@
 - Updated to Node.js 14
 - Updated various dependencies
 
-**3.1.1** (29 Aug 2020)
+### 3.1.1 (29 Aug 2020)
 - Improved graph behavior when changing intervals
 
-**3.1.0** (03 Aug 2020)
+### 3.1.0 (03 Aug 2020)
 - Added a search bar. All comments can be searched by text or author name, and the resulting subsets can be further sorted and/or filtered.
 - Added filter by date. You can select any date range, making it easier to analyze hundreds of thousands of comments.
 - Switched database library to `better-sqlite3`, reducing graph load times by up to 60% over `node-sqlite3`
@@ -53,11 +53,11 @@
 - Fixed linked comment card having shorter line height
 - 1 milion comments limit will be lifted soon™, partially thanks to YouTube [relaxing](https://developers.google.com/youtube/v3/revision_history#july-29,-2020) their API quota policies
 
-**3.0.1** (22 July 2020)
+### 3.0.1 (22 Jul 2020)
 - Removed "top commenters" for now due to slow performance and replaced it with "average comments per day"
 - Switched to throttling instead of debouncing for graph resize
 
-**3.0.0** (21 July 2020)
+### 3.0.0 (21 Jul 2020)
 - Revamped page to fresh new card layout
 - Added more comment statistics, including total likes & top commenters
 - Graph now loads in larger, quicker chunks
@@ -68,7 +68,7 @@
 - Full video information is now stored in database (for future possibilities)
 - Various performance and visual improvements
 
-**2.4.0** (09 July 2020)
+### 2.4.0 (09 Jul 2020)
 - Stores the next pageToken to continue loading comments even after server crash
 - Added 30-second timeout on API responses
 - Fixed comments with identical timestamps being out of order (now preserves the order from API response)
@@ -80,18 +80,18 @@
 - Fixed Discussion tab linked comments breaking the page
 - Fixed API errors due to extra whitespaces that seemed to somehow be the issue
 
-**2.3.1** (02 July 2020)
+### 2.3.1 (02 Jul 2020)
 - Fixed trying to load videos with 0 comments
 - Cached comments will be refreshed slightly more often
 - Larger favicon
 
-**2.3.0** (29 June 2020)
+### 2.3.0 (29 Jun 2020)
 - All comments now initially show a subset of their replies
 - Load percentage now shows as many decimal points as necessary
 - More loading indicators & responsive, restyled buttons
 - Scaled down size of most elements
 
-**2.2.0** (25 June 2020)
+### 2.2.0 (25 Jun 2020)
 - Added options for different intervals on the graph. Aggregate comments by hour, day, month, or year.
 - Made optimizations on the comments fetch process. Loading over 1 million comments should (theoretically) be possible.
 - Multiple users can now track the same video's load progress
@@ -101,7 +101,7 @@
 - Fixed reply buttons not working after changing sort order
 - Fixed "Linked Comment" indicator not showing up
 
-**2.1.1** (17 June 2020)
+### 2.1.1 (17 Jun 2020)
 - Better dynamic resizing on window resize
 - Added comment permalink on the comment numbers
 - Updated home page to hide input box after enter
@@ -110,7 +110,7 @@
 - Fixed load progress showing over 100% due to pinned comment & its replies being recounted
 - Fixed RTL text not displaying properly
 
-**2.1.0** (16 June 2020)
+### 2.1.0 (16 Jun 2020)
 - Switched to columns instead of raw JSON for storing comments. (75% space decrease!)
 - Server no longer retains comments in memory; they are only served from the database.
 - Scaled down font size on main page
@@ -119,7 +119,7 @@
 - Fixed videos being added as fresh entries, resulting in the cached comments never updating
 - Fixed crashing due to client socket timeout
 
-**2.0.0** (11 June 2020)
+### 2.0.0 (11 Jun 2020)
 - Comments are now cached in a database, greatly reducing load times and quota usage. Any video with over 500 comments will be cached.
 - Visual changes to support small/mobile displays
 - Added terms of service
@@ -133,14 +133,14 @@
 - Several visual enchancements
 - Fixed some faulty API error handling
 
-**1.2.0** (29 May 2020)
+### 1.2.0 (29 May 2020)
 - Better no-image mode (no squares)
 - Changed UTC date format to YYYY-MM-DD to transcend language
 - Refactored backend into modules
 - Fixed load button showing up for 0 comments
 - Fixed timestamp link on linked comment
 
-**1.1.0** (19 May 2020)
+### 1.1.0 (19 May 2020)
 - Hour/minute units on graph are now hidden
 - Improved linked comment error handling for replies
 - Relocated "view graph" button
