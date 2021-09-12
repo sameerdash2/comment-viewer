@@ -68,7 +68,7 @@ main {
 }
 footer {
   background-color: #def;
-  padding: 5px;
+  padding: 10px 5px;
   position: absolute;
   bottom: 0;
   width: 100%;
