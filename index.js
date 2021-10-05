@@ -62,9 +62,20 @@ class App {
                 // Assuming video ID length of 11
                 if (inp.length >= 11) {
                     const linkedMarker = inp.indexOf("lc=");
-                    const videoMarker = Math.max(inp.indexOf("v=") + 2, inp.indexOf("youtu.be/") + 9);
-                    let idString = "";
+                    let videoMarker;
+                    if (inp.indexOf("v=") >= 0) {
+                        // https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                        // https://www.youtube.com/watch?v=dQw4w9WgXcQ&foo=bar
+                        videoMarker = inp.indexOf("v=") + 2;
+                    } else if (inp.indexOf("youtu.be/") >= 0) {
+                        // https://youtu.be/dQw4w9WgXcQ
+                        videoMarker = inp.indexOf("youtu.be/") + 9;
+                    } else {
+                        // Take last 11 characters
+                        videoMarker = inp.length - 11;
+                    }
 
+                    let idString = "";
                     if (linkedMarker > -1) {
                         const linkedId = inp.substring(linkedMarker + 3);
                         let linkedParentId;
@@ -78,14 +89,9 @@ class App {
                             linkedParentId = linkedId;
                             videoInstance.fetchLinkedComment(idString, linkedParentId);
                         }
-                    } else if (inp.length >= videoMarker + 11) {
-                        // https://www.youtube.com/watch?v=dQw4w9WgXcQ, https://youtu.be/dQw4w9WgXcQ
-                        idString = inp.substring(videoMarker, videoMarker + 11);
-                        videoInstance.fetchTitle(idString, false);
                     } else {
-                        // dQw4w9WgXcQ (assume)
-                        idString = inp.substring(inp.length - 11);
-                        videoInstance.fetchTitle(idString, false);
+                        idString = inp.substring(videoMarker, videoMarker + 11);
+                        videoInstance.fetchTitle(idString);
                     }
 
                     return true;
