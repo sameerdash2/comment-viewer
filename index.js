@@ -70,6 +70,10 @@ class App {
                     } else if (inp.indexOf("youtu.be/") >= 0) {
                         // https://youtu.be/dQw4w9WgXcQ
                         videoMarker = inp.indexOf("youtu.be/") + 9;
+                    } else if (inp.indexOf("shorts/" >= 0)) {
+                        // https://www.youtube.com/shorts/0T36jqxQcgQ
+                        // https://www.youtube.com/shorts/0T36jqxQcgQ&foo=bar
+                        videoMarker = inp.indexOf("shorts/") + 7;
                     } else {
                         // Take last 11 characters
                         videoMarker = inp.length - 11;
