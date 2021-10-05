@@ -338,7 +338,7 @@ class Video {
             }
             else {
                 // Linked comment not found
-                this.fetchTitle(idString, false);
+                this.fetchTitle(idString);
             }
         }, (err) => {
             logger.log('error', "Linked comment execute error on %s: %d ('%s') - '%s'",

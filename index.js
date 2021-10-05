@@ -78,8 +78,8 @@ class App {
                         // Take last 11 characters
                         videoMarker = inp.length - 11;
                     }
+                    const idString = inp.substring(videoMarker, videoMarker + 11);
 
-                    let idString = "";
                     if (linkedMarker > -1) {
                         const linkedId = inp.substring(linkedMarker + 3);
                         let linkedParentId;
@@ -94,7 +94,6 @@ class App {
                             videoInstance.fetchLinkedComment(idString, linkedParentId);
                         }
                     } else {
-                        idString = inp.substring(videoMarker, videoMarker + 11);
                         videoInstance.fetchTitle(idString);
                     }
 
