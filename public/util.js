@@ -19,31 +19,40 @@ export function formatTitle(video, options) {
     document.getElementById("uploader").textContent = video.snippet.channelTitle;
     document.getElementById("uploader").href = getChannelUrl(video.snippet.channelId);
 
+    let ratingsSec = ``;
     if (typeof video.statistics.likeCount === "undefined") {
-        document.getElementById("ratings").innerHTML = `<span class="icon-thumbs-up"></span> <span class="gray">Ratings have been hidden.</span>`;
+        ratingsSec += `<span class="icon-thumbs-up"></span> <span class="gray">Ratings have been hidden.</span>`;
     }
     else {
-        document.getElementById("ratings").innerHTML =
+        ratingsSec +=
             `<span class="icon-thumbs-up"></span> ${likeCount.toLocaleString()}&nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="icon-thumbs-down"></span> ${dislikeCount.toLocaleString()}`;
+            <span class="icon-thumbs-down"></span>`;
+        if (typeof video.statistics.dislikeCount !== "undefined") { 
+            ratingsSec += `&nbsp;${dislikeCount.toLocaleString()}`;
+        }
+        else {
+            ratingsSec += `&nbsp;<span class="gray"
+                title="The YouTube API is removing access to dislike counts starting Dec 13, 2021.">(Dislikes hidden) 🛈</span>`;
+        }
     }
+    document.getElementById("ratings").innerHTML = ratingsSec;
 
     let viewcountSec = `<span class="icon-eye"></span> `;
-    let timestampSec = ``;
+    let timestampSec = `<b><span class="icon-calendar"></span> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
     if (liveState === "live") {
         const concurrentViewers = Number(video.liveStreamingDetails.concurrentViewers);
         viewcountSec += `<span class="red">${concurrentViewers.toLocaleString()} watching now</span> / ${viewCount.toLocaleString()} views`;
 
         const startTime = new Date(video.liveStreamingDetails.actualStartTime);
         const duration = new Date().getTime() - startTime.getTime();
-        timestampSec += `<b><span class="icon-calendar"></span> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
-            <span class="icon-clock"></span> <b>Stream start time:</b> ${parseTimestamp(startTime.toISOString(), options.timezone)}
+        timestampSec += `<br><span class="icon-clock"></span> <b>Stream start time:</b>
+            ${parseTimestamp(startTime.toISOString(), options.timezone)}
             (Elapsed: ${parseDurationHMMSS(Math.floor(duration / 1000))})`;
     }
     else if (liveState === "upcoming") {
         viewcountSec += `<span class="red">Upcoming live stream</span>`;
-        timestampSec += `<b><span class="icon-calendar"></span> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}<br>
-            <span class="icon-clock"></span> <b>Scheduled start time:</b> ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
+        timestampSec += `<br><span class="icon-clock"></span> <b>Scheduled start time:</b>
+            ${parseTimestamp(video.liveStreamingDetails.scheduledStartTime, options.timezone)}`;
     }
     else {
         // Handle missing viewcount (seen in YT premium shows)
@@ -51,11 +60,12 @@ export function formatTitle(video, options) {
             ? ` <span class="gray">View count unavailable</span>`
             : `${viewCount.toLocaleString()} views`;
 
-        timestampSec += `<b><span class="icon-calendar"></span> Published:</b> ${parseTimestamp(video.snippet.publishedAt, options.timezone)}`;
+        timestampSec += ``;
 
+        // For premieres
         if (typeof video.liveStreamingDetails !== "undefined") {
-            timestampSec += `<br><div class="streamTimes"><span class="icon-clock"></span> <b>Stream start time:</b> 
-                ${parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)}</div>`;
+            timestampSec += `<br><span class="icon-clock"></span> <b>Stream start time:</b> 
+                ${parseTimestamp(video.liveStreamingDetails.actualStartTime, options.timezone)}`;
         }
 
         document.getElementById("commentInfo").innerHTML = `<span class="icon-comment"></span>&nbsp;<span class="gray">Loading comment information...</span>`;
