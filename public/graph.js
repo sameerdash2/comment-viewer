@@ -122,8 +122,8 @@ export class Graph {
         }
 
         // Populate date counts from comments
-        for (let i = 0; i < this._rawDates.length; i++) {
-            dateMap[floorDate(new Date(this._rawDates[i]), interval, isUtc).getTime()]++;
+        for (const rawDate of this._rawDates) {
+            dateMap[floorDate(new Date(rawDate), interval, isUtc).getTime()]++;
         }
 
         // Build dataset for graph
@@ -200,7 +200,16 @@ export class Graph {
                 },
                 {
                     ...axis,
-                    size: 60,
+                    size: (_self, values) => {
+                        const size = 50;
+                        let increment = 0;
+                        if (values) {
+                            // Buff axis space if more than 5 characters
+                            const longestLen = values[values.length - 1].length;
+                            increment = Math.max(longestLen - 5, 0) * 8;
+                        }
+                        return size + increment;
+                    },
                     // Only allow whole numbers on y axis
                     space: (_self, _axisIdx, _scaleMin, scaleMax, plotDim) => Math.max(plotDim / scaleMax, 30)
                 }

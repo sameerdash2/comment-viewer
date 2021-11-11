@@ -73,32 +73,44 @@ class Video {
                     num: this._commentCount,
                     disabled: false,
                     max: (this._commentCountTooLarge) ? config.maxLoad : -1,
-                    graph: this._graphAvailable
+                    graph: this._graphAvailable,
+                    error: false
                 });
             }
         }, (err) => {
-            logger.log('error', "TEST COMMENT execute error on %s: %d ('%s') - '%s'",
-                this._id, err.code, err.errors[0].reason, err.errors[0].message);
+            const error = err.errors[0];
+            if (error.reason !== "commentsDisabled") {
+                logger.log('error', "TEST comment execute error on %s: %d ('%s') - '%s'",
+                    this._id, err.code, error.reason, error.message);
+            }
 
             if (consecutiveErrors < 5) {
-                if (err.errors[0].reason === "quotaExceeded") {
+                if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._socket.emit("quotaExceeded");
                 }
-                else if (err.errors[0].reason === "processingFailure") {
+                else if (error.reason === "processingFailure") {
                     setTimeout(() => this.fetchTestComment(++consecutiveErrors), 1);
                 }
-                else if (this._video.snippet.liveBroadcastContent === "none" && err.errors[0].reason === "commentsDisabled") {
+                else if (this._video.snippet.liveBroadcastContent === "none" && error.reason === "commentsDisabled") {
                     this._commentsEnabled = false;
                     this._socket.emit("commentsInfo", {
                         num: this._commentCount,
                         disabled: true,
                         max: -1,
-                        graph: false
+                        graph: false,
+                        error: false
                     });
                 }
             } else {
                 logger.log('warn', "Giving up TEST comment fetch on %s due to %d consecutive errors.", this._id, consecutiveErrors);
+                this._socket.emit("commentsInfo", {
+                    num: this._commentCount,
+                    disabled: false,
+                    max: -1,
+                    graph: false,
+                    error: true
+                });
             }
         });
     }
@@ -137,16 +149,21 @@ class Video {
             this._startTime = now;
 
             if (this._logToDatabase) {
-                const {row, actuallyInProgress} = this._app.database.checkVideo(this._id);
+                const { row, actuallyInProgress, inDeletion } = this._app.database.checkVideo(this._id);
                 if (row) {
                     // Comments exist in the database.
-                    if (row.inProgress) {
+
+                    if (inDeletion) {
+                        this._socket.emit("loadStatus", -2);
+                    }
+                    else if (row.inProgress) {
                         this._socket.join('video-' + this._id);
                         if (!actuallyInProgress) {
                             // Comment set is stuck in an unfinished state.
                             // Use nextPageToken to continue fetch if possible
                             if (row.nextPageToken) {
-                                logger.log('info', "Attempting to resume unfinished fetch process on %s", this._id);
+                                logger.log('info', "Attempting to resume unfinished fetch process on %s. Indexed %s comments; total expected: %s",
+                                    this._id, row.commentCount.toLocaleString(), this._commentCount.toLocaleString());
                                 this._indexedComments = row.commentCount;
 
                                 this._app.database.reAddVideo(this._video);
@@ -154,9 +171,7 @@ class Video {
                             }
                             else {
                                 logger.log('info', "Could not resume unfinished fetch process on %s. Restarting.", this._id);
-                                this._app.database.deleteVideo(this._id);
-                                this._app.database.addVideo(this._video);
-                                this.startFetchProcess(false);
+                                this.reFetchVideo(row);
                             }
                         }
                     }
@@ -166,9 +181,7 @@ class Video {
                     }
                     // Re-fetch all comments from scratch if needed
                     else if (this.shouldReFetch(row)) {
-                        this._app.database.deleteVideo(this._id);
-                        this._app.database.addVideo(this._video);
-                        this.startFetchProcess(false);
+                        this.reFetchVideo(row);
                     }
                     // Append to existing set of comments
                     else {
@@ -193,6 +206,18 @@ class Video {
         }
     }
 
+    reFetchVideo = (row) => {
+        // If video has over 100,000 comments, delete in chunks
+        if (row.commentCount > 100000) {
+            this._app.database.deleteVideoChunks(this._id, true);
+            this._socket.emit("loadStatus", -2);
+        } else {
+            this._app.database.deleteVideo(this._id);
+            this._app.database.addVideo(this._video);
+            this.startFetchProcess(false);
+        }
+    }
+
     startFetchProcess = (appendToDatabase) => {
         // Join a room so load status can be broadcast to multiple users
         this._socket.join('video-' + this._id);
@@ -205,7 +230,8 @@ class Video {
         const timeoutHolder = new Promise((resolve) => setTimeout(resolve, 30*1000, -1));
         Promise.race([timeoutHolder, this._app.ytapi.executeCommentChunk(this._id, pageToken)]).then((response) => {
             if (response === -1) {
-                logger.log('warn', "Fetch process on %s timed out.", this._id);
+                logger.log('warn', "Fetch process on %s timed out. Indexed %s comments; total expected: %s",
+                    this._id, this._indexedComments.toLocaleString(), this._commentCount.toLocaleString());
                 this._app.database.abortVideo(this._id);
                 return;
             }
@@ -278,7 +304,7 @@ class Video {
         }, (err) => {
             const error = err.errors[0];
             logger.log('error', "Comments execute error on %s: %d ('%s') - '%s'",
-                this._id, err.code, err.errors[0].reason, err.errors[0].message);
+                this._id, err.code, error.reason, error.message);
 
             if (consecutiveErrors < 20) {
                 if (error.reason === "quotaExceeded") {
@@ -358,7 +384,7 @@ class Video {
         this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
-    sendLoadedComments(sort, commentIndex, broadcast, minDate, maxDate, searchTerms = ['', '']) {
+    sendLoadedComments(sort, commentIndex, broadcast, minDate, maxDate) {
         if (!this._id) return;
 
         const newSet = commentIndex === 0;
@@ -374,13 +400,8 @@ class Video {
         sortBy += (sort === "dateOldest" || sort === "likesLeast") ? " ASC, rowid DESC" : " DESC, rowid ASC";
 
         try {
-            const {rows, subCount, totalCount, error} = this._app.database.getComments(
-                this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate, searchTerms);
-            if (error) {
-                // This is most likely a search error, so broadcast should hopefully be false
-                this._socket.emit("searchError");
-                return;
-            }
+            const { rows, subCount, totalCount } = this._app.database.getComments(
+                this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate);
 
             this._loadComplete = true; // To permit statistics retrieval later
             const more = rows.length === config.maxDisplay;

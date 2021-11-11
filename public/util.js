@@ -1,3 +1,5 @@
+const wholeHourOffset = new Date().getTimezoneOffset() % 60 === 0;
+
 export function formatTitle(video, options) {
     const liveState = video.snippet.liveBroadcastContent;
     const viewCount = Number(video.statistics.viewCount);
@@ -178,7 +180,9 @@ export function shiftDate(date, unit, amt, isUtc) {
             isUtc ? date.setUTCDate(date.getUTCDate() + amt) : date.setDate(date.getDate() + amt);
             break;
         case "hour":
-            isUtc ? date.setUTCHours(date.getUTCHours() + amt) : date.setHours(date.getHours() + amt);
+            // Use UTC hour shifting, because otherwise JavaScript skips the 1 AM hour after DST "fall back"
+            // Only exception is for half-hour time zones (e.g. India: GMT+5:30)
+            wholeHourOffset ? date.setUTCHours(date.getUTCHours() + amt) : date.setHours(date.getHours() + amt);
             break;
     }
 }
@@ -193,7 +197,10 @@ export function floorDate(date, unit, isUtc) {
         case "day":
             isUtc ? date.setUTCHours(0) : date.setHours(0);
         case "hour":
-            isUtc ? date.setUTCMinutes(0, 0, 0) : date.setMinutes(0, 0, 0);
+            // Use UTC hour shifting, because otherwise JavaScript incorrectly floors the hour after DST "fall back"
+            // Example: 1:40 AM PST -> 1:00 AM PDT (should be 1:00 AM PST)
+            // Only exception is for half-hour time zones
+            wholeHourOffset ? date.setUTCMinutes(0, 0, 0) : date.setMinutes(0, 0, 0);
     }
     return date;
 }

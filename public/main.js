@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let dateLeftBound = -1;
     let dateRightBound = -1;
-    let searchTerms = ['', ''];
 
     let firstBatchReceived = false;
     let statsAvailable = false;
@@ -49,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (enterID.value.length > 0) {
             message.textContent = "Working...";
             message.style.color = LOAD;
-            socket.emit('idSent', enterID.value);
+            socket.emit('idSent', enterID.value.trim());
             enterID.value = "";
         }
         return false;
@@ -124,17 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    document.getElementById("searchForm").addEventListener('submit', (event) => {
-        event.preventDefault();
-        searchTerms = ['', ''];
-        const searchBy = document.querySelector('input[name="searchField"]:checked').value;
-        const typeIndex = searchBy === "authors" ? 1 : 0;
-        searchTerms[typeIndex] = document.getElementById("searchBox").value.trim();
-
-        sendCommentRequest(true);
-        gtag('event', 'search_' + searchBy, { 'event_category': 'filters' });
-    });
-
     document.getElementById("resetFilters").addEventListener('click', () => {
         // Reset date filter
         dateLeftBound = -1;
@@ -142,20 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
         dateMin.value = dateMin.getAttribute('min');
         dateMax.value = dateMax.getAttribute('max');
 
-        // Reset search
-        searchTerms = ['', ''];
-        document.getElementById("searchBox").value = "";
-
         sendCommentRequest(true);
         gtag('event', 'reset', { 'event_category': 'filters' });
-    });
-
-    document.getElementById("clearSearch").addEventListener('click', () => {
-        searchTerms = ['', ''];
-        document.getElementById("searchBox").value = "";
-
-        sendCommentRequest(true);
-        gtag('event', 'reset_search', { 'event_category': 'filters' });
     });
 
     commentsSection.addEventListener('click', repliesButton);
@@ -181,8 +157,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    socket.on("commentsInfo", ({ num, disabled, max, graph }) => {
-        document.getElementById("chooseLoad").style.display = (!disabled && max < 0) ? "block" : "none";
+    socket.on("commentsInfo", ({ num, disabled, max, graph, error }) => {
+        const allowLoadingComments = !disabled && max < 0 && !error;
+        document.getElementById("chooseLoad").style.display = allowLoadingComments ? "block" : "none";
+
         num = Number(num) || 0;
         statsAvailable = graph;
         let newCommentInfo = `<span class="icon-comment"></span>&nbsp;`;
@@ -199,6 +177,10 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
             newCommentInfo += `${num.toLocaleString()} comments`;
 
+            if (error === true) {
+                displayNote(`The YouTube API returned an unknown error when trying to access this video's comments.`);
+            }
+
             if (max > 0) {
                 displayNote(`Videos with over ${max.toLocaleString()} comments are not currently supported.
                     (This may change in the future)`);
@@ -212,11 +194,14 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("commentInfo").innerHTML = newCommentInfo;
     });
 
-    socket.on("loadStatus", (totalCount) => video.updateLoadStatus(totalCount));
-
-    socket.on("searchError", () => {
-        hideLoading();
-        document.getElementById("searchErrorCol").style.display = "block";
+    socket.on("loadStatus", (totalCount) => {
+        if (totalCount === -2) {
+            displayNote(`This video's comments were stored by Comment Viewer,
+                but they are currently being deleted in order to keep the data up to date.
+                Please try again in a minute.`);
+        } else {
+            video.updateLoadStatus(totalCount);
+        }
     });
 
     socket.on("groupComments", ({ reset, items, replies, showMore, subCount, totalCount }) => {
@@ -264,7 +249,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("totalCount").textContent = Number(totalCount).toLocaleString();
             }
         }
-        document.getElementById("searchErrorCol").style.display = "none";
         video.handleGroupComments(reset, items);
         video.handleMinReplies(replies);
         document.getElementById("showMoreDiv").style.display = showMore ? "block" : "none";
@@ -331,8 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
             sort: video.currentSort,
             commentNum: index,
             minDate: dateLeftBound,
-            maxDate: dateRightBound,
-            searchTerms: searchTerms
+            maxDate: dateRightBound
         });
     }
 

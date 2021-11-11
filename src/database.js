@@ -9,7 +9,9 @@ class Database {
     constructor() {
         this._db = new sqlite('db.sqlite');
         this._statsDb = new sqlite('stats.sqlite');
+
         this._videosInProgress = new Set();
+        this._videosInDeletion = new Set();
 
         this._db.pragma('journal_mode=WAL');
         this._db.pragma('secure_delete=0');
@@ -23,32 +25,6 @@ class Database {
             ' authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT,' +
             ' totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)').run();
 
-        this._db.prepare('CREATE VIRTUAL TABLE IF NOT EXISTS comments_fts USING fts4(content="comments", id PRIMARY KEY, textDisplay, authorDisplayName,' +
-            ' authorProfileImageUrl, authorChannelId, likeCount, publishedAt, updatedAt, totalReplyCount, videoId, tokenize=unicode61,' +
-            ' notindexed=id, notindexed=authorProfileImageUrl, notindexed=authorChannelId, notindexed=likeCount, notindexed=publishedAt,' +
-            ' notindexed=updatedAt, notindexed=totalReplyCount, notindexed=videoId)').run();
-        // Create triggers to keep virtual FTS table up to date with comments table
-        this._db.exec(`
-            CREATE TRIGGER IF NOT EXISTS comments_bu BEFORE UPDATE ON comments BEGIN
-                DELETE FROM comments_fts WHERE docid=old.id;
-            END;
-            CREATE TRIGGER IF NOT EXISTS comments_bd BEFORE DELETE ON comments BEGIN
-                DELETE FROM comments_fts WHERE docid=old.id;
-            END;
-            CREATE TRIGGER IF NOT EXISTS comments_au AFTER UPDATE ON comments BEGIN
-                INSERT INTO comments_fts(docid, id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
-                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId)
-                VALUES(new.rowid, new.id, new.textDisplay, new.authorDisplayName, new.authorProfileImageUrl, new.authorChannelId,
-                    new.likeCount, new.publishedAt, new.updatedAt, new.totalReplyCount, new.videoId);
-            END;
-            CREATE TRIGGER IF NOT EXISTS comments_ai AFTER INSERT ON comments BEGIN
-                INSERT INTO comments_fts(docid, id, textDisplay, authorDisplayName, authorProfileImageUrl, authorChannelId,
-                    likeCount, publishedAt, updatedAt, totalReplyCount, videoId)
-                VALUES(new.rowid, new.id, new.textDisplay, new.authorDisplayName, new.authorProfileImageUrl, new.authorChannelId,
-                    new.likeCount, new.publishedAt, new.updatedAt, new.totalReplyCount, new.videoId);
-            END;
-        `);
-
         this._db.prepare('CREATE INDEX IF NOT EXISTS comment_index ON comments(videoId, publishedAt, likeCount)').run();
 
         this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT,' +
@@ -59,8 +35,10 @@ class Database {
 
     checkVideo(videoId) {
         const actuallyInProgress = this._videosInProgress.has(videoId);
+        const inDeletion = this._videosInDeletion.has(videoId);
         const row = this._db.prepare('SELECT * FROM videos WHERE id = ?').get(videoId);
-        return { row, actuallyInProgress };
+
+        return { row, actuallyInProgress, inDeletion };
     }
 
     addVideo(video) {
@@ -81,6 +59,28 @@ class Database {
         this._db.prepare('DELETE FROM videos WHERE id = ?').run(videoId);
     }
 
+    async deleteVideoChunks(videoId, verbose = false) {
+        verbose && logger.log('info', "Deleting video %s in chunks.", videoId);
+
+        this._videosInDeletion.add(videoId);
+        this._db.prepare('UPDATE videos SET inProgress = true, nextPageToken = ? WHERE id = ?').run(null, videoId);
+
+        let deleteCount = 0;
+        let changes = 1;
+        while (changes > 0) {
+            changes = this._db.prepare(`DELETE FROM comments WHERE videoId = ? LIMIT 10000`).run(videoId).changes;
+            deleteCount += changes;
+            await (timer(50));
+        }
+        this._db.prepare('DELETE FROM videos WHERE id = ?').run(videoId);
+        this._videosInDeletion.delete(videoId);
+
+        verbose && logger.log('info', "Finished deleting video %s in chunks; %s comments deleted.",
+            videoId, deleteCount.toLocaleString());
+
+        return deleteCount;
+    }
+
     abortVideo(videoId) {
         this._videosInProgress.delete(videoId);
     }
@@ -89,53 +89,16 @@ class Database {
         return this._db.prepare('SELECT id, MAX(publishedAt) FROM comments WHERE videoId = ?').get(videoId);
     }
 
-    getComments(videoId, limit, offset, sortBy, minDate, maxDate, searchTerms) {
-        let rows, subCount;
+    getComments(videoId, limit, offset, sortBy, minDate, maxDate) {
+        const rows = this._db.prepare(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?
+            ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`).all(videoId, minDate, maxDate);
+
+        const subCount = this._db.prepare(`SELECT COUNT(*) FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?`)
+            .get(videoId, minDate, maxDate)['COUNT(*)'];
+
         const totalCount = this._db.prepare('SELECT COUNT(*) FROM comments WHERE videoId = ?').get(videoId)['COUNT(*)'];
-        let subCountStatement, rowsStatement;
 
-        if (searchTerms[0]) {
-            searchTerms[0] = this.formatString(searchTerms[0]);
-
-            subCountStatement = this._db.prepare(`SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?
-                    AND publishedAt >= ? AND publishedAt <= ?`)
-                .bind(videoId, searchTerms[0], minDate, maxDate);
-
-            rowsStatement = this._db.prepare(`SELECT * FROM comments_fts WHERE videoId = ? AND textDisplay MATCH ?
-                    AND publishedAt >= ? AND publishedAt <= ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
-                .bind(videoId, searchTerms[0], minDate, maxDate);
-        }
-        else if (searchTerms[1]) {
-            searchTerms[1] = this.formatString(searchTerms[1]);
-
-            subCountStatement = this._db.prepare(`SELECT COUNT(*) FROM comments_fts WHERE videoId = ? AND authorDisplayName MATCH ?
-                    AND publishedAt >= ? AND publishedAt <= ?`)
-                .bind(videoId, searchTerms[1], minDate, maxDate);
-
-            rowsStatement = this._db.prepare(`SELECT * FROM comments_fts WHERE videoId = ? AND authorDisplayName MATCH ?
-                    AND publishedAt >= ? AND publishedAt <= ? ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
-                .bind(videoId, searchTerms[1], minDate, maxDate);
-        }
-        // No search
-        else {
-            subCountStatement = this._db.prepare(`SELECT COUNT(*) FROM comments WHERE videoId = ?
-                    AND publishedAt >= ? AND publishedAt <= ?`)
-                .bind(videoId, minDate, maxDate);
-
-            rowsStatement = this._db.prepare(`SELECT * FROM comments WHERE videoId = ? AND publishedAt >= ? AND publishedAt <= ?
-                    ORDER BY ${sortBy} LIMIT ${Number(limit)} OFFSET ${Number(offset)}`)
-                .bind(videoId, minDate, maxDate);
-        }
-
-        try {
-            subCount = subCountStatement.get()['COUNT(*)'];
-            rows = rowsStatement.all();
-            return { rows, subCount, totalCount, error: false };
-        } catch (err) {
-            logger.log('error', "Error getting comments for video %s with searchTerms %O: '%s', %s",
-                videoId, searchTerms, err.code, err.message);
-            return { rows: [], subCount: 0, totalCount: totalCount, error: true };
-        }
+        return { rows, subCount, totalCount };
     }
 
     getAllDates(videoId) {
@@ -217,27 +180,15 @@ class Database {
 
         const rows = this._db.prepare(`SELECT id FROM videos WHERE (lastUpdated < ?) AND (commentCount < ? ${inProgressClause})`)
             .all(now - age, commentCount);
-        const placeholders = rows.map(() => '?').join(',');
-        const deleteCount = this._db.prepare(`SELECT COUNT(*) FROM comments WHERE videoId IN (${placeholders})`)
-            .get(rows.map((row) => row.id))['COUNT(*)'];
+
+        let totalDeleteCount = 0;
 
         for (const row of rows) {
-            this._db.prepare('DELETE FROM videos WHERE id = ?').run(row.id);
-            await(timer(500));
+            totalDeleteCount += await this.deleteVideoChunks(row.id);
         }
 
         logger.log('info', "Deleted rows with < %s comments: %s videos, %s comments",
-            commentCount.toLocaleString(), rows.length, deleteCount.toLocaleString());
-    }
-
-    formatString(str) {
-        // Ensure that any double quotes in search string are matched up (or tokenizer throws error).
-        // If not, remove the last instance of double quote
-        if ((str.split('"').length - 1) % 2 !== 0) {
-            const pos = str.lastIndexOf('"');
-            str = str.substring(0, pos) + str.substring(pos + 1);
-        }
-        return str;
+            commentCount.toLocaleString(), rows.length, totalDeleteCount.toLocaleString());
     }
 }
 

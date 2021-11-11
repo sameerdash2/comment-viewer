@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
     <link href="bootstrap-purged.min.css" rel="stylesheet" />
     <link href="./style.css" rel="stylesheet" type="text/css" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="./favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <base target="_blank" />
 
@@ -36,7 +36,7 @@
 
     <!-- Force parcel bundler to ignore socket script -->
     <script>document.write(`<script defer src="/socket.io/socket.io.min.js"><` + `/script>`)</script>
-    <script defer src="./main.js"></script>
+    <script defer type="module" src="./main.js"></script>
   </head>
 
   <body>
@@ -251,41 +251,8 @@
                 </div>
               </div>
 
-              <div class="row align-items-center">
-                <div class="col-12">
-                  <form id="searchForm" class="p-2" autocomplete="off">
-                    <div class="row align-items-center">
-                      <div class="col input-group">
-                        <input class="form-control" type="text" id="searchBox" spellcheck="false" maxlength="255" placeholder="Search" aria-label="Search comments" />
-                        <div class="input-group-append">
-                          <button class="btn btn-primary" type="submit" title="Search"><span class="icon-search"></span></button>
-                        </div>
-                      </div>
-                      <div class="col-auto dropdown pl-0">
-                        <span class="dropdown-toggle float-right cursor-default p-1" data-toggle="dropdown">Options</span>
-                        <div class="dropdown-menu anchor-right shadow p-2 mt-0">
-                          <h6 class="sub-title mb-2">Search by...</h6>
-                          <div class="custom-control custom-radio my-1">
-                            <input type="radio" class="custom-control-input" id="selectTexts" name="searchField" value="texts" checked />
-                            <label for="selectTexts" class="custom-control-label">Comment text</label>
-                          </div>
-
-                          <div class="custom-control custom-radio my-1">
-                            <input type="radio" class="custom-control-input" id="selectAuthors" name="searchField" value="authors" />
-                            <label for="selectAuthors" class="custom-control-label">Author</label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-                <div class="col-12 mb-1" id="searchErrorCol">
-                  <span class="p-2">
-                    <i class="red">Could not process search query.</i> •
-                    <button id="clearSearch" class="btn btn-link font-weight-bold align-baseline p-0" type="button">Clear</button>
-                  </span>
-                </div>
-                <div class="col-12 mb-2" id="resultCol">
+              <div class="row">
+                <div class="col-12 my-2" id="resultCol">
                   <span class="p-2">
                     Showing <span id="subCount" class="font-weight-bold">0</span> / <span id="totalCount">0</span> results •
                     <button id="resetFilters" class="btn btn-link font-weight-bold align-baseline p-0" type="button">Reset</button>
@@ -310,7 +277,7 @@
         <span>|</span>
         <span>Made by <a href="https://twitter.com/Kite_Frozen">FrozenKite</a></span>
         <span class="float-right">v3.2.1 (<a href="https://github.com/FrozenKite/comment-viewer/blob/master/CHANGELOG.md"
-            target="_blank">View changelog) </span>
+            target="_blank">View changelog</a>)</span>
       </div>
     </footer>
 

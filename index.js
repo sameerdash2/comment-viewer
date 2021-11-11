@@ -32,23 +32,21 @@ class App {
             });
 
             socket.on("showMore", requestSendComments);
-            function requestSendComments({ sort, commentNum, minDate, maxDate, searchTerms }) {
+            function requestSendComments({ sort, commentNum, minDate, maxDate }) {
                 if (throttled) {
                     clearTimeout(queueTimeout);
-                    queueTimeout = setTimeout(() => requestSendComments({ sort, commentNum, minDate, maxDate, searchTerms }),
+                    queueTimeout = setTimeout(() => requestSendComments({ sort, commentNum, minDate, maxDate }),
                         unThrottleTimestamp - Date.now());
                 }
                 else {
                     throttled = true;
-                    sendComments({ sort, commentNum, minDate, maxDate, searchTerms });
+                    sendComments({ sort, commentNum, minDate, maxDate });
                     setTimeout(() => throttled = false, throttleMs);
                     unThrottleTimestamp = Date.now() + throttleMs + 20;
                 }
             }
-            function sendComments({ sort, commentNum, minDate, maxDate, searchTerms }) {
-                // searchTerms = searchTerms.map((term) => term.substring(0, 255));
-                searchTerms = ['', ''];
-                videoInstance.sendLoadedComments(sort, commentNum, false, minDate, maxDate, searchTerms);
+            function sendComments({ sort, commentNum, minDate, maxDate }) {
+                videoInstance.sendLoadedComments(sort, commentNum, false, minDate, maxDate);
             }
 
             socket.on("replyRequest", (id) => {

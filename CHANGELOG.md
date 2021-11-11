@@ -1,3 +1,14 @@
+### 3.3.0 (12 Nov 2021)
+- Reworked database cleanup: Comments are now deleted in chunks of 10,000. This should stop the site becoming unresponsive during cleanup
+- Removed the search feature entirely. This includes dropping the database FTS table, which should improve performance (especially cleanup)
+- Updated to Parcel 2 to resolve npm security warnings
+- Graph y-axis now widens to display large numbers, instead of cutting them off
+- Fixed graph combining two points across the DST "fall back" hours (the second 1 AM - 2 AM hour now appears as a separate data point)
+- Handled strange case where video is missing metadata. Examples: https://www.youtube.com/watch?v=MOqm0qGJhpw, https://www.youtube.com/watch?v=TlGXDy5xFlw
+- Fixed styling issues on page
+- Updated to Node 16
+- Updated dependencies
+
 ### 3.2.1 (02 Sep 2021)
 - Disabled searching for now. Search queries were taking up to 30 seconds (much longer than normal) and blocking the main thread, making the entire site unresponsive. :( This probably won't be restored unless a feasible solution becomes available.
 - Made criteria for fully re-fetching a video less strict. This means new, fast-rising videos will not have to start from 0% as often.
