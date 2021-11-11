@@ -1,7 +1,8 @@
 ### 3.3.0 (12 Nov 2021)
-- Reworked database cleanup: Comments are now deleted in chunks of 10,000. This should stop the site becoming unresponsive during cleanup
-- Removed the search feature entirely. This includes dropping the database FTS table, which should improve performance (especially cleanup)
+- Reworked database cleanup: Comments are now deleted in chunks of 10,000. This should stop the site becoming unresponsive during cleanup.
+- Removed the search feature entirely. This includes dropping the database FTS table, which should improve performance (especially cleanup). The last commit that included the enabled search feature has been [tagged](https://github.com/FrozenKite/comment-viewer/tree/search).
 - Updated to Parcel 2 to resolve npm security warnings
+- Handled missing dislike counts on videos. The YouTube API will stop returning dislike counts [on Dec 13, 2021](https://support.google.com/youtube/thread/134791097/update-to-youtube-dislike-counts).
 - Graph y-axis now widens to display large numbers, instead of cutting them off
 - Fixed graph combining two points across the DST "fall back" hours (the second 1 AM - 2 AM hour now appears as a separate data point)
 - Handled strange case where video is missing metadata. Examples: https://www.youtube.com/watch?v=MOqm0qGJhpw, https://www.youtube.com/watch?v=TlGXDy5xFlw
