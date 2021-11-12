@@ -28,7 +28,8 @@ export function formatTitle(video, options) {
             `<span class="icon-thumbs-up"></span> ${likeCount.toLocaleString()}&nbsp;&nbsp;&nbsp;&nbsp;
             <span class="icon-thumbs-down"></span>`;
         if (typeof video.statistics.dislikeCount !== "undefined") { 
-            ratingsSec += `&nbsp;${dislikeCount.toLocaleString()}`;
+            ratingsSec += `<span title="The YouTube API is removing access to dislike counts starting Dec 13, 2021.">
+                ${dislikeCount.toLocaleString()} 🛈</span>`;
         }
         else {
             ratingsSec += `&nbsp;<span class="gray"
