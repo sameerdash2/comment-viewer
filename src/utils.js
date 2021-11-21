@@ -23,7 +23,22 @@ function printTimestamp(date) {
         {timeZone: "America/Los_Angeles", timeZoneName: "short"}).replace(',', '');
 }
 
+// Returns a Unix timestamp of the next occurence of a given day of the week (at a given hour)
+// 0 = Sunday, 6 = Saturday
+function getNextUTCTimestamp(dayOfWeek, hour) {
+    const nextOccurence = new Date();
+    const diff = dayOfWeek - nextOccurence.getUTCDay();
+    nextOccurence.setUTCDate(nextOccurence.getUTCDate() + diff);
+    nextOccurence.setUTCHours(hour, 0, 0, 0);
+    if (nextOccurence <= Date.now()) {
+        nextOccurence.setUTCDate(nextOccurence.getUTCDate() + 7);
+    }
+
+    return nextOccurence.getTime();
+}
+
 module.exports = {
     convertComment,
-    printTimestamp
+    printTimestamp,
+    getNextUTCTimestamp
 }

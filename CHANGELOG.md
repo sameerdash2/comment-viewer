@@ -1,5 +1,6 @@
 ### 3.3.0 (12 Nov 2021)
 - Reworked database cleanup: Comments are now deleted in chunks of 10,000. This should stop the site becoming unresponsive during cleanup.
+    - Amendment (21 Nov 2021): Chunk size reduced to 2500, as there was still some lag with 10,000. Cleanup also happens twice a week now (on Wednesdays and Saturdays)
 - Removed the search feature entirely. This includes dropping the database FTS table, which should improve performance (especially cleanup). The last commit that included the enabled search feature has been [tagged](https://github.com/FrozenKite/comment-viewer/tree/search).
 - Updated to Parcel 2 to resolve npm security warnings
 - Handled missing dislike counts on videos. The YouTube API will stop returning dislike counts [on Dec 13, 2021](https://support.google.com/youtube/thread/134791097/update-to-youtube-dislike-counts).

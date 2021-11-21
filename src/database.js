@@ -1,6 +1,6 @@
 const sqlite = require('better-sqlite3');
 const logger = require('./logger');
-const { printTimestamp } = require('./utils');
+const { printTimestamp, getNextUTCTimestamp } = require('./utils');
 
 const DAY = 24 * 60 * 60 * 1000;
 const timer = ms => new Promise(res => setTimeout(res, ms));
@@ -142,16 +142,13 @@ class Database {
     }
 
     scheduleCleanup() {
-        // Clean up database every Saturday at 09:00 UTC
-        const nextCleanup = new Date();
-        const diff = 6 - nextCleanup.getUTCDay();
-        nextCleanup.setUTCDate(nextCleanup.getUTCDate() + diff);
-        nextCleanup.setUTCHours(9, 0, 0, 0);
-        const now = Date.now();
-        if (nextCleanup <= now) {
-            nextCleanup.setUTCDate(nextCleanup.getUTCDate() + 7);
-        }
-        const timeToNextCleanup = nextCleanup - now;
+        // Clean up database every Wednesday & Saturday at 09:00 UTC
+        const nextWednesday = getNextUTCTimestamp(3, 9);
+        const nextSaturday = getNextUTCTimestamp(6, 9);
+
+        // Take the earlier date
+        const nextCleanup = new Date(Math.min(nextWednesday, nextSaturday));
+        const timeToNextCleanup = nextCleanup.getTime() - Date.now();
 
         setTimeout(() => this.cleanup(), timeToNextCleanup);
         logger.log('info', "Next database cleanup scheduled for %s, in %d hours",
@@ -161,20 +158,22 @@ class Database {
     async cleanup() {
         // Remove any videos with:
         // - under 10,000 comments & > 2 days untouched
+        // - under 100K comments   & > 5 days untouched
         // - under 1M comments     & > 7 days untouched
-        // - under 10M comments    & > 30 days untouched
+        // - under 10M comments    & > 21 days untouched
 
-        logger.log('info', "Starting database cleanup");
+        logger.log('info', "CLEANUP: Starting database cleanup");
 
-        await this.cleanupSet(2 * DAY, 10000, true);
-        await this.cleanupSet(7 * DAY, 1000000);
-        await this.cleanupSet(30 * DAY, 10000000);
+        await this.cleanUpSet(2 * DAY,  10000, true);
+        await this.cleanUpSet(5 * DAY,  100000);
+        await this.cleanUpSet(7 * DAY,  1000000);
+        await this.cleanUpSet(21 * DAY, 10000000);
 
-        logger.log('info', "Finished database cleanup");
+        logger.log('info', "CLEANUP: Finished database cleanup");
         this.scheduleCleanup();
     }
 
-    async cleanupSet(age, commentCount, includeInProgress = false) {
+    async cleanUpSet(age, commentCount, includeInProgress = false) {
         const now = Date.now();
         const inProgressClause = includeInProgress ? `OR inProgress = true` : '';
 
@@ -187,7 +186,7 @@ class Database {
             totalDeleteCount += await this.deleteVideoChunks(row.id);
         }
 
-        logger.log('info', "Deleted rows with < %s comments: %s videos, %s comments",
+        logger.log('info', "CLEANUP: Deleted rows with < %s comments: %s videos, %s comments",
             commentCount.toLocaleString(), rows.length, totalDeleteCount.toLocaleString());
     }
 }
