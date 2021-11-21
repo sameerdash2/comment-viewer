@@ -68,7 +68,7 @@ class Database {
         let deleteCount = 0;
         let changes = 1;
         while (changes > 0) {
-            changes = this._db.prepare(`DELETE FROM comments WHERE videoId = ? LIMIT 10000`).run(videoId).changes;
+            changes = this._db.prepare(`DELETE FROM comments WHERE videoId = ? LIMIT 2500`).run(videoId).changes;
             deleteCount += changes;
             await (timer(50));
         }
