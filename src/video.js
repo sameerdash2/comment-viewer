@@ -142,7 +142,7 @@ class Video {
     }
 
     handleLoad(type) {
-        if (this._commentsEnabled && !this._commentCountTooLarge && this._commentCount > 0 && type === "dateOldest") {
+        if (this._commentsEnabled && !this._commentCountTooLarge && type === "dateOldest") {
             this._newComments = 0;
             this._newCommentThreads = 0;
             const now = Date.now();

@@ -208,6 +208,11 @@ document.addEventListener("DOMContentLoaded", () => {
         message.textContent = "\u00A0";
         if (!firstBatchReceived) {
             firstBatchReceived = true;
+            loadStatus.style.display = "none";
+            if (items.length < 1) {
+                displayNote("This video does not have any comments.");
+                return;
+            }
 
             // Apply values to HTML date picker which operates on YYYY-MM-DD format
             // **This code assumes the first batch is sorted oldest first**
@@ -230,7 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
             dateMax.value = max;
 
             // Display necessary elements
-            loadStatus.style.display = "none";
             document.getElementById("commentsCol").style.display = "block";
             document.getElementById("sortLoaded").style.display = "block";
             document.getElementById("filter").style.display = "block";
