@@ -24,16 +24,15 @@ export function formatTitle(video, options) {
         ratingsSec += `<span class="icon-thumbs-up"></span> <span class="gray">Ratings have been hidden.</span>`;
     }
     else {
-        ratingsSec +=
-            `<span class="icon-thumbs-up"></span> ${likeCount.toLocaleString()}&nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="icon-thumbs-down"></span>`;
+        ratingsSec += `<span class="icon-thumbs-up"></span> ${likeCount.toLocaleString()}`;
+
+        // in case dislikeCount somehow exists...
         if (typeof video.statistics.dislikeCount !== "undefined") { 
-            ratingsSec += `<span title="The YouTube API is removing access to dislike counts starting Dec 13, 2021.">
-                ${dislikeCount.toLocaleString()} 🛈</span>`;
-        }
-        else {
-            ratingsSec += `&nbsp;<span class="gray"
-                title="The YouTube API is removing access to dislike counts starting Dec 13, 2021.">(Dislikes hidden) 🛈</span>`;
+            ratingsSec += `&nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="red">
+                    <span class="icon-thumbs-down"></span> ${dislikeCount.toLocaleString()}
+                </span>
+            `;
         }
     }
     document.getElementById("ratings").innerHTML = ratingsSec;
