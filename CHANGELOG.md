@@ -1,3 +1,9 @@
+### 3.3.1 (03 Feb 2022)
+- Removed display of dislikes on videos (dislike counts have been unavailable since 2021-12-13)
+    - If the API somehow returns a dislike count, it will be displayed in red.
+- Better handling for videos with 0 comments
+- Updated dependencies / resolved security vulnerabilities
+
 ### 3.3.0 (12 Nov 2021)
 - Reworked database cleanup: Comments are now deleted in chunks of 10,000. This should stop the site becoming unresponsive during cleanup.
     - Amendment (21 Nov 2021): Chunk size reduced to 2500, as there was still some lag with 10,000. Cleanup also happens twice a week now (on Wednesdays and Saturdays)
