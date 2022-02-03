@@ -10,18 +10,18 @@
     "url": "git+https://github.com/FrozenKite/comment-viewer"
   },
   "dependencies": {
-    "better-sqlite3": "^7.4.4",
-    "express": "^4.17.1",
-    "googleapis": "^91.0.0",
-    "socket.io": "^4.3.2",
-    "socket.io-client": "^4.3.2",
-    "uplot": "^1.6.16",
-    "winston": "^3.3.3"
+    "better-sqlite3": "^7.5.0",
+    "express": "^4.17.2",
+    "googleapis": "^94.0.0",
+    "socket.io": "^4.4.1",
+    "socket.io-client": "^4.4.1",
+    "uplot": "^1.6.18",
+    "winston": "^3.5.1"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.16.3",
-    "eslint": "^8.2.0",
-    "parcel": "^2.0.1"
+    "@babel/eslint-parser": "^7.17.0",
+    "eslint": "^8.8.0",
+    "parcel": "^2.2.1"
   },
   "targets": {
     "default": {
