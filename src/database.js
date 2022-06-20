@@ -162,14 +162,20 @@ class Database {
         // - under 1M comments     & > 7 days untouched
         // - under 10M comments    & > 21 days untouched
 
+        const cleanupStart = new Date();
         logger.log('info', "CLEANUP: Starting database cleanup");
 
-        await this.cleanUpSet(2 * DAY,  10000, true);
-        await this.cleanUpSet(5 * DAY,  100000);
-        await this.cleanUpSet(7 * DAY,  1000000);
-        await this.cleanUpSet(21 * DAY, 10000000);
+        let totalDeleteCount = 0;
+        totalDeleteCount += await this.cleanUpSet(2 * DAY,  10000, true);
+        totalDeleteCount += await this.cleanUpSet(5 * DAY,  100000);
+        totalDeleteCount += await this.cleanUpSet(7 * DAY,  1000000);
+        totalDeleteCount += await this.cleanUpSet(21 * DAY, 10000000);
 
-        logger.log('info', "CLEANUP: Finished database cleanup");
+        const elapsed = Math.ceil((Date.now() - cleanupStart.getTime()) / 1000);
+        const elapsedMins = Math.floor(elapsed / 60), elapsedSecs = elapsed % 60;
+
+        logger.log('info', "CLEANUP: Finished database cleanup in %d min, %d s. Comments deleted: %s",
+            elapsedMins, elapsedSecs, totalDeleteCount.toLocaleString());
         this.scheduleCleanup();
     }
 
@@ -180,14 +186,16 @@ class Database {
         const rows = this._db.prepare(`SELECT id FROM videos WHERE (lastUpdated < ?) AND (commentCount < ? ${inProgressClause})`)
             .all(now - age, commentCount);
 
-        let totalDeleteCount = 0;
+        let deleteCountSet = 0;
 
         for (const row of rows) {
-            totalDeleteCount += await this.deleteVideoChunks(row.id);
+            deleteCountSet += await this.deleteVideoChunks(row.id);
         }
 
         logger.log('info', "CLEANUP: Deleted rows with < %s comments: %s videos, %s comments",
-            commentCount.toLocaleString(), rows.length, totalDeleteCount.toLocaleString());
+            commentCount.toLocaleString(), rows.length, deleteCountSet.toLocaleString());
+
+        return deleteCountSet;
     }
 }
 
