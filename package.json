@@ -16,7 +16,8 @@
     "socket.io": "^4.4.1",
     "socket.io-client": "^4.4.1",
     "uplot": "^1.6.18",
-    "winston": "^3.5.1"
+    "winston": "^3.7.2",
+    "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.17.0",
