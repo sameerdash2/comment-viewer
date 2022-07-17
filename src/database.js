@@ -28,7 +28,7 @@ class Database {
         this._db.prepare('CREATE INDEX IF NOT EXISTS comment_index ON comments(videoId, publishedAt, likeCount)').run();
 
         this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT,' +
-            ' finishedAt BIGINT, commentCount INT, commentThreads INT)').run();
+            ' finishedAt BIGINT, commentCount INT, commentThreads INT, isAppending BOOL)').run();
 
         this.scheduleCleanup();
     }
@@ -133,12 +133,13 @@ class Database {
             .run(newCommentCount, Date.now(), nextPageToken || null, videoId);
     }
 
-    markVideoComplete(videoId, videoTitle, elapsed, newComments, newCommentThreads) {
+    markVideoComplete(videoId, videoTitle, elapsed, newComments, newCommentThreads, appending) {
         this._db.prepare('UPDATE videos SET inProgress = false WHERE id = ?').run(videoId);
         this._videosInProgress.delete(videoId);
 
-        this._statsDb.prepare('INSERT INTO stats(id, title, duration, finishedAt, commentCount, commentThreads) VALUES (?,?,?,?,?,?)')
-            .run(videoId, videoTitle, elapsed, Date.now(), newComments, newCommentThreads);
+        this._statsDb.prepare('INSERT INTO stats(id, title, duration, finishedAt, commentCount, commentThreads, isAppending)' +
+            ' VALUES (?,?,?,?,?,?,?)')
+            .run(videoId, videoTitle, elapsed, Date.now(), newComments, newCommentThreads, appending ? 1 : 0);
     }
 
     scheduleCleanup() {

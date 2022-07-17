@@ -289,7 +289,8 @@ class Video {
                 logger.log('info', 'Retrieved video %s; %s comments in %ds' + cpsString,
                     this._id, (this._newComments).toLocaleString(), (elapsed / 1000).toFixed(1));
 
-                this._app.database.markVideoComplete(this._id, this._video.snippet.title, elapsed, this._newComments, this._newCommentThreads);
+                this._app.database.markVideoComplete(this._id, this._video.snippet.title, elapsed,
+                    this._newComments, this._newCommentThreads, appending);
 
                 // Send the first batch of comments
                 this.sendLoadedComments("dateOldest", 0, true);
