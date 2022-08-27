@@ -5,10 +5,6 @@
   "engines": {
     "node": ">=14.x"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/FrozenKite/comment-viewer"
-  },
   "dependencies": {
     "better-sqlite3": "^7.5.0",
     "express": "^4.17.2",
@@ -36,6 +32,6 @@
     "build": "parcel build public/index.html",
     "purge-bootstrap": "purgecss --css ../bootstrap.min.css --content public/* --output public/bootstrap-purged.min.css"
   },
-  "author": "FrozenKite",
+  "author": "",
   "license": "ISC"
 }

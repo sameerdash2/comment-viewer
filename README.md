@@ -1,7 +1,7 @@
 ## YouTube Comment Viewer 💬
 A web app for sorting and filtering comments on YouTube videos. Enter any video link and the comments will start loading in the background.
 
-This project is mostly just me getting familiar with Node.js and SQLite.
+Tech stack: JavaScript, SQLite, and a lot of CSS.
 
 ### Website
 #### https://commentviewer.com
@@ -17,7 +17,7 @@ This project is mostly just me getting familiar with Node.js and SQLite.
 - View exact publish timestamps for comments and videos
 - See comment trends on an interactive graph
 - Input direct links to a comment
-- Works decently on mobile
+- Works well on mobile
 
 ### Changelog
 For new changes, check out the [changelog](CHANGELOG.md).

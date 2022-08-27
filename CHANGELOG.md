@@ -7,7 +7,7 @@
 ### 3.3.0 (12 Nov 2021)
 - Reworked database cleanup: Comments are now deleted in chunks of 10,000. This should stop the site becoming unresponsive during cleanup.
     - Amendment (21 Nov 2021): Chunk size reduced to 2500, as there was still some lag with 10,000. Cleanup also happens twice a week now (on Wednesdays and Saturdays)
-- Removed the search feature entirely. This includes dropping the database FTS table, which should improve performance (especially cleanup). The last commit that included the enabled search feature has been [tagged](https://github.com/FrozenKite/comment-viewer/tree/search).
+- Removed the search feature entirely. This includes dropping the database FTS table, which should improve performance (especially cleanup). The last commit that included the enabled search feature has been tagged.
 - Updated to Parcel 2 to resolve npm security warnings
 - Handled missing dislike counts on videos. The YouTube API will stop returning dislike counts [on Dec 13, 2021](https://support.google.com/youtube/thread/134791097/update-to-youtube-dislike-counts).
 - Graph y-axis now widens to display large numbers, instead of cutting them off
@@ -28,7 +28,7 @@
 - Added new hover tooltip on graph
 - Removed unused styles from Bootstrap CSS. This shaves off 138 KB (28% of page size)
 - Switched SQLite search engine back to FTS4 from FTS5.
-    - Since switching to FTS5 in January, the database has been throwing `SQLITE_CORRUPT_VTAB` "database disk image is malformed" errors on about 50% of text searches. This is difficult to reproduce, but it may have something to do with this [delete trigger](https://github.com/FrozenKite/comment-viewer/blob/7aabdda5a0cccdf6d756030d94063bc5fb3c48a1/src/database.js#L40-L48). 3.2.0 reverts to the FTS4 implementation which didn't have this issue, though we'll have to see if it scales well. This will also require the database to be reset once.
+    - Since switching to FTS5 in January, the database has been throwing `SQLITE_CORRUPT_VTAB` "database disk image is malformed" errors on about 50% of text searches. 3.2.0 reverts to the FTS4 implementation which didn't have this issue, though we'll have to see if it scales well. This will also require the database to be reset once.
 - Added button to clear search on search error
 - Moved graph tools ("Aggregate by") to above the graph
 - Removed "Initializing" progress bar animation
