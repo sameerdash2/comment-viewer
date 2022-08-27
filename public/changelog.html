@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Changelog | YouTube Comment Viewer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="bootstrap-purged.min.css" rel="stylesheet" />
+  <link href="./style.css" rel="stylesheet" type="text/css" />
+  <link rel="icon" href="./favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <base target="_blank" />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-82745335-2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+
+    gtag("config", "UA-82745335-2");
+  </script>
+</head>
+
+<body>
+  <main class="container-xl">
+    <h1><a href="/" target="_self" class="noColor">YouTube Comment Viewer</a></h1>
+
+    <div class="row">
+      <div id="changelogCol" class="col-12">
+        <div class="card">
+          <h5 class="card-header head">Changelog</h5>
+          <div class="card-body changelog">
+
+            <h3 id="3-3-1-03-feb-2022-">3.3.1 (03 Feb 2022)</h3>
+            <ul>
+              <li>Removed display of dislikes on videos (dislike counts have been unavailable since 2021-12-13)<ul>
+                  <li>If the API somehow returns a dislike count, it will be displayed in red.</li>
+                </ul>
+              </li>
+              <li>Better handling for videos with 0 comments</li>
+              <li>Updated dependencies / resolved security vulnerabilities</li>
+            </ul>
+            <h3 id="3-3-0-12-nov-2021-">3.3.0 (12 Nov 2021)</h3>
+            <ul>
+              <li>Reworked database cleanup: Comments are now deleted in chunks of 10,000. This should stop the site
+                becoming unresponsive during cleanup.<ul>
+                  <li>Amendment (21 Nov 2021): Chunk size reduced to 2500, as there was still some lag with 10,000.
+                    Cleanup also happens twice a week now (on Wednesdays and Saturdays)</li>
+                </ul>
+              </li>
+              <li>Removed the search feature entirely. This includes dropping the database FTS table, which should
+                improve performance (especially cleanup). The last commit that included the enabled search feature has
+                been tagged.</li>
+              <li>Updated to Parcel 2 to resolve npm security warnings</li>
+              <li>Handled missing dislike counts on videos. The YouTube API will stop returning dislike counts <a
+                  href="https://support.google.com/youtube/thread/134791097/update-to-youtube-dislike-counts">on Dec 13,
+                  2021</a>.</li>
+              <li>Graph y-axis now widens to display large numbers, instead of cutting them off</li>
+              <li>Fixed graph combining two points across the DST &quot;fall back&quot; hours (the second 1 AM - 2 AM
+                hour now appears as a separate data point)</li>
+              <li>Handled strange case where video is missing metadata. Examples: <a
+                  href="https://www.youtube.com/watch?v=MOqm0qGJhpw">https://www.youtube.com/watch?v=MOqm0qGJhpw</a>, <a
+                  href="https://www.youtube.com/watch?v=TlGXDy5xFlw">https://www.youtube.com/watch?v=TlGXDy5xFlw</a>
+              </li>
+              <li>Fixed styling issues on page</li>
+              <li>Updated to Node 16</li>
+              <li>Updated dependencies</li>
+            </ul>
+            <h3 id="3-2-1-02-sep-2021-">3.2.1 (02 Sep 2021)</h3>
+            <ul>
+              <li>Disabled searching for now. Search queries were taking up to 30 seconds (much longer than normal) and
+                blocking the main thread, making the entire site unresponsive. :( This probably won&#39;t be restored
+                unless a feasible solution becomes available.</li>
+              <li>Made criteria for fully re-fetching a video less strict. This means new, fast-rising videos will not
+                have to start from 0% as often.</li>
+              <li>Added an alert to reload the page after WebSocket connection lost</li>
+              <li>Fixed lag on graph tooltip&#39;s position update</li>
+              <li>Fixed a graph interval-change case where old left bound exceeds new right bound</li>
+            </ul>
+            <h3 id="3-2-0-26-aug-2021-">3.2.0 (26 Aug 2021)</h3>
+            <ul>
+              <li>Added new hover tooltip on graph</li>
+              <li>Removed unused styles from Bootstrap CSS. This shaves off 138 KB (28% of page size)</li>
+              <li>Switched SQLite search engine back to FTS4 from FTS5.<ul>
+                  <li>Since switching to FTS5 in January, the database has been throwing
+                    <code>SQLITE_CORRUPT_VTAB</code> &quot;database disk image is malformed&quot; errors on about 50% of
+                    text searches. 3.2.0 reverts to the FTS4 implementation which didn&#39;t have this issue, though
+                    we&#39;ll have to see if it scales well. This will also require the database to be reset once.
+                  </li>
+                </ul>
+              </li>
+              <li>Added button to clear search on search error</li>
+              <li>Moved graph tools (&quot;Aggregate by&quot;) to above the graph</li>
+              <li>Removed &quot;Initializing&quot; progress bar animation</li>
+              <li>Turned off auto retrieval for videos with &lt;200 comments</li>
+              <li>Refined statistics button</li>
+              <li>Added logging for different possible states of video (appending to stored comments, re-fetching video,
+                etc.)</li>
+              <li>Fixed missing whitespace before &quot;x hidden comments&quot;</li>
+              <li>Updated dependencies</li>
+            </ul>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container-xl">
+      <span>&nbsp;</span>
+    </div>
+  </footer>
+</body>
+
+</html>

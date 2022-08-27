@@ -29,7 +29,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "build": "parcel build public/index.html",
+    "build": "parcel build public/*.html",
     "purge-bootstrap": "purgecss --css ../bootstrap.min.css --content public/* --output public/bootstrap-purged.min.css"
   },
   "author": "",

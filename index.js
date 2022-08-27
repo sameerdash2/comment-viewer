@@ -9,7 +9,9 @@ const io = require('socket.io')(http);
 
 class App {
     constructor() {
-        application.use(express.static("dist"));
+        application.use(express.static('dist', {
+            extensions: ['html']
+        }));
         this.ytapi = new YouTubeAPI();
         this.createServer();
         this.database = new Database();
