@@ -180,11 +180,13 @@ class Database {
         this.scheduleCleanup();
     }
 
-    async cleanUpSet(age, commentCount, includeInProgress = false) {
+    async cleanUpSet(age, commentCount, includeStrays = false) {
         const now = Date.now();
-        const inProgressClause = includeInProgress ? `OR inProgress = true` : '';
+        // Clean out "stuck" videos (inProgress == true) or "damaged" videos (commentCount is null)
+        // Not entirely sure why the latter happens
+        const strayClause = includeStrays ? `OR inProgress = true OR commentCount IS NULL` : ``;
 
-        const rows = this._db.prepare(`SELECT id FROM videos WHERE (lastUpdated < ?) AND (commentCount < ? ${inProgressClause})`)
+        const rows = this._db.prepare(`SELECT id FROM videos WHERE (lastUpdated < ?) AND (commentCount < ? ${strayClause})`)
             .all(now - age, commentCount);
 
         let deleteCountSet = 0;
