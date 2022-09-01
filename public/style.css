@@ -380,12 +380,3 @@ div#terms {
   text-decoration: none;
   cursor: pointer;
 }
-h3 {
-  font-size: 18px;
-}
-.changelog {
-  line-height: 1.5;
-}
-.changelog li {
-  margin-top: 0.25em;
-}
