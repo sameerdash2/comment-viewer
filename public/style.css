@@ -228,6 +228,9 @@ div#spinner {
 #loadEta {
   float: right;
 }
+#loadCount {
+  font-size: 14px;
+}
 div#progress {
   height: 24px;
 }

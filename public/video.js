@@ -58,8 +58,9 @@ export class Video {
         document.getElementById("loadPercentage").textContent = percentage;
         document.title = percentage + " complete | YouTube Comment Viewer";
         if (this._totalExpected > 1000) {
-            document.getElementById("loadEta").textContent = '~'
-                + parseDurationMSS(Math.max(0, eta(this._totalExpected - count))) + ' remaining';
+            document.getElementById("loadEta").textContent = `~${parseDurationMSS(Math.max(0, eta(this._totalExpected - count)))} remaining`;
+            const countString = Number(count).toLocaleString() + " / " + Number(this._totalExpected).toLocaleString();
+            document.getElementById("loadCount").textContent = `(${countString} comments indexed)`;
         }
     }
 

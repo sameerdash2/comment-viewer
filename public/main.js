@@ -279,6 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("limitMessage").textContent = "";
         document.getElementById("loadPercentage").textContent = "0%";
         document.getElementById("loadEta").textContent = '';
+        document.getElementById("loadCount").textContent = '--';
         document.getElementById("progressGreen").style.width = "0%";
 
         document.getElementById("chooseLoad").style.display = "none";
