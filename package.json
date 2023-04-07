@@ -2,6 +2,8 @@
   "name": "commentviewer",
   "version": "3.3.1",
   "description": "View and analyze YouTube comments easily.",
+  "author": "Sameer Dash",
+  "license": "MIT",
   "engines": {
     "node": ">=14.x"
   },
@@ -31,7 +33,5 @@
     "start": "node index.js",
     "build": "parcel build public/*.html",
     "purge-bootstrap": "purgecss --css ../bootstrap.min.css --content public/* --output public/bootstrap-purged.min.css"
-  },
-  "author": "",
-  "license": "ISC"
+  }
 }
