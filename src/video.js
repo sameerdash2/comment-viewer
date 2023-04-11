@@ -177,7 +177,8 @@ class Video {
                     }
                     // 5-minute cooldown before doing any new fetch
                     else if ((now - row.lastUpdated) <= 5*60*1000) {
-                        this.sendLoadedComments("dateOldest", 0, false);
+                        this._loadComplete = true; // To permit statistics retrieval later
+                        this.requestLoadedComments("dateOldest", 0, false, undefined, undefined, true);
                     }
                     // Re-fetch all comments from scratch if needed
                     else if (this.shouldReFetch(row)) {
@@ -292,15 +293,10 @@ class Video {
                 this._app.database.markVideoComplete(this._id, this._video.snippet.title, elapsed,
                     this._newComments, this._newCommentThreads, appending);
 
-                // Send the first batch of comments
-                this.sendLoadedComments("dateOldest", 0, true);
+                this._loadComplete = true; // To permit statistics retrieval later
 
-                // Clear out the room
-                setTimeout(() => {
-                    this._io.of('/').in('video-' + this._id).allSockets().then(clientIds => {
-                        clientIds.forEach((clientId) => this._io.sockets.sockets.get(clientId).leave('video-' + this._id));
-                    });
-                }, 1000);
+                // Send the first batch of comments
+                this.requestLoadedComments("dateOldest", 0, true, undefined, undefined, true);
             }
         }, (err) => {
             const error = err.errors[0];
@@ -385,7 +381,7 @@ class Video {
         this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
-    sendLoadedComments(sort, commentIndex, broadcast, minDate, maxDate) {
+    requestLoadedComments(sort, commentIndex, broadcast, minDate, maxDate, isFirstBatch = false) {
         if (!this._id) return;
 
         const newSet = commentIndex === 0;
@@ -404,10 +400,8 @@ class Video {
             const { rows, subCount, totalCount } = this._app.database.getComments(
                 this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate);
 
-            this._loadComplete = true; // To permit statistics retrieval later
             const more = rows.length === config.maxDisplay;
             const subset = [];
-            const repliesPromises = [];
             for (const commentThread of rows) {
                 subset.push({
                     id: commentThread.id,
@@ -421,36 +415,47 @@ class Video {
                     updatedAt: commentThread.updatedAt,
                     totalReplyCount: commentThread.totalReplyCount
                 });
-
-                if (commentThread.totalReplyCount > 0 && config.maxDisplayedReplies > 0) {
-                    repliesPromises.push(this._app.ytapi.executeMinReplies(commentThread.id));
-                }
             }
 
-            // Fetch a subset of the replies for each comment
-            const replies = {};
-            Promise.allSettled(repliesPromises).then((results) => {
-                results.forEach((result) => {
-                    if (result.status === "fulfilled" && result.value.data.pageInfo.totalResults > 0) {
-                        const parentId = result.value.data.items[0].id;
-                        const chosenReplies = result.value.data.items[0].replies.comments.slice(0, config.maxDisplayedReplies);
-                        replies[parentId] = [];
+            const payload = {
+                reset: newSet,
+                items: subset,
+                showMore: more,
+                subCount: subCount,
+                totalCount: totalCount,
+                fullStatsData: null
+            };
 
-                        chosenReplies.forEach((reply) => replies[parentId].push(convertComment(reply, true)));
-                    }
+            // If comment count is small enough, compute statistics and send them with the first batch.
+            if (isFirstBatch && this._graphAvailable && this._commentCount < 100000) {
+                this.getStatistics().then((fullStatsData) => {
+                    payload.fullStatsData = fullStatsData;
+                    this.sendLoadedComments(payload, broadcast);
                 });
+            }
+            else {
+                // Send first batch without statistics. User can manually request it later
+                this.sendLoadedComments(payload, broadcast);
+            }
 
-                if (broadcast) {
-                    this._io.to('video-' + this._id).emit("groupComments",
-                        {reset: newSet, items: subset, replies: replies, showMore: more, subCount: subCount, totalCount: totalCount});
-                }
-                else {
-                    this._socket.emit("groupComments",
-                        {reset: newSet, items: subset, replies: replies, showMore: more, subCount: subCount, totalCount: totalCount});
-                }
-            });
         } catch (err) {
             logger.log('error', "Database getComments error: %O", err);
+        }
+    }
+
+    sendLoadedComments(payload, broadcast) {
+        if (broadcast) {
+            this._io.to('video-' + this._id).emit("groupComments", payload);
+
+            // Only the first batch is broadcasted. Clear out the socket room
+            setTimeout(() => {
+                this._io.of('/').in('video-' + this._id).allSockets().then(clientIds => {
+                    clientIds.forEach((clientId) => this._io.sockets.sockets.get(clientId).leave('video-' + this._id));
+                });
+            }, 1000);
+        }
+        else {
+            this._socket.emit("groupComments", payload);
         }
     }
 
@@ -487,16 +492,29 @@ class Video {
         this._socket.emit("newReplies", { items: items, id: commentId});
     }
 
-    getStatistics() {
+    // Computes statistics for the current video and sends them to the client.
+    requestStatistics() {
         if (this._graphAvailable && this._loadComplete) {
-            const stats = this._app.database.getStatistics(this._id);
-            this.makeGraphArray().then((result) => {
-                this._socket.emit("statsData", [stats, result]);
-                result = undefined;
+            this.getStatistics().then((fullStatsData) => {
+                this._socket.emit("statsData", fullStatsData);
+                // Tell compiler to release this memory as soon as possible
+                fullStatsData = undefined;
             });
         }
     }
 
+    // Computes statistics for the current video and returns them via Promise.
+    getStatistics() {
+        return new Promise((resolve) => {
+            const stats = this._app.database.getStatistics(this._id);
+            this.makeGraphArray().then((datesArray) => {
+                const fullStatsData = [stats, datesArray];
+                resolve(fullStatsData);
+            });
+        });
+    }
+
+    // Constructs the array of all comments' dates.
     makeGraphArray() {
         // Form array of all dates
         return new Promise((resolve) => {

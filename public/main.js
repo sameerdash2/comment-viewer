@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    socket.on("groupComments", ({ reset, items, replies, showMore, subCount, totalCount }) => {
+    socket.on("groupComments", ({ reset, items, showMore, subCount, totalCount, fullStatsData }) => {
         message.textContent = "\u00A0";
         if (!firstBatchReceived) {
             firstBatchReceived = true;
@@ -240,6 +240,11 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("filter").style.display = "block";
             document.getElementById("statsColumn").style.display = statsAvailable ? "block" : "none";
             document.title = "YouTube Comment Viewer";
+
+            // If statistics data was sent, display graph and statistics.
+            if (fullStatsData != null) {
+                video.handleStatsData(fullStatsData);
+            }
         }
         if (reset) {
             hideLoading();
@@ -254,7 +259,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
         video.handleGroupComments(reset, items);
-        video.handleMinReplies(replies);
         document.getElementById("showMoreDiv").style.display = showMore ? "block" : "none";
         showMoreBtn.textContent = "Show more comments...";
         showMoreBtn.disabled = false;

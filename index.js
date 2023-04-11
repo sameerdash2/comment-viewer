@@ -48,14 +48,14 @@ class App {
                 }
             }
             function sendComments({ sort, commentNum, minDate, maxDate }) {
-                videoInstance.sendLoadedComments(sort, commentNum, false, minDate, maxDate);
+                videoInstance.requestLoadedComments(sort, commentNum, false, minDate, maxDate);
             }
 
             socket.on("replyRequest", (id) => {
                 videoInstance.getReplies(id);
             });
             socket.on("graphRequest", () => {
-                videoInstance.getStatistics();
+                videoInstance.requestStatistics();
             });
 
             function checkSendID(inp) {

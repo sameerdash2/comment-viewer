@@ -84,24 +84,6 @@ export class Video {
         document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
     }
 
-    handleMinReplies(allReplies) {
-        let content;
-        for (const id in allReplies) {
-            content = "";
-            allReplies[id].forEach((reply) => {
-                content += `<div class="mt-2">`
-                    + formatComment(reply, -1, this.options, this._uploaderId, this._videoId, true) + `</div>`
-            });
-            document.getElementById("repliesEE-" + id).innerHTML = content;
-
-            // Remove reply button if all replies are shown
-            const replyButton = document.getElementById("getReplies-" + id);
-            if (replyButton !== null && allReplies[id].length >= this._replyCounts[id]) {
-                replyButton.parentNode.removeChild(replyButton);
-            }
-        }
-    }
-
     handleNewReplies(id, items) {
         this._storedReplies[id] = items;
         gtag('event', 'replies', {
