@@ -1,3 +1,10 @@
+### 3.3.2 (11 Apr 2023)
+*Note: Some intermittent changes may not be posted on this changelog.*
+- Graph and statistics now show automatically for videos with under 100,000 comments
+- Fixed "NaN%" showing in tab title
+- Updated system to use Node 18
+- Updated dependencies
+
 ### 3.3.1 (03 Feb 2022)
 - Removed display of dislikes on videos (dislike counts have been unavailable since 2021-12-13)
     - If the API somehow returns a dislike count, it will be displayed in red.
