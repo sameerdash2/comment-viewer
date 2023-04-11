@@ -56,7 +56,7 @@ function makeLabel(rawValue, interval, isUtc) {
             output = isUtc ? date.getUTCFullYear() : date.getFullYear();
             break;
         case "month":
-            output = isUtc ? date.toLocaleDateString("en-ca", { timeZone: "UTC", month: "2-digit", year: "numeric" })
+            output = isUtc ? date.toISOString().substring(0, 7)
                 : date.toLocaleString(undefined, { month: "short", year: "numeric" })
             break;
         case "day":

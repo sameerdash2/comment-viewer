@@ -18,9 +18,17 @@ function convertComment(object, isReply = false) {
     });
 }
 
+// Returns a timestamp in the format `YYYY-MM-DD hh:mm:ss {timeZoneName}` in Pacific time.
 function printTimestamp(date) {
-    return date.toLocaleString('en-ca-u-hc-h23',
-        {timeZone: "America/Los_Angeles", timeZoneName: "short"}).replace(',', '');
+    const datePart = date.toLocaleDateString("fr-ca", {
+        timeZone: "America/Los_Angeles",
+    });
+    const timePart = date.toLocaleTimeString("en-us", {
+        timeZone: "America/Los_Angeles",
+        hourCycle: "h23",
+        timeZoneName: "short"
+    });
+    return `${datePart} ${timePart}`;
 }
 
 // Returns a Unix timestamp of the next occurence of a given day of the week (at a given hour)
