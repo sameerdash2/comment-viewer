@@ -25,7 +25,7 @@ export class Video {
     }
 
     display(video) {
-        this._totalExpected = video.statistics.commentCount; // for load percentage
+        this._totalExpected = Number(video.statistics.commentCount); // for load percentage
         this._videoId = video.id;
         this.videoPublished = video.snippet.publishedAt; // for graph bound
         this._uploaderId = video.snippet.channelId; // for highlighting OP comments
@@ -45,6 +45,9 @@ export class Video {
     }
 
     updateLoadStatus(count) {
+        if (this._totalExpected === 0) {
+            return;
+        }
         // Determine percentage precision based on total comment count
         // An "update" includes 100 or more comments
         // 1,000+ comments takes at least 10 updates, so use 2 digits (no decimals)
