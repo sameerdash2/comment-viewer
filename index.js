@@ -42,11 +42,12 @@ class App {
                 }
                 else {
                     throttled = true;
-                    // Stop client from trying funny stuff
-                    if (pageSize > 500) {
+
+                    pageSize = Number(pageSize);
+                    // Stop client from doing funny stuff
+                    if (isNaN(pageSize) || pageSize > 500) {
                         pageSize = 25;
                     }
-                    pageSize = Number(pageSize);
 
                     sendComments({ sort, commentNum, pageSize, minDate, maxDate });
                     setTimeout(() => throttled = false, throttleMs);
