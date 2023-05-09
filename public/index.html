@@ -250,12 +250,26 @@
                 </div>
               </div>
 
-              <div class="row">
-                <div class="col-12 my-2" id="resultCol">
+              <div class="row my-2 align-items-center">
+                <div class="col-sm-6" id="resultCol">
                   <span class="p-2">
-                    Showing <span id="subCount" class="font-weight-bold">0</span> / <span id="totalCount">0</span> results •
-                    <button id="resetFilters" class="btn btn-link font-weight-bold align-baseline p-0" type="button">Reset</button>
+                    Showing <span id="subCount" class="font-weight-bold">0</span> / <span id="totalCount">0</span> results
+                    <span id="resetGroup">• 
+                      <button id="resetFilters" class="btn btn-link font-weight-bold align-baseline p-0" type="button">Reset</button>
+                    </span>
                   </span>
+                </div>
+
+                <div class="col-sm-6">
+                  <div class="float-right px-2">
+                    <label for="pageSizeSelect">Page size:</label>
+                    <select name="pageSize" id="pageSizeSelect" class="form-control noColor w-auto p-1 d-inline-block">
+                      <option selected value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                      <option value="500">500</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 

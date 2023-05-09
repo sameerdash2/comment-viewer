@@ -25,6 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let dateLeftBound = -1;
     let dateRightBound = -1;
 
+    let pageSize = document.getElementById("pageSizeSelect").value;
+
     let firstBatchReceived = false;
     let statsAvailable = false;
 
@@ -121,6 +123,12 @@ document.addEventListener("DOMContentLoaded", () => {
             sendCommentRequest(true);
             gtag('event', 'date', { 'event_category': 'filters' });
         }
+    });
+
+    // On change in page size, request new set of comments with new page size.
+    document.getElementById("pageSizeSelect").addEventListener("change", () => {
+        pageSize = document.getElementById("pageSizeSelect").value;
+        sendCommentRequest(true);
     });
 
     document.getElementById("resetFilters").addEventListener('click', () => {
@@ -249,13 +257,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (reset) {
             hideLoading();
             commentsSection.textContent = "";
+            document.getElementById("subCount").textContent = Number(subCount).toLocaleString();
+            document.getElementById("totalCount").textContent = Number(totalCount).toLocaleString();
             if (subCount === totalCount) {
-                document.getElementById("resultCol").style.display = "none";
+                document.getElementById("resetGroup").style.display = "none";
             }
             else {
-                document.getElementById("resultCol").style.display = "block";
-                document.getElementById("subCount").textContent = Number(subCount).toLocaleString();
-                document.getElementById("totalCount").textContent = Number(totalCount).toLocaleString();
+                document.getElementById("resetGroup").style.display = "inline-block";
             }
         }
         video.handleGroupComments(reset, items);
@@ -323,6 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
         socket.emit("showMore", {
             sort: video.currentSort,
             commentNum: index,
+            pageSize: pageSize,
             minDate: dateLeftBound,
             maxDate: dateRightBound
         });

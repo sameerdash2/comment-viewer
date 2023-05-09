@@ -178,7 +178,7 @@ class Video {
                     // 5-minute cooldown before doing any new fetch
                     else if ((now - row.lastUpdated) <= 5*60*1000) {
                         this._loadComplete = true; // To permit statistics retrieval later
-                        this.requestLoadedComments("dateOldest", 0, false, undefined, undefined, true);
+                        this.requestLoadedComments("dateOldest", 0, config.defaultPageSize, false, undefined, undefined, true);
                     }
                     // Re-fetch all comments from scratch if needed
                     else if (this.shouldReFetch(row)) {
@@ -296,7 +296,7 @@ class Video {
                 this._loadComplete = true; // To permit statistics retrieval later
 
                 // Send the first batch of comments
-                this.requestLoadedComments("dateOldest", 0, true, undefined, undefined, true);
+                this.requestLoadedComments("dateOldest", 0, config.defaultPageSize, true, undefined, undefined, true);
             }
         }, (err) => {
             const error = err.errors[0];
@@ -381,7 +381,7 @@ class Video {
         this._socket.emit("linkedComment", {parent: parent, hasReply: (reply !== null), reply: reply, videoObject: video});
     }
 
-    requestLoadedComments(sort, commentIndex, broadcast, minDate, maxDate, isFirstBatch = false) {
+    requestLoadedComments(sort, commentIndex, pageSize, broadcast, minDate, maxDate, isFirstBatch = false) {
         if (!this._id) return;
 
         const newSet = commentIndex === 0;
@@ -398,9 +398,9 @@ class Video {
 
         try {
             const { rows, subCount, totalCount } = this._app.database.getComments(
-                this._id, config.maxDisplay, commentIndex, sortBy, minDate, maxDate);
+                this._id, pageSize, commentIndex, sortBy, minDate, maxDate);
 
-            const more = rows.length === config.maxDisplay;
+            const more = rows.length === pageSize;
             const subset = [];
             for (const commentThread of rows) {
                 subset.push({
