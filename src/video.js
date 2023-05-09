@@ -2,6 +2,8 @@ const config = require('../config.json');
 const { convertComment } = require('./utils');
 const logger = require('./logger');
 
+const MAX_CONSECUTIVE_ERRORS = 3;
+
 class Video {
     constructor(app, io, socket) {
         this._app = app;
@@ -30,7 +32,7 @@ class Video {
         }
     }
 
-    fetchTitle(idString) {
+    fetchTitle(idString, consecutiveErrors = 0) {
         return this._app.ytapi.executeVideo(idString).then((response) => {
             if (response.data.pageInfo.totalResults > 0) {
                 this.handleNewVideo(response.data.items[0]);
@@ -44,12 +46,17 @@ class Video {
             logger.log('error', "Video execute error on %s: %d ('%s') - '%s'",
                 idString, err.code, err.errors[0].reason, err.errors[0].message);
 
-            if (err.errors[0].reason === "quotaExceeded") {
-                this._app.ytapi.quotaExceeded();
-                this._socket.emit("quotaExceeded");
+            if (++consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
+                if (err.errors[0].reason === "quotaExceeded") {
+                    this._app.ytapi.quotaExceeded();
+                    this._socket.emit("quotaExceeded");
+                }
+                else if (err.errors[0].reason === "processingFailure") {
+                    setTimeout(() => this.fetchTitle(idString, consecutiveErrors), 100);
+                }
             }
-            else if (err.errors[0].reason === "processingFailure") {
-                setTimeout(() => this.fetchTitle(idString), 1);
+            else {
+                logger.log('warn', "Giving up video fetch on '%s' due to %d consecutive errors.", idString, consecutiveErrors);
             }
         });
     }
@@ -84,13 +91,13 @@ class Video {
                     this._id, err.code, error.reason, error.message);
             }
 
-            if (consecutiveErrors < 5) {
+            if (++consecutiveErrors < 3) {
                 if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._socket.emit("quotaExceeded");
                 }
                 else if (error.reason === "processingFailure") {
-                    setTimeout(() => this.fetchTestComment(++consecutiveErrors), 1);
+                    setTimeout(() => this.fetchTestComment(consecutiveErrors), 100);
                 }
                 else if (this._video.snippet.liveBroadcastContent === "none" && error.reason === "commentsDisabled") {
                     this._commentsEnabled = false;
@@ -303,7 +310,8 @@ class Video {
             logger.log('error', "Comments execute error on %s: %d ('%s') - '%s'",
                 this._id, err.code, error.reason, error.message);
 
-            if (consecutiveErrors < 20) {
+            // Try the same request up to 10 consecutive times -- we really don't want to abort in a fetch process
+            if (++consecutiveErrors < 10) {
                 if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._app.database.abortVideo(this._id);
@@ -311,7 +319,7 @@ class Video {
                 }
                 else {
                     // Retry
-                    setTimeout(() => this.fetchAllComments(pageToken, appending, ++consecutiveErrors), 1);
+                    setTimeout(() => this.fetchAllComments(pageToken, appending, consecutiveErrors), 100);
                 }
             }
             else {
@@ -321,7 +329,7 @@ class Video {
         });
     }
 
-    fetchLinkedComment(idString, parentId, replyId) {
+    fetchLinkedComment(idString, parentId, replyId, consecutiveErrors = 0) {
         this._app.ytapi.executeSingleComment(parentId).then((response) => {
             if (response.data.pageInfo.totalResults) {
                 // Linked comment found
@@ -367,12 +375,18 @@ class Video {
             logger.log('error', "Linked comment execute error on %s: %d ('%s') - '%s'",
                 parentId, err.code, err.errors[0].reason, err.errors[0].message);
 
-            if (err.errors[0].reason === "quotaExceeded") {
-                this._app.ytapi.quotaExceeded();
-                this._socket.emit("quotaExceeded");
+            if (++consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
+                if (err.errors[0].reason === "quotaExceeded") {
+                    this._app.ytapi.quotaExceeded();
+                    this._socket.emit("quotaExceeded");
+                }
+                else if (err.errors[0].reason === "processingFailure") {
+                    setTimeout(() => this.fetchLinkedComment(idString, parentId, replyId, consecutiveErrors), 100);
+                }
             }
-            else if (err.errors[0].reason === "processingFailure") {
-                setTimeout(() => this.fetchLinkedComment(idString, parentId, replyId), 1);
+            else {
+                logger.log('warn', "Giving up fetch of Linked Comment '%s' on video %s due to %d consecutive errors.",
+                    parentId, this._id, consecutiveErrors);
             }
         });
     }
@@ -460,10 +474,10 @@ class Video {
     }
 
     getReplies(commentId) {
-        this.fetchReplies(commentId, "", false);
+        this.fetchReplies(commentId, "", false, []);
     }
 
-    fetchReplies(commentId, pageToken, silent, replies = []) {
+    fetchReplies(commentId, pageToken, silent, replies, consecutiveErrors = 0) {
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
             response.data.items.forEach((reply) => replies.push(convertComment(reply, true)));
 
@@ -475,17 +489,23 @@ class Video {
                 this.sendReplies(commentId, replies);
             }
         }, (err) => {
-                logger.log('error', "Replies execute error on %s: %d ('%s') - '%s'",
-                    this._id, err.code, err.errors[0].reason, err.errors[0].message);
+            logger.log('error', "Replies execute error on %s: %d ('%s') - '%s'",
+                this._id, err.code, err.errors[0].reason, err.errors[0].message);
 
+            if (++consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
                 if (err.errors[0].reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._socket.emit("quotaExceeded");
                 }
                 else if (err.errors[0].reason === "processingFailure") {
-                    setTimeout(() => this.fetchReplies(commentId, pageToken, silent, replies), 1);
-                }                                
-            });
+                    setTimeout(() => this.fetchReplies(commentId, pageToken, silent, replies, consecutiveErrors), 100);
+                }
+            }
+            else {
+                logger.log('warn', "Giving up fetch of REPLIES on comment '%s', on video %s due to %d consecutive errors.",
+                    commentId, this._id, consecutiveErrors);
+            }
+        });
     }
 
     sendReplies(commentId, items) {
