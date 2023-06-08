@@ -44,17 +44,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener('resize', () => video.handleWindowResize());
 
+    // Listener for entering a video ID via text box.
     document.getElementById("videoForm").addEventListener('submit', (event) => {
         event.preventDefault(); // prevents page reloading
         const enterID = document.getElementById("enterID");
         if (enterID.value.length > 0) {
-            message.textContent = "Working...";
-            message.style.color = LOAD;
-            socket.emit('idSent', enterID.value.trim());
+            submitVideo(enterID.value);
             enterID.value = "";
         }
         return false;
     });
+
+    // Also check if an ID was supplied via URL parameter "v".
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('v') !== null) {
+        submitVideo(urlParams.get('v'));
+    }
+
+    function submitVideo(input) {
+        message.textContent = "Working...";
+        message.style.color = LOAD;
+        socket.emit('idSent', input.trim());
+    }
+
     document.getElementById("submitAll").addEventListener('click', () => {
         document.getElementById("chooseLoad").style.display = "none";
         video.prepareLoadStatus();

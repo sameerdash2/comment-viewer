@@ -19,5 +19,9 @@ Tech stack: JavaScript, SQLite, and a lot of CSS.
 - Input direct links to a comment
 - Works well on mobile
 
+### Usage / APIs
+
+You can open the website directly to a video by supplying the video ID as a URL parameter `v`. Example: https://commentviewer.com/?v=4VaqA-5aQTM. The `v=` value can also be a full YouTube URL itself, or the URL to a linked comment/reply.
+
 ### Changelog
 For new changes, check out the [changelog](CHANGELOG.md).
