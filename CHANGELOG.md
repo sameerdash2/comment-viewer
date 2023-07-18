@@ -1,3 +1,12 @@
+### 3.3.3 (18 Jul 2023)
+- Added page size option: show 25, 50, 100, or 500 comments at a time. (https://github.com/sameerdash2/comment-viewer/issues/3)
+- Added support for passing video IDs or links as a URL parameter: `https://commentviewer.com/?v=4VaqA-5aQTM`. (https://github.com/sameerdash2/comment-viewer/issues/5)
+- Added OpenSearch support: quickly open the site from the address bar in Chrome/Edge/Firefox/Safari.
+    - Apparently Chrome disabled this feature in the past couple years -- you need to turn on the search engines manually in settings, which (imo) defeats the purpose.
+    - In Edge, you can use tab-to-search once you've loaded the page for a first time.
+    - In Firefox you can [manually add the search engine](https://support.mozilla.org/en-US/kb/add-or-remove-search-engine-firefox) once the page is loaded.
+    - In Safari, I couldn't figure out how to access the site search (in my 5 minutes of testing) but it did recognize the site's OpenSearch engine.
+
 ### 3.3.2 (11 Apr 2023)
 *Note: Some intermittent changes may not be posted on this changelog.*
 - Graph and statistics now show automatically for videos with under 100,000 comments
