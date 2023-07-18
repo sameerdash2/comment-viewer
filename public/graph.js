@@ -103,7 +103,6 @@ export class Graph {
                 document.getElementById("viewGraph").textContent = "Loading" + '.'.repeat(this._loadingDots);
             }, 200);
             this._socket.emit("graphRequest");
-            gtag('event', 'stats', { 'event_category': 'data_request' });
         }
     }
 

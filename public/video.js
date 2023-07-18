@@ -150,6 +150,7 @@ export class Video {
     }
 
     handleStatsData(data) {
+        gtag('event', 'stats', { 'event_category': 'data_request' });
         document.getElementById("s_comments").textContent = data[0].comments.toLocaleString();
         document.getElementById("s_totalLikes").textContent = data[0].totalLikes.toLocaleString();
         document.getElementById("s_avgLikes").textContent = (data[0].totalLikes / data[0].comments)
