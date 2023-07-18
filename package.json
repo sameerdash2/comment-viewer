@@ -22,7 +22,8 @@
     "@parcel/packager-xml": "2.9.3",
     "@parcel/transformer-xml": "2.9.3",
     "eslint": "^8.38.0",
-    "parcel": "^2.9.3"
+    "parcel": "^2.9.3",
+    "parcel-reporter-static-files-copy": "^1.5.0"
   },
   "targets": {
     "default": {
@@ -30,6 +31,10 @@
       "sourceMap": false,
       "engines": {}
     }
+  },
+  "staticFiles": {
+    "staticPath": "public/favicon.ico",
+    "distDir": "dist"
   },
   "scripts": {
     "start": "node index.js",
