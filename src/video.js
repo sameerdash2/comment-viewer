@@ -18,6 +18,8 @@ class Video {
         this._newComments = 0;
         this._newCommentThreads = 0;
         this._loadComplete = false;
+
+        this._reportedLowResults = 0;
     }
 
     handleNewVideo(item) {
@@ -242,6 +244,13 @@ class Video {
                     this._id, this._indexedComments.toLocaleString(), this._commentCount.toLocaleString());
                 this._app.database.abortVideo(this._id);
                 return;
+            }
+
+            // 2023-10-29 API issues: Log youtube API returning low number of results.
+            if (this._reportedLowResults < 2 && response.data.nextPageToken && response.data.items.length < 100) {
+                logger.log('warn', "API returned only %d comments for video %s. commentCount: %s",
+                    response.data.items.length, this._id, this._commentCount.toLocaleString());
+                this._reportedLowResults++;
             }
 
             let proceed = true;
