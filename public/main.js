@@ -141,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("pageSizeSelect").addEventListener("change", () => {
         pageSize = document.getElementById("pageSizeSelect").value;
         sendCommentRequest(true);
+        gtag('event', 'page_size', { 'value': pageSize.toString() });
     });
 
     document.getElementById("resetFilters").addEventListener('click', () => {
