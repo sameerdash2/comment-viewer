@@ -483,18 +483,18 @@ class Video {
     }
 
     getReplies(commentId) {
-        this.fetchReplies(commentId, "", false, []);
+        this.fetchReplies(commentId, "", []);
     }
 
-    fetchReplies(commentId, pageToken, silent, replies, consecutiveErrors = 0) {
+    fetchReplies(commentId, pageToken, replies, consecutiveErrors = 0) {
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
             response.data.items.forEach((reply) => replies.push(convertComment(reply, true)));
 
             if (response.data.nextPageToken) {
                 // Fetch next batch of replies
-                setTimeout(() => this.fetchReplies(commentId, response.data.nextPageToken, silent, replies), 0);
+                setTimeout(() => this.fetchReplies(commentId, response.data.nextPageToken, replies), 0);
             }
-            else if (!silent) {
+            else {
                 this.sendReplies(commentId, replies);
             }
         }, (err) => {
@@ -507,7 +507,7 @@ class Video {
                     this._socket.emit("quotaExceeded");
                 }
                 else if (err.errors[0].reason === "processingFailure") {
-                    setTimeout(() => this.fetchReplies(commentId, pageToken, silent, replies, consecutiveErrors), 100);
+                    setTimeout(() => this.fetchReplies(commentId, pageToken, replies, consecutiveErrors), 100);
                 }
             }
             else {

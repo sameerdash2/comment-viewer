@@ -19,7 +19,6 @@ export class Video {
         this.options.timezone === 'utc' && gtag('event', 'timezone_utc', { 'event_category': 'options' });
         this.options.showImg === false && gtag('event', 'no_images', { 'event_category': 'options' });
 
-        this._replyCounts = {};
         this._storedReplies = {};
         this._displayedReplies = new Set();
     }
@@ -70,6 +69,8 @@ export class Video {
     handleGroupComments(reset, items) {
         if (reset) {
             this.commentNum = 0;
+            // Clear stored replies so they can be re-fetched on sorting change
+            // (also cause it makes the logic simpler)
             this._storedReplies = {};
             this._displayedReplies = new Set();
         }
@@ -77,9 +78,6 @@ export class Video {
         const paddingX = this.options.showImg ? "2" : "3";
         for (let i = 0; i < items.length; i++) {
             this.commentNum++;
-            this._replyCounts[items[i].id] = items[i].totalReplyCount;
-            // Skip comment if it's the linked one. (obsolete)
-            if (this._linkedParent == items[i].id) continue;
 
             add += `<li class="list-group-item comment py-2 px-${paddingX}">`
                 + formatComment(items[i], this.commentNum, this.options, this._uploaderId, this._videoId, false) + `</li>`;
@@ -87,11 +85,18 @@ export class Video {
         document.getElementById("commentsSection").insertAdjacentHTML('beforeend', add);
     }
 
-    handleNewReplies(id, items) {
-        this._storedReplies[id] = items;
+    handleNewReplies(id, replies) {
+        // Intent: store replies in date-ascending order.
+        // Verify the order, in case the YT API folks decide to flip the order of returned replies
+        // on a whim like they did in October 2023.
+        if (replies.length >= 2 && new Date(replies[0].publishedAt) > new Date(replies[1].publishedAt)) {
+            replies.reverse();
+        }
+        this._storedReplies[id] = replies;
+
         gtag('event', 'replies', {
             'event_category': 'data_request',
-            'value': items.length
+            'value': replies.length
         });
         this.populateReplies(id);
     }
@@ -121,10 +126,11 @@ export class Video {
         const len = this._storedReplies[commentId].length;
         let newContent = "";
         let lClass;
-        for (let i = len - 1; i >= 0; i--) {
+        for (let i = 0; i < len; i++) {
             lClass = this._storedReplies[commentId][i].id === this._currentLinked ? " linked" : "";
+
             newContent += `<div class="mt-2${lClass}">`
-                + formatComment(this._storedReplies[commentId][i], len - i, this.options,
+                + formatComment(this._storedReplies[commentId][i], i + 1, this.options,
                     this._uploaderId, this._videoId, true) + `</div>`;
         }
         document.getElementById("repliesEE-" + commentId).innerHTML = newContent;
