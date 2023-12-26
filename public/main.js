@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let firstBatchReceived = false;
     let statsAvailable = false;
 
+    // Terms of service button
     document.getElementById("viewTerms").addEventListener('click', (event) => {
         event.preventDefault();
         terms.style.display = "block";
@@ -37,9 +38,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("closeTerms").addEventListener('click', () => terms.style.display = "none");
     window.addEventListener('click', (event) => {
-        if (event.target == terms) {
+        if (event.target === terms) {
             terms.style.display = "none";
         }
+    });
+
+    // Dark mode toggle
+    document.getElementById("toggleDark").addEventListener('click', (event) => {
+        event.preventDefault();
+        const root = document.documentElement;
+        const darkIsOn = root.classList.contains("dark-mode");
+        if (darkIsOn) {
+            root.classList.remove("dark-mode");
+        }
+        else {
+            root.classList.add("dark-mode");
+        }
+
+        // Send a resize signal to video instance, to make it redraw the graph (if shown)
+        video.handleWindowResize();
+        // Focus input box if visible
+        event.target.blur();
+        document.getElementById("enterID").focus();
+
+        gtag('event', 'dark_mode');
     });
 
     window.addEventListener('resize', () => video.handleWindowResize());

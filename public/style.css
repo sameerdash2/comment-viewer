@@ -5,8 +5,8 @@
 .uplot {
   font-family: inherit;
 }
-.u-legend {
-  font-size: 16px;
+.u-select {
+  background: var(--graph-selection-color,);
 }
 
 /* Dark mode colors */
@@ -25,13 +25,18 @@
   --light-3: hsl(0, 0%, 86%);
 
   --text-color: hsl(0, 0%, 69%);
-  --link-color: rgb(31, 136, 217);
+  --link-color: rgb(63, 156, 228);
   --author-color: rgb(108, 208, 68);
   --backdrop-color: hsla(0, 0%, 0%, .6);
   --border-color: hsla(0, 0%, 0%, .25);
   --divider-color: hsl(0, 0%, 40%);
 
   --dark-scheme: dark;
+
+  --stroke-color: hsl(188, 65%, 65%);
+  --graph-selection-color: hsla(0, 0%, 100%, .1);
+  --grid-color: hsl(200, 10%, 25%);
+  --graph-selection-color: hsla(0, 0%, 100%, .1);
 }
 
 * {
@@ -100,9 +105,11 @@ footer {
   border-top: 1px solid var(--border-color, #999);
   box-sizing: border-box;
 }
+
 .form-control {
   background-color: var(--dark-5, #fff);
   border-color: var(--divider-color, #ced4da);
+  color: var(--text-color, #495057);
 }
 .form-control:focus {
   background-color: var(--dark-4, #fff);
@@ -128,7 +135,7 @@ input {
 }
 canvas {
   margin-top: 5px;
-  background-color: var(--light-1,);
+  background-color: var(--dark-5,);
 }
 .list-group-item {
   background-color: var(--dark-5,);
