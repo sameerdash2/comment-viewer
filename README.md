@@ -25,3 +25,7 @@ You can open the website directly to a video by supplying the video ID as a URL 
 
 ### Changelog
 For new changes, check out the [changelog](CHANGELOG.md).
+
+### Acknowledgements
+
+* Thanks to [Ilethas](https://github.com/Ilethas) for contributing a dark mode stylesheet.
