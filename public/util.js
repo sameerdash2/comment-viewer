@@ -232,3 +232,7 @@ export function eta(x) {
     // Estimates number of seconds to load x comments
     return Math.floor(x / 250) + 1;
 }
+
+export function getCssProperty(propertyName) {
+    return window.getComputedStyle(document.body).getPropertyValue(propertyName);
+}

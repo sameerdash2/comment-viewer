@@ -1,3 +1,6 @@
+### 3.3.4 (27 Dec 2023)
+- Added dark mode (https://github.com/sameerdash2/comment-viewer/issues/14). Toggleable via a button in the footer.
+
 ### 3.3.3 (18 Jul 2023)
 - Added page size option: show 25, 50, 100, or 500 comments at a time. (https://github.com/sameerdash2/comment-viewer/issues/3)
 - Added support for passing video IDs or links as a URL parameter: `https://commentviewer.com/?v=4VaqA-5aQTM`. (https://github.com/sameerdash2/comment-viewer/issues/5)

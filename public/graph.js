@@ -1,8 +1,7 @@
 import uPlot from 'uplot';
-import { shiftDate, floorDate } from './util.js';
+import { shiftDate, floorDate, getCssProperty } from './util.js';
 import { tooltipPlugin, calcAxisSpace } from './graphUtils.js';
 
-const GRIDCOLOR = "rgba(0,0,0,0.1)";
 const HOUR = 60 * 60 * 1000, DAY = 24 * HOUR, MONTH = 30 * DAY, YEAR = 365 * DAY;
 
 export class Graph {
@@ -78,8 +77,11 @@ export class Graph {
         const statsColumn = document.getElementById("statsColumn");
         const computedStyle = window.getComputedStyle(statsColumn);
         const containerWidth = statsColumn.clientWidth - parseFloat(computedStyle.paddingLeft) - parseFloat(computedStyle.paddingRight);
+        // Minimum dimensions: 250 x 150, CSS pixels
         return {
-            width: Math.max(250, containerWidth - 16),
+            // 24px buffer to account for card padding
+            // and scrollbar, since browsers don't fire resize event on scrollbar appearance.
+            width: Math.max(250, containerWidth - 24),
             height: Math.max(150, Math.min(400, document.documentElement.clientHeight - 75))
         };
     }
@@ -169,15 +171,20 @@ export class Graph {
     drawGraph(interval) {
         if (this._graphInstance) this._graphInstance.destroy();
 
+        const gridColor = () => getCssProperty("--grid-color") || "rgba(0,0,0,0.1)";
+        const textColor = () => getCssProperty("--text-color") || "#000";
+        const strokeColor = () => getCssProperty("--stroke-color") || "blue";
+
         const isUtc = this._video.options.timezone === "utc";
         const axis = {
             font: "14px Open Sans",
-            grid: { stroke: GRIDCOLOR },
+            grid: { stroke: gridColor },
             ticks: {
                 show: true,
                 size: 5,
-                stroke: GRIDCOLOR
+                stroke: gridColor
             },
+            stroke: textColor
         }
 
         const opts = {
@@ -217,7 +224,7 @@ export class Graph {
                 {},
                 {
                     // y series
-                    stroke: "blue",
+                    stroke: strokeColor,
                     width: 2,
                     points: { show: false }
                 },
