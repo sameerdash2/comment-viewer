@@ -55,6 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
             root.classList.add("dark-mode");
         }
 
+        try {
+            localStorage.setItem("dark", darkIsOn ? "false" : "true");
+        } catch { }
+
         // Send a resize signal to video instance, to make it redraw the graph (if shown)
         video.handleWindowResize();
         // Focus input box if visible

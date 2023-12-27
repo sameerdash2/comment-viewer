@@ -36,6 +36,15 @@
     <!-- Force parcel bundler to ignore socket script -->
     <script>document.write(`<script defer src="/socket.io/socket.io.min.js"><` + `/script>`)</script>
     <script defer type="module" src="./main.js"></script>
+
+    <!-- Check user's dark mode setting & apply before rendering the body -->
+    <script>
+      try {
+        if (localStorage.getItem('dark') === "true") {
+          document.documentElement.classList.add("dark-mode");
+        }
+      } catch { }
+    </script>
   </head>
 
   <body>
