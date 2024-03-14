@@ -4,6 +4,7 @@ const { printTimestamp, getNextUTCTimestamp } = require('./utils');
 
 const DAY = 24 * 60 * 60 * 1000;
 const timer = ms => new Promise(res => setTimeout(res, ms));
+const CHUNK_SIZE = 2500;
 
 class Database {
     constructor() {
@@ -30,6 +31,7 @@ class Database {
         this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT,' +
             ' finishedAt BIGINT, commentCount INT, commentThreads INT, isAppending BOOL)').run();
 
+        this.cleanupChunkTimes = [];
         this.scheduleCleanup();
     }
 
@@ -66,12 +68,20 @@ class Database {
         this._db.prepare('UPDATE videos SET inProgress = true, nextPageToken = ? WHERE id = ?').run(null, videoId);
 
         let deleteCount = 0;
-        let changes = 1;
-        while (changes > 0) {
-            changes = this._db.prepare(`DELETE FROM comments WHERE videoId = ? LIMIT 2500`).run(videoId).changes;
+        let changes = 0;
+        let start, end;
+        do {
+            start = Date.now();
+            changes = this._db.prepare(`DELETE FROM comments WHERE videoId = ? LIMIT ${CHUNK_SIZE}`).run(videoId).changes;
+            end = Date.now();
+
+            // Track time taken for each full-size chunk
+            changes === CHUNK_SIZE && this.cleanupChunkTimes.push(end - start);
+
             deleteCount += changes;
             await (timer(50));
-        }
+        } while (changes > 0);
+
         this._db.prepare('DELETE FROM videos WHERE id = ?').run(videoId);
         this._videosInDeletion.delete(videoId);
 
@@ -163,8 +173,10 @@ class Database {
         // - under 1M comments     & > 7 days untouched
         // - under 10M comments    & > 21 days untouched
 
-        const cleanupStart = new Date();
+        const cleanupStart = Date.now();
         logger.log('info', "CLEANUP: Starting database cleanup");
+
+        this.cleanupChunkTimes = [];
 
         let totalDeleteCount = 0;
         totalDeleteCount += await this.cleanUpSet(2 * DAY,  10000, true);
@@ -172,11 +184,18 @@ class Database {
         totalDeleteCount += await this.cleanUpSet(7 * DAY,  1000000);
         totalDeleteCount += await this.cleanUpSet(21 * DAY, 10000000);
 
-        const elapsed = Math.ceil((Date.now() - cleanupStart.getTime()) / 1000);
+        const elapsed = Math.ceil((Date.now() - cleanupStart) / 1000);
         const elapsedMins = Math.floor(elapsed / 60), elapsedSecs = elapsed % 60;
 
         logger.log('info', "CLEANUP: Finished database cleanup in %d min, %d s. Comments deleted: %s",
             elapsedMins, elapsedSecs, totalDeleteCount.toLocaleString());
+
+        const chunkSum = this.cleanupChunkTimes.reduce((prev, current) => prev + current, 0);
+        const chunkAvg = Math.ceil(chunkSum / this.cleanupChunkTimes.length);
+        
+        logger.log('info', "CLEANUP: There were %d chunks of size %d. Average time per chunk: %d ms",
+            this.cleanupChunkTimes.length, CHUNK_SIZE, chunkAvg);
+
         this.scheduleCleanup();
     }
 
