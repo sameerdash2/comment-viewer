@@ -38,7 +38,9 @@ function getNextUTCTimestamp(dayOfWeek, hour) {
     const diff = dayOfWeek - nextOccurence.getUTCDay();
     nextOccurence.setUTCDate(nextOccurence.getUTCDate() + diff);
     nextOccurence.setUTCHours(hour, 0, 0, 0);
-    if (nextOccurence <= Date.now()) {
+
+    // Include 1 second of buffer time to ensure the timestamp is in the future
+    if (nextOccurence <= (Date.now() + 1000)) {
         nextOccurence.setUTCDate(nextOccurence.getUTCDate() + 7);
     }
 

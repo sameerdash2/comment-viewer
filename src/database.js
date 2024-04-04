@@ -4,7 +4,7 @@ const { printTimestamp, getNextUTCTimestamp } = require('./utils');
 
 const DAY = 24 * 60 * 60 * 1000;
 const timer = ms => new Promise(res => setTimeout(res, ms));
-const CHUNK_SIZE = 2500;
+const CHUNK_SIZE = 1500;
 
 class Database {
     constructor() {
@@ -153,12 +153,13 @@ class Database {
     }
 
     scheduleCleanup() {
-        // Clean up database every Wednesday & Saturday at 09:00 UTC
-        const nextWednesday = getNextUTCTimestamp(3, 9);
+        // Clean up database every Tuesday, Thursday, & Saturday at 09:00 UTC
+        const nextTuesday = getNextUTCTimestamp(2, 9);
+        const nextThursday = getNextUTCTimestamp(4, 9);
         const nextSaturday = getNextUTCTimestamp(6, 9);
 
-        // Take the earlier date
-        const nextCleanup = new Date(Math.min(nextWednesday, nextSaturday));
+        // Take the earliest date
+        const nextCleanup = new Date(Math.min(nextTuesday, nextThursday, nextSaturday));
         const timeToNextCleanup = nextCleanup.getTime() - Date.now();
 
         setTimeout(() => this.cleanup(), timeToNextCleanup);
@@ -170,8 +171,8 @@ class Database {
         // Remove any videos with:
         // - under 10,000 comments & > 2 days untouched
         // - under 100K comments   & > 5 days untouched
-        // - under 1M comments     & > 7 days untouched
-        // - under 10M comments    & > 21 days untouched
+        // - under 1M comments     & > 5 days untouched
+        // - under 10M comments    & > 14 days untouched
 
         const cleanupStart = Date.now();
         logger.log('info', "CLEANUP: Starting database cleanup");
@@ -181,8 +182,8 @@ class Database {
         let totalDeleteCount = 0;
         totalDeleteCount += await this.cleanUpSet(2 * DAY,  10000, true);
         totalDeleteCount += await this.cleanUpSet(5 * DAY,  100000);
-        totalDeleteCount += await this.cleanUpSet(7 * DAY,  1000000);
-        totalDeleteCount += await this.cleanUpSet(21 * DAY, 10000000);
+        totalDeleteCount += await this.cleanUpSet(5 * DAY,  1000000);
+        totalDeleteCount += await this.cleanUpSet(14 * DAY, 10000000);
 
         const elapsed = Math.ceil((Date.now() - cleanupStart) / 1000);
         const elapsedMins = Math.floor(elapsed / 60), elapsedSecs = elapsed % 60;
