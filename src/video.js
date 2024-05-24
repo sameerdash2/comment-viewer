@@ -490,7 +490,9 @@ class Video {
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
             response.data.items.forEach((reply) => replies.push(convertComment(reply, true)));
 
-            if (response.data.nextPageToken) {
+            // TEMP 2024-05-24: API sometimes returns a corrupt nextPageToken that links to itself, causing an infinite loop. Nice.
+            const abortEarly = true;
+            if (!abortEarly && response.data.nextPageToken) {
                 // Fetch next batch of replies
                 setTimeout(() => this.fetchReplies(commentId, response.data.nextPageToken, replies), 0);
             }
