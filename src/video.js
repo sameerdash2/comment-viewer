@@ -488,11 +488,30 @@ class Video {
 
     fetchReplies(commentId, pageToken, replies, consecutiveErrors = 0) {
         this._app.ytapi.executeReplies(commentId, pageToken).then((response) => {
-            response.data.items.forEach((reply) => replies.push(convertComment(reply, true)));
+            // After the May 2024 bug, make sure all replies are unique.
+            const existingReplies = new Set(replies.map((reply) => reply.id));
+            let hadDuplicates = false;
+            response.data.items.forEach((reply) => {
+                if (existingReplies.has(reply.id)) {
+                    !hadDuplicates && logger.log('warn', "Duplicate reply found on comment %s: %s", commentId, reply.id);
+                    hadDuplicates = true;
+                }
+                else {
+                    replies.push(convertComment(reply, true));
+                    existingReplies.add(reply.id);
+                }
+            });
 
-            // TEMP 2024-05-24: API sometimes returns a corrupt nextPageToken that links to itself, causing an infinite loop. Nice.
-            const abortEarly = true;
-            if (!abortEarly && response.data.nextPageToken) {
+            const shouldFetchNextPage = (
+                response.data.nextPageToken &&
+                response.data.nextPageToken !== pageToken &&
+                !hadDuplicates &&
+                // As a last resort, stop fetching past 1000 replies.
+                // Comments are technically limited to 500 replies, but there have been some special cases with up to 800.
+                replies.length < 1000
+            );
+
+            if (shouldFetchNextPage) {
                 // Fetch next batch of replies
                 setTimeout(() => this.fetchReplies(commentId, response.data.nextPageToken, replies), 0);
             }
