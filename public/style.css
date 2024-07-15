@@ -6,7 +6,7 @@
   font-family: inherit;
 }
 .u-select {
-  background: var(--graph-selection-color,);
+  background: var(--graph-selection-color, #00000012);
 }
 
 /* Dark mode colors */
