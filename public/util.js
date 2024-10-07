@@ -230,7 +230,8 @@ export function parseDurationHMMSS(timeSeconds) {
 
 export function eta(x) {
     // Estimates number of seconds to load x comments
-    return Math.floor(x / 250) + 1;
+    const estimate = Math.floor(x / 450);
+    return Math.max(estimate, 0);
 }
 
 export function getCssProperty(propertyName) {
