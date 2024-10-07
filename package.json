@@ -8,22 +8,22 @@
     "node": ">=14.x"
   },
   "dependencies": {
-    "better-sqlite3": "^8.3.0",
-    "express": "^4.18.2",
-    "googleapis": "^122.0.0",
-    "socket.io": "^4.6.1",
-    "socket.io-client": "^4.6.1",
-    "uplot": "^1.6.24",
-    "winston": "^3.8.2",
-    "winston-daily-rotate-file": "^4.7.1"
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.21.0",
+    "googleapis": "^144.0.0",
+    "socket.io": "^4.8.0",
+    "socket.io-client": "^4.8.0",
+    "uplot": "^1.6.31",
+    "winston": "^3.15.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.21.3",
-    "@parcel/packager-xml": "2.9.3",
-    "@parcel/transformer-xml": "2.9.3",
+    "@babel/eslint-parser": "^7.25.7",
+    "@parcel/packager-xml": "^2.12.0",
+    "@parcel/transformer-xml": "^2.12.0",
     "eslint": "^8.38.0",
-    "parcel": "^2.9.3",
-    "parcel-reporter-static-files-copy": "^1.5.0"
+    "parcel": "^2.12.0",
+    "parcel-reporter-static-files-copy": "^1.5.3"
   },
   "targets": {
     "default": {
@@ -38,6 +38,7 @@
   },
   "scripts": {
     "start": "node index.js",
+    "dev": "parcel watch public/*.html",
     "build": "parcel build public/*.html",
     "purge-bootstrap": "purgecss --css ../bootstrap.min.css --content public/* --output public/bootstrap-purged.min.css"
   }
