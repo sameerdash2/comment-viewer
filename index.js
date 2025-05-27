@@ -66,48 +66,38 @@ class App {
             });
 
             function checkSendID(inp) {
-                // Assuming video ID length of 11
-                if (inp.length >= 11) {
-                    const linkedMarker = inp.indexOf("lc=");
-                    let videoMarker;
-                    if (inp.indexOf("v=") >= 0) {
-                        // https://www.youtube.com/watch?v=dQw4w9WgXcQ
-                        // https://www.youtube.com/watch?v=dQw4w9WgXcQ&foo=bar
-                        videoMarker = inp.indexOf("v=") + 2;
-                    } else if (inp.indexOf("youtu.be/") >= 0) {
-                        // https://youtu.be/dQw4w9WgXcQ
-                        videoMarker = inp.indexOf("youtu.be/") + 9;
-                    } else if (inp.indexOf("shorts/") >= 0) {
-                        // https://www.youtube.com/shorts/0T36jqxQcgQ
-                        // https://www.youtube.com/shorts/0T36jqxQcgQ&foo=bar
-                        videoMarker = inp.indexOf("shorts/") + 7;
-                    } else {
-                        // Take last 11 characters
-                        videoMarker = inp.length - 11;
-                    }
-                    const idString = inp.substring(videoMarker, videoMarker + 11);
-
-                    if (linkedMarker > -1) {
-                        const linkedId = inp.substring(linkedMarker + 3);
-                        let linkedParentId;
-                        if (linkedId.indexOf(".") > -1) {
-                            // Linked a reply
-                            const dot = linkedId.indexOf(".");
-                            linkedParentId = linkedId.substring(0, dot);
-                            videoInstance.fetchLinkedComment(idString, linkedParentId, linkedId);
-                        } else {
-                            // Linked a parent comment
-                            linkedParentId = linkedId;
-                            videoInstance.fetchLinkedComment(idString, linkedParentId);
-                        }
-                    } else {
-                        videoInstance.fetchTitle(idString);
-                    }
-
-                    return true;
-                } else {
+                // Assuming video IDs are strings in base64 with 11 chars.
+                // Match the 11 characters after one of {"v=", "youtu.be/", "shorts/", "live/"}.
+                // If none of those are found, fall back to last 11 chars.
+                const videoIdPattern = /(?:v=|youtu\.be\/|shorts\/|live\/)([\w-]{11})/;
+                const match = videoIdPattern.exec(inp) ?? /([\w-]{11})$/.exec(inp);
+                if (match === null) {
                     return false;
                 }
+                const videoId = match[1];
+
+                // Check if user entered a linked comment. These can have periods
+                const linkedIdPattern = /lc=([\w.-]+)/;
+                const linkedMatch = linkedIdPattern.exec(inp);
+                if (linkedMatch !== null) {
+                    const linkedId = linkedMatch[1];
+                    // Check if this linked ID indicates a reply: look for the dot.
+                    // If so, pull out the parent ID separately
+                    const dotIndex = linkedId.indexOf(".");
+                    if (dotIndex !== -1) {
+                        // Linked a reply
+                        const linkedParentId = linkedId.substring(0, dotIndex);
+                        videoInstance.fetchLinkedComment(videoId, linkedParentId, linkedId);
+                    } else {
+                        // Linked a parent comment
+                        videoInstance.fetchLinkedComment(videoId, linkedId);
+                    }
+                } else {
+                    // Fetch video info
+                    videoInstance.fetchTitle(videoId);
+                }
+
+                return true;
             }
         });
     }
