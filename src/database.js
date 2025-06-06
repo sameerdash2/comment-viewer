@@ -168,11 +168,14 @@ class Database {
     }
 
     async cleanup() {
+        // The following are based on commentCount, which *counts replies*, even though replies are not stored in database.
+        // commentCount is the user-facing number of comments, which is larger than the number of comment threads stored.
+
         // Remove any videos with:
         // - under 10,000 comments & > 2 days untouched
-        // - under 100K comments   & > 5 days untouched
+        // - under 100K comments   & > 2 days untouched
         // - under 1M comments     & > 5 days untouched
-        // - under 10M comments    & > 14 days untouched
+        // - under 10M comments    & > 7 days untouched
 
         const cleanupStart = Date.now();
         logger.log('info', "CLEANUP: Starting database cleanup");
@@ -181,9 +184,9 @@ class Database {
 
         let totalDeleteCount = 0;
         totalDeleteCount += await this.cleanUpSet(2 * DAY,  10000, true);
-        totalDeleteCount += await this.cleanUpSet(5 * DAY,  100000);
+        totalDeleteCount += await this.cleanUpSet(2 * DAY,  100000);
         totalDeleteCount += await this.cleanUpSet(5 * DAY,  1000000);
-        totalDeleteCount += await this.cleanUpSet(14 * DAY, 10000000);
+        totalDeleteCount += await this.cleanUpSet(7 * DAY, 10000000);
 
         const elapsed = Math.ceil((Date.now() - cleanupStart) / 1000);
         const elapsedMins = Math.floor(elapsed / 60), elapsedSecs = elapsed % 60;
