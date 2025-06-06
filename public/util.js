@@ -237,3 +237,14 @@ export function eta(x) {
 export function getCssProperty(propertyName) {
     return window.getComputedStyle(document.body).getPropertyValue(propertyName);
 }
+
+export function timeToNextMidnight() {
+    const now = new Date();
+    const nextPacificMidnight = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+    nextPacificMidnight.setDate(nextPacificMidnight.getDate() + 1);
+    nextPacificMidnight.setHours(0, 0, 0, 0);
+    const diff = nextPacificMidnight - now;
+    const hr = Math.floor(diff / 1000 / 60 / 60);
+    const min = Math.floor(diff / 1000 / 60 % 60);
+    return { hr, min };
+}

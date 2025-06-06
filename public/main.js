@@ -1,5 +1,5 @@
 import { Video } from "./video.js";
-import { shiftDate } from './util.js';
+import { shiftDate, timeToNextMidnight } from './util.js';
 
 const ERR = "#A00";
 const LOAD = "#666";
@@ -348,11 +348,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     socket.on("quotaExceeded", () => {
+        const {hr, min} = timeToNextMidnight();
+        const concession = `Quota exceeded. Please try again after midnight Pacific Time (in ${hr} hr ${min} min)`;
         if (video._videoId) {
-            displayNote("Quota exceeded. Please try again later");
+            displayNote(concession);
         }
         else {
-            message.textContent = "Quota exceeded. Please try again later";
+            message.textContent = concession;
             message.style.color = ERR;
         }
     });
