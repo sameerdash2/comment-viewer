@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>YouTube Comment Viewer</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
-    <link href="bootstrap-purged.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css" integrity="sha256-aAr2Zpq8MZ+YA/D6JtRD3xtrwpEz2IqOS+pWD/7XKIw=" crossorigin="anonymous">
     <link href="./style.css" rel="stylesheet" type="text/css" />
     <link rel="icon" href="./favicon.ico" />
     <link type="application/opensearchdescription+xml" rel="search" href="./opensearch.xml" title="YouTube Comment Viewer">
@@ -44,12 +44,18 @@
           document.documentElement.classList.add("dark-mode");
         }
       } catch { }
+      const mt = new Date(1749358800000).toLocaleString(undefined, { timeZoneName: "short" });
     </script>
   </head>
 
   <body>
     <main class="container-xl">
       <h1><a href="/" target="_self" class="noColor">YouTube Comment Viewer</a></h1>
+
+      <div class="alert alert-warning pl-3" role="alert" style="color: hsl(45 94% 20% / 1);">
+        <p><strong>Notice</strong>: Upcoming site maintenance on <strong><script>document.write(mt)</script></strong>. Downtime may last up to 2 hours</p>
+      </div>
+
       <div class="row" id="intro">
         <div class="col-md-8 mb-3">
           <div class="card h-100">
