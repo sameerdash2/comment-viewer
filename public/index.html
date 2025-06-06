@@ -44,7 +44,6 @@
           document.documentElement.classList.add("dark-mode");
         }
       } catch { }
-      const mt = new Date(1749358800000).toLocaleString(undefined, { timeZoneName: "short" });
     </script>
   </head>
 
@@ -53,7 +52,11 @@
       <h1><a href="/" target="_self" class="noColor">YouTube Comment Viewer</a></h1>
 
       <div class="alert alert-warning pl-3" role="alert" style="color: hsl(45 94% 20% / 1);">
-        <p><strong>Notice</strong>: Upcoming site maintenance on <strong><script>document.write(mt)</script></strong>. Downtime may last up to 2 hours</p>
+        <p>
+          <strong>Notice</strong>: Upcoming site maintenance on <strong>
+          <script>document.write(new Date(1749358800000).toLocaleString(undefined, { timeZoneName: "short" }))</script>
+          </strong>. Downtime may last up to 2 hours
+        </p>
       </div>
 
       <div class="row" id="intro">
