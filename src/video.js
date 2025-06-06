@@ -175,7 +175,7 @@ class Video {
                                     this._id, row.commentCount.toLocaleString(), this._commentCount.toLocaleString());
                                 this._indexedComments = row.commentCount;
 
-                                this._app.database.reAddVideo(this._video);
+                                this._app.database.reAddVideo(this._id);
                                 this.fetchAllComments(row.nextPageToken, false);
                             }
                             else {
@@ -198,7 +198,7 @@ class Video {
                         logger.log('info', "Appending to video %s. %s total; %s new.",
                             this._id, (this._commentCount).toLocaleString(), (this._commentCount - row.commentCount).toLocaleString());
                         this._indexedComments = row.commentCount;
-                        this._app.database.reAddVideo(this._video);
+                        this._app.database.reAddVideo(this._id);
                         const lastCommentRow = this._app.database.getLastComment(this._id);
                         this._lastComment = { id: lastCommentRow.id, publishedAt: lastCommentRow["MAX(publishedAt)"] };
                         this.startFetchProcess(true);
@@ -206,7 +206,7 @@ class Video {
                 }
                 else {
                     // New video
-                    this._app.database.addVideo(this._video);
+                    this._app.database.addVideo(this._id);
                     this.startFetchProcess(false);
                 }
             }
@@ -223,7 +223,7 @@ class Video {
             this._socket.emit("loadStatus", -2);
         } else {
             this._app.database.deleteVideo(this._id);
-            this._app.database.addVideo(this._video);
+            this._app.database.addVideo(this._id, this._video.commentCount);
             this.startFetchProcess(false);
         }
     }

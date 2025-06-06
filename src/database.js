@@ -21,7 +21,7 @@ class Database {
         this._db.pragma('journal_size_limit=10000000');
 
         this._db.prepare('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT,' +
-            ' commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT, rawObject TEXT)').run();
+            ' commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT)').run();
         this._db.prepare('CREATE TABLE IF NOT EXISTS comments(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT,' +
             ' authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT,' +
             ' totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)').run();
@@ -43,18 +43,18 @@ class Database {
         return { row, actuallyInProgress, inDeletion };
     }
 
-    addVideo(video) {
+    addVideo(videoId, commentCount) {
         const now = Date.now();
-        this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, retrievedAt, lastUpdated, rawObject, inProgress)' +
-            ' VALUES(?, ?, ?, ?, ?, true)')
-            .run(video.id, video.statistics.commentCount, now, now, JSON.stringify(video));
-        this._videosInProgress.add(video.id);
+        this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, retrievedAt, lastUpdated, inProgress)' +
+            ' VALUES(?, ?, ?, ?, true)')
+            .run(videoId, commentCount, now, now);
+        this._videosInProgress.add(videoId);
     }
 
-    reAddVideo(video) {
-        this._db.prepare('UPDATE videos SET lastUpdated = ?, rawObject = ?, inProgress = true WHERE id = ?')
-            .run(Date.now(), JSON.stringify(video), video.id);
-        this._videosInProgress.add(video.id);
+    reAddVideo(videoId) {
+        this._db.prepare('UPDATE videos SET lastUpdated = ?, inProgress = true WHERE id = ?')
+            .run(Date.now(), videoId);
+        this._videosInProgress.add(videoId);
     }
 
     deleteVideo(videoId) {
