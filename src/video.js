@@ -82,6 +82,10 @@ class Video {
                 const commentThreadsToday = this._app.database.commentThreadsFetchedToday();
                 this._blockedToday = commentThreadsToday >= config.dailyThreshold
                     && this._commentCount >= config.limitAfterThreshold;
+                if (this._blockedToday) {
+                    logger.log('info', "Blocking video %s with %s comments, since %s comment threads fetched today.",
+                        this._id, this._commentCount.toLocaleString(), commentThreadsToday.toLocaleString());
+                }
 
                 // Pass data to frontend
                 this._socket.emit("commentsInfo", {
