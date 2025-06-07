@@ -100,6 +100,15 @@ class Video {
                     this._id, err.code, error.reason, error.message);
             }
 
+            const errorPayload = {
+                num: this._commentCount,
+                disabled: false,
+                max: -1,
+                largeAfterThreshold: -1,
+                graph: false,
+                error: true
+            };
+
             if (++consecutiveErrors < 3) {
                 if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
@@ -119,16 +128,13 @@ class Video {
                         error: false
                     });
                 }
+                else {
+                    // Unknown error. Or members-only content
+                    this._socket.emit("commentsInfo", errorPayload);
+                }
             } else {
                 logger.log('warn', "Giving up TEST comment fetch on %s due to %d consecutive errors.", this._id, consecutiveErrors);
-                this._socket.emit("commentsInfo", {
-                    num: this._commentCount,
-                    disabled: false,
-                    max: -1,
-                    largeAfterThreshold: -1,
-                    graph: false,
-                    error: true
-                });
+                this._socket.emit("commentsInfo", errorPayload);
             }
         });
     }
