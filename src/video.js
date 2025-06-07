@@ -77,11 +77,18 @@ class Video {
                 this._commentCountTooLarge = this._commentCount > config.maxLoad
                     && typeof this._app.database.checkVideo(this._id).row === "undefined";
 
+                // Check if the daily "warning" threshold has been passed.
+                // If so, check if the comment count is too large with the strict threshold.
+                const commentThreadsToday = this._app.database.commentThreadsFetchedToday();
+                this._blockedToday = commentThreadsToday >= config.dailyThreshold
+                    && this._commentCount >= config.limitAfterThreshold;
+
                 // Pass data to frontend
                 this._socket.emit("commentsInfo", {
                     num: this._commentCount,
                     disabled: false,
                     max: (this._commentCountTooLarge) ? config.maxLoad : -1,
+                    largeAfterThreshold: this._blockedToday ? config.limitAfterThreshold : -1,
                     graph: this._graphAvailable,
                     error: false
                 });
@@ -107,6 +114,7 @@ class Video {
                         num: this._commentCount,
                         disabled: true,
                         max: -1,
+                        largeAfterThreshold: -1,
                         graph: false,
                         error: false
                     });
@@ -117,6 +125,7 @@ class Video {
                     num: this._commentCount,
                     disabled: false,
                     max: -1,
+                    largeAfterThreshold: -1,
                     graph: false,
                     error: true
                 });
@@ -151,7 +160,12 @@ class Video {
     }
 
     handleLoad(type) {
-        if (this._commentsEnabled && !this._commentCountTooLarge && type === "dateOldest") {
+        if (
+            this._commentsEnabled
+            && !this._commentCountTooLarge
+            && !this._blockedToday
+            && type === "dateOldest"
+        ) {
             this._newComments = 0;
             this._newCommentThreads = 0;
             const now = Date.now();

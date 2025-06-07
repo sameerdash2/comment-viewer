@@ -47,8 +47,24 @@ function getNextUTCTimestamp(dayOfWeek, hour) {
     return nextOccurence.getTime();
 }
 
+// Returns a Unix timestamp of the most recent Pacific midnight.
+function getLastPacificMidnight() {
+    // Get current hour of the day (0-23) in Pacific time.
+    const pacificHour = Number(new Date().toLocaleTimeString('en-US', {
+        timeZone: 'America/Los_Angeles',
+        hour12: false,
+        hour: '2-digit'
+    }));
+    // The hour diff will be off-by-one if used after 2 AM on the day of a DST switch.
+    // However, I'd rather accept this drawback than import a whole library for this
+    const midnight = new Date();
+    midnight.setUTCHours(midnight.getUTCHours() - pacificHour, 0, 0, 0);
+    return midnight.getTime();
+}
+
 module.exports = {
     convertComment,
     printTimestamp,
-    getNextUTCTimestamp
+    getNextUTCTimestamp,
+    getLastPacificMidnight
 }

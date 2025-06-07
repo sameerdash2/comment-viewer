@@ -1,6 +1,6 @@
 const sqlite = require('better-sqlite3');
 const logger = require('./logger');
-const { printTimestamp, getNextUTCTimestamp } = require('./utils');
+const { printTimestamp, getNextUTCTimestamp, getLastPacificMidnight } = require('./utils');
 
 const DAY = 24 * 60 * 60 * 1000;
 const timer = ms => new Promise(res => setTimeout(res, ms));
@@ -30,6 +30,8 @@ class Database {
 
         this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT,' +
             ' finishedAt BIGINT, commentCount INT, commentThreads INT, isAppending BOOL)').run();
+
+        this._statsDb.prepare('CREATE INDEX IF NOT EXISTS stats_index ON stats(finishedAt)').run();
 
         this.cleanupChunkTimes = [];
         this.scheduleCleanup();
@@ -126,6 +128,18 @@ class Database {
         return stats;
     }
 
+    /**
+     * Get the total number of comment threads fetched since midnight, Pacific Time.
+     * Used to fine-tune API quota usage.
+     */
+    commentThreadsFetchedToday() {
+        const cutoff = getLastPacificMidnight();
+        const row = this._statsDb.prepare(`SELECT COALESCE(SUM(commentThreads), 0) AS commentThreadsSum
+                FROM stats WHERE finishedAt > ?`)
+            .get(cutoff);
+        return Number(row.commentThreadsSum);
+    }
+
     writeNewComments(videoId, comments, newCommentCount, nextPageToken) {
         const insert = [];
         for (let i = 0; i < comments.length; i++) { 
@@ -196,7 +210,7 @@ class Database {
 
         const chunkSum = this.cleanupChunkTimes.reduce((prev, current) => prev + current, 0);
         const chunkAvg = Math.ceil(chunkSum / this.cleanupChunkTimes.length);
-        
+
         logger.log('info', "CLEANUP: There were %d chunks of size %d. Average time per chunk: %d ms",
             this.cleanupChunkTimes.length, CHUNK_SIZE, chunkAvg);
 

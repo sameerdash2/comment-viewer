@@ -204,8 +204,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    socket.on("commentsInfo", ({ num, disabled, max, graph, error }) => {
-        const allowLoadingComments = !disabled && max < 0 && !error;
+    socket.on("commentsInfo", ({ num, disabled, max, largeAfterThreshold, graph, error }) => {
+        const allowLoadingComments = !disabled && max < 0 && largeAfterThreshold < 0 && !error;
         document.getElementById("chooseLoad").style.display = allowLoadingComments ? "block" : "none";
 
         num = Number(num) || 0;
@@ -234,6 +234,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 gtag('event', 'max_comments', {
                     'event_category': 'data_request',
                     'value': num
+                });
+            }
+            else if (largeAfterThreshold > 0) {
+                displayNote(`Videos with over ${largeAfterThreshold.toLocaleString()} comments are disabled for the rest
+                    of the day. For more details
+                    <a href="https://github.com/sameerdash2/comment-viewer/pull/17">see here</a>.`);
+                gtag('event', 'large_after_threshold', {
+                    'event_category': 'data_request',
+                    'value': largeAfterThreshold
                 });
             }
         }
@@ -390,6 +399,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function displayNote(note) {
         document.getElementById("noteColumn").style.display = "block";
-        document.getElementById("limitMessage").textContent = note;
+        document.getElementById("limitMessage").innerHTML = note;
     }
 });
