@@ -238,13 +238,19 @@ export function getCssProperty(propertyName) {
     return window.getComputedStyle(document.body).getPropertyValue(propertyName);
 }
 
-export function timeToNextMidnight() {
+export function timeToNextPacificMidnight() {
+    // Get current Pacific time in "HH:MM"
     const now = new Date();
-    const nextPacificMidnight = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
-    nextPacificMidnight.setDate(nextPacificMidnight.getDate() + 1);
-    nextPacificMidnight.setHours(0, 0, 0, 0);
-    const diff = nextPacificMidnight - now;
-    const hr = Math.floor(diff / 1000 / 60 / 60);
-    const min = Math.floor(diff / 1000 / 60 % 60);
-    return { hr, min };
+    const timeString = now.toLocaleTimeString('en-US', {
+        timeZone: 'America/Los_Angeles',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    const [hh, mm] = timeString.split(':').map(Number);
+    // The hour diff will be off-by-one if used before 2 AM on the day of a DST switch.
+    // However, I'd rather accept this drawback than import a whole library for this
+    const hourDiff = 23 - hh;
+    const minDiff = 59 - mm;
+    return { hourDiff, minDiff };
 }

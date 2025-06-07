@@ -1,5 +1,5 @@
 import { Video } from "./video.js";
-import { shiftDate, timeToNextMidnight } from './util.js';
+import { shiftDate, timeToNextPacificMidnight } from './util.js';
 
 const ERR = "#A00";
 const LOAD = "#666";
@@ -348,7 +348,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     socket.on("quotaExceeded", () => {
-        const {hr, min} = timeToNextMidnight();
+        const {hr, min} = timeToNextPacificMidnight();
         const concession = `Quota exceeded. Please try again after midnight Pacific Time (in ${hr} hr ${min} min)`;
         if (video._videoId) {
             displayNote(concession);
