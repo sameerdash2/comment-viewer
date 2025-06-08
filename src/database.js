@@ -1,6 +1,6 @@
 const sqlite = require('better-sqlite3');
 const logger = require('./logger');
-const { printTimestamp, getNextUTCTimestamp } = require('./utils');
+const { printTimestamp, getNextUTCTimestamp, getLastPacificMidnight } = require('./utils');
 
 const DAY = 24 * 60 * 60 * 1000;
 const timer = ms => new Promise(res => setTimeout(res, ms));
@@ -21,7 +21,7 @@ class Database {
         this._db.pragma('journal_size_limit=10000000');
 
         this._db.prepare('CREATE TABLE IF NOT EXISTS videos(id TINYTEXT PRIMARY KEY, initialCommentCount INT,' +
-            ' commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT, rawObject TEXT)').run();
+            ' commentCount INT, retrievedAt BIGINT, lastUpdated BIGINT, inProgress BOOL, nextPageToken TEXT)').run();
         this._db.prepare('CREATE TABLE IF NOT EXISTS comments(id TINYTEXT PRIMARY KEY, textDisplay TEXT, authorDisplayName TEXT,' +
             ' authorProfileImageUrl TINYTEXT, authorChannelId TINYTEXT, likeCount INT, publishedAt BIGINT, updatedAt BIGINT,' +
             ' totalReplyCount SMALLINT, videoId TINYTEXT, FOREIGN KEY(videoId) REFERENCES videos(id) ON DELETE CASCADE)').run();
@@ -30,6 +30,8 @@ class Database {
 
         this._statsDb.prepare('CREATE TABLE IF NOT EXISTS stats(id TINYTEXT, title TINYTEXT, duration INT,' +
             ' finishedAt BIGINT, commentCount INT, commentThreads INT, isAppending BOOL)').run();
+
+        this._statsDb.prepare('CREATE INDEX IF NOT EXISTS stats_index ON stats(finishedAt)').run();
 
         this.cleanupChunkTimes = [];
         this.scheduleCleanup();
@@ -43,18 +45,18 @@ class Database {
         return { row, actuallyInProgress, inDeletion };
     }
 
-    addVideo(video) {
+    addVideo(videoId, commentCount) {
         const now = Date.now();
-        this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, retrievedAt, lastUpdated, rawObject, inProgress)' +
-            ' VALUES(?, ?, ?, ?, ?, true)')
-            .run(video.id, video.statistics.commentCount, now, now, JSON.stringify(video));
-        this._videosInProgress.add(video.id);
+        this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, retrievedAt, lastUpdated, inProgress)' +
+            ' VALUES(?, ?, ?, ?, true)')
+            .run(videoId, commentCount, now, now);
+        this._videosInProgress.add(videoId);
     }
 
-    reAddVideo(video) {
-        this._db.prepare('UPDATE videos SET lastUpdated = ?, rawObject = ?, inProgress = true WHERE id = ?')
-            .run(Date.now(), JSON.stringify(video), video.id);
-        this._videosInProgress.add(video.id);
+    reAddVideo(videoId) {
+        this._db.prepare('UPDATE videos SET lastUpdated = ?, inProgress = true WHERE id = ?')
+            .run(Date.now(), videoId);
+        this._videosInProgress.add(videoId);
     }
 
     deleteVideo(videoId) {
@@ -126,6 +128,18 @@ class Database {
         return stats;
     }
 
+    /**
+     * Get the total number of comment threads fetched since midnight, Pacific Time.
+     * Used to fine-tune API quota usage.
+     */
+    commentThreadsFetchedToday() {
+        const cutoff = getLastPacificMidnight();
+        const row = this._statsDb.prepare(`SELECT COALESCE(SUM(commentThreads), 0) AS commentThreadsSum
+                FROM stats WHERE finishedAt > ?`)
+            .get(cutoff);
+        return Number(row.commentThreadsSum);
+    }
+
     writeNewComments(videoId, comments, newCommentCount, nextPageToken) {
         const insert = [];
         for (let i = 0; i < comments.length; i++) { 
@@ -168,11 +182,14 @@ class Database {
     }
 
     async cleanup() {
+        // The following are based on commentCount, which *counts replies*, even though replies are not stored in database.
+        // commentCount is the user-facing number of comments, which is larger than the number of comment threads stored.
+
         // Remove any videos with:
         // - under 10,000 comments & > 2 days untouched
-        // - under 100K comments   & > 5 days untouched
+        // - under 100K comments   & > 2 days untouched
         // - under 1M comments     & > 5 days untouched
-        // - under 10M comments    & > 14 days untouched
+        // - under 10M comments    & > 7 days untouched
 
         const cleanupStart = Date.now();
         logger.log('info', "CLEANUP: Starting database cleanup");
@@ -181,9 +198,9 @@ class Database {
 
         let totalDeleteCount = 0;
         totalDeleteCount += await this.cleanUpSet(2 * DAY,  10000, true);
-        totalDeleteCount += await this.cleanUpSet(5 * DAY,  100000);
+        totalDeleteCount += await this.cleanUpSet(2 * DAY,  100000);
         totalDeleteCount += await this.cleanUpSet(5 * DAY,  1000000);
-        totalDeleteCount += await this.cleanUpSet(14 * DAY, 10000000);
+        totalDeleteCount += await this.cleanUpSet(7 * DAY, 10000000);
 
         const elapsed = Math.ceil((Date.now() - cleanupStart) / 1000);
         const elapsedMins = Math.floor(elapsed / 60), elapsedSecs = elapsed % 60;
@@ -193,7 +210,7 @@ class Database {
 
         const chunkSum = this.cleanupChunkTimes.reduce((prev, current) => prev + current, 0);
         const chunkAvg = Math.ceil(chunkSum / this.cleanupChunkTimes.length);
-        
+
         logger.log('info', "CLEANUP: There were %d chunks of size %d. Average time per chunk: %d ms",
             this.cleanupChunkTimes.length, CHUNK_SIZE, chunkAvg);
 

@@ -77,11 +77,22 @@ class Video {
                 this._commentCountTooLarge = this._commentCount > config.maxLoad
                     && typeof this._app.database.checkVideo(this._id).row === "undefined";
 
+                // Check if the daily "warning" threshold has been passed.
+                // If so, check if the comment count is too large with the strict threshold.
+                const commentThreadsToday = this._app.database.commentThreadsFetchedToday();
+                this._blockedToday = commentThreadsToday >= config.dailyThreshold
+                    && this._commentCount >= config.limitAfterThreshold;
+                if (this._blockedToday) {
+                    logger.log('info', "Blocking video %s with %s comments, since %s comment threads fetched today.",
+                        this._id, this._commentCount.toLocaleString(), commentThreadsToday.toLocaleString());
+                }
+
                 // Pass data to frontend
                 this._socket.emit("commentsInfo", {
                     num: this._commentCount,
                     disabled: false,
                     max: (this._commentCountTooLarge) ? config.maxLoad : -1,
+                    largeAfterThreshold: this._blockedToday ? config.limitAfterThreshold : -1,
                     graph: this._graphAvailable,
                     error: false
                 });
@@ -92,6 +103,15 @@ class Video {
                 logger.log('error', "TEST comment execute error on %s: %d ('%s') - '%s'",
                     this._id, err.code, error.reason, error.message);
             }
+
+            const errorPayload = {
+                num: this._commentCount,
+                disabled: false,
+                max: -1,
+                largeAfterThreshold: -1,
+                graph: false,
+                error: true
+            };
 
             if (++consecutiveErrors < 3) {
                 if (error.reason === "quotaExceeded") {
@@ -107,19 +127,18 @@ class Video {
                         num: this._commentCount,
                         disabled: true,
                         max: -1,
+                        largeAfterThreshold: -1,
                         graph: false,
                         error: false
                     });
                 }
+                else {
+                    // Unknown error. Or members-only content
+                    this._socket.emit("commentsInfo", errorPayload);
+                }
             } else {
                 logger.log('warn', "Giving up TEST comment fetch on %s due to %d consecutive errors.", this._id, consecutiveErrors);
-                this._socket.emit("commentsInfo", {
-                    num: this._commentCount,
-                    disabled: false,
-                    max: -1,
-                    graph: false,
-                    error: true
-                });
+                this._socket.emit("commentsInfo", errorPayload);
             }
         });
     }
@@ -151,7 +170,12 @@ class Video {
     }
 
     handleLoad(type) {
-        if (this._commentsEnabled && !this._commentCountTooLarge && type === "dateOldest") {
+        if (
+            this._commentsEnabled
+            && !this._commentCountTooLarge
+            && !this._blockedToday
+            && type === "dateOldest"
+        ) {
             this._newComments = 0;
             this._newCommentThreads = 0;
             const now = Date.now();
@@ -175,7 +199,7 @@ class Video {
                                     this._id, row.commentCount.toLocaleString(), this._commentCount.toLocaleString());
                                 this._indexedComments = row.commentCount;
 
-                                this._app.database.reAddVideo(this._video);
+                                this._app.database.reAddVideo(this._id);
                                 this.fetchAllComments(row.nextPageToken, false);
                             }
                             else {
@@ -198,7 +222,7 @@ class Video {
                         logger.log('info', "Appending to video %s. %s total; %s new.",
                             this._id, (this._commentCount).toLocaleString(), (this._commentCount - row.commentCount).toLocaleString());
                         this._indexedComments = row.commentCount;
-                        this._app.database.reAddVideo(this._video);
+                        this._app.database.reAddVideo(this._id);
                         const lastCommentRow = this._app.database.getLastComment(this._id);
                         this._lastComment = { id: lastCommentRow.id, publishedAt: lastCommentRow["MAX(publishedAt)"] };
                         this.startFetchProcess(true);
@@ -206,7 +230,7 @@ class Video {
                 }
                 else {
                     // New video
-                    this._app.database.addVideo(this._video);
+                    this._app.database.addVideo(this._id);
                     this.startFetchProcess(false);
                 }
             }
@@ -223,7 +247,7 @@ class Video {
             this._socket.emit("loadStatus", -2);
         } else {
             this._app.database.deleteVideo(this._id);
-            this._app.database.addVideo(this._video);
+            this._app.database.addVideo(this._id, this._video.commentCount);
             this.startFetchProcess(false);
         }
     }

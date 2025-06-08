@@ -1,3 +1,9 @@
+### Note
+
+This changelog is not exhaustive. It served as a useful record back in 2020–2021 when I used to work on many features and push them all at once, but nowadays most [new commits](https://github.com/sameerdash2/comment-viewer/commits/master/) are small hotfixes that go to production immediately.
+
+---
+
 ### 3.3.4 (27 Dec 2023)
 - Added dark mode (https://github.com/sameerdash2/comment-viewer/issues/14). Toggleable via a button in the footer.
 
@@ -11,7 +17,6 @@
     - In Safari, I couldn't figure out how to access the site search (in my 5 minutes of testing) but it did recognize the site's OpenSearch engine.
 
 ### 3.3.2 (11 Apr 2023)
-*Note: Some intermittent changes may not be posted on this changelog.*
 - Graph and statistics now show automatically for videos with under 100,000 comments
 - Fixed "NaN%" showing in tab title
 - Updated system to use Node 18
