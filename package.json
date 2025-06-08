@@ -19,10 +19,10 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.25.7",
-    "@parcel/packager-xml": "^2.15.2",
-    "@parcel/transformer-xml": "^2.15.2",
+    "@parcel/packager-xml": "2.12.0",
+    "@parcel/transformer-xml": "2.12.0",
     "eslint": "^8.38.0",
-    "parcel": "^2.15.2",
+    "parcel": "2.12.0",
     "parcel-reporter-static-files-copy": "^1.5.3"
   },
   "targets": {
