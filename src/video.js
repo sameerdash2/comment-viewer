@@ -230,7 +230,7 @@ class Video {
                 }
                 else {
                     // New video
-                    this._app.database.addVideo(this._id);
+                    this._app.database.addVideo(this._id, this._commentCount);
                     this.startFetchProcess(false);
                 }
             }
