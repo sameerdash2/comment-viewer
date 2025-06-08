@@ -72,16 +72,19 @@ class Video {
                 this._graphAvailable = this._commentCount >= 10
                     && new Date(this._video.snippet.publishedAt).getTime() <= (Date.now() - 60 * 60 * 1000);
 
+                const videoInDb = typeof this._app.database.checkVideo(this._id).row !== "undefined";
+
                 // Check if video's comment count exceeds the set maximum.
                 // If so, make sure the video isn't already retrieved (from when it had fewer comments).
-                this._commentCountTooLarge = this._commentCount > config.maxLoad
-                    && typeof this._app.database.checkVideo(this._id).row === "undefined";
+                this._commentCountTooLarge = this._commentCount > config.maxLoad && !videoInDb;
 
                 // Check if the daily "warning" threshold has been passed.
-                // If so, check if the comment count is too large with the strict threshold.
+                // If so, check if the comment count is too large with the strict threshold,
+                // and that the video isn't already retrieved.
                 const commentThreadsToday = this._app.database.commentThreadsFetchedToday();
                 this._blockedToday = commentThreadsToday >= config.dailyThreshold
-                    && this._commentCount >= config.limitAfterThreshold;
+                    && this._commentCount >= config.limitAfterThreshold
+                    && !videoInDb;
                 if (this._blockedToday) {
                     logger.log('info', "Blocking video %s with %s comments, since %s comment threads fetched today.",
                         this._id, this._commentCount.toLocaleString(), commentThreadsToday.toLocaleString());
