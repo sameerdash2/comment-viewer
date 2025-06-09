@@ -250,7 +250,7 @@ class Video {
             this._socket.emit("loadStatus", -2);
         } else {
             this._app.database.deleteVideo(this._id);
-            this._app.database.addVideo(this._id, this._video.commentCount);
+            this._app.database.addVideo(this._id, this._commentCount);
             this.startFetchProcess(false);
         }
     }
