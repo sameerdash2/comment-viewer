@@ -357,8 +357,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     socket.on("quotaExceeded", () => {
-        const {hr, min} = timeToNextPacificMidnight();
-        const concession = `Quota exceeded. Please try again after midnight Pacific Time (in ${hr} hr ${min} min)`;
+        const {hourDiff, minDiff} = timeToNextPacificMidnight();
+        const concession = `Quota exceeded. Please try again after midnight Pacific Time (in ${hourDiff} hr ${minDiff} min)`;
         if (video._videoId) {
             displayNote(concession);
         }
