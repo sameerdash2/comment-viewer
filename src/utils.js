@@ -52,7 +52,7 @@ function getLastPacificMidnight() {
     // Get current hour of the day (0-23) in Pacific time.
     const pacificHour = Number(new Date().toLocaleTimeString('en-US', {
         timeZone: 'America/Los_Angeles',
-        hour12: false,
+        hourCycle: 'h23',
         hour: '2-digit'
     }));
     // The hour diff will be off-by-one if used after 2 AM on the day of a DST switch.

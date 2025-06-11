@@ -243,7 +243,7 @@ export function timeToNextPacificMidnight() {
     const now = new Date();
     const timeString = now.toLocaleTimeString('en-US', {
         timeZone: 'America/Los_Angeles',
-        hour12: false,
+        hourCycle: 'h23',
         hour: '2-digit',
         minute: '2-digit'
     });
