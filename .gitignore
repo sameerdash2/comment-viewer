@@ -7,3 +7,4 @@ config.json
 *.sqlite-shm
 *.sqlite-wal
 *.log
+debug.txt

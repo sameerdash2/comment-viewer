@@ -1,6 +1,7 @@
 const config = require('../config.json');
-const { convertComment } = require('./utils');
+const { convertComment, printTimestamp } = require('./utils');
 const logger = require('./logger');
+const fs = require('fs');
 
 const MAX_CONSECUTIVE_ERRORS = 3;
 
@@ -9,6 +10,8 @@ class Video {
         this._app = app;
         this._io = io;
         this._socket = socket;
+
+        this.debugStream = fs.createWriteStream('debug.txt', { flags: 'a' });
 
         this.reset();
     }
@@ -332,6 +335,25 @@ class Video {
                 const cpsString = this._newCommentThreads > 800 ? ('; TRUE CPS = ' + (this._newCommentThreads / elapsed * 1000).toFixed(0)) : '';
                 logger.log('info', 'Retrieved video %s; %s comments in %ds' + cpsString,
                     this._id, (this._newComments).toLocaleString(), (elapsed / 1000).toFixed(1));
+
+                // Aug 2025: Log indexed counts to debug fetch process ending prematurely.
+                if (!appending) {
+                    this.debugStream.write(
+                        `[${printTimestamp(new Date())}] For video '${this._id}'.\n` +
+                        `  Expected commentCount:            ${this._commentCount.toLocaleString()}\n` +
+                        `  Comments indexed:                 ${this._indexedComments.toLocaleString()}\n` +
+                        `  Comment threads fetched:          ${this._newCommentThreads.toLocaleString()}\n` +
+                        `  pageToken used on last request:   ${pageToken || 'NONE'}\n` +
+                        `  nextPageToken given on last resp: ${response.data.nextPageToken ?? 'NONE'}\n` +
+                        `  proceed:                          ${proceed}\n`
+                    );
+
+                    // If over 5% of expected comments are missing, print a warning
+                    if ((this._commentCount - this._indexedComments) / this._commentCount > 0.05) {
+                        logger.log('warn', "On video %s: only %s of %s comments indexed.",
+                            this._id, this._indexedComments.toLocaleString(), this._commentCount.toLocaleString());
+                    }
+                }
 
                 this._app.database.markVideoComplete(this._id, this._video.snippet.title, elapsed,
                     this._newComments, this._newCommentThreads, appending);
