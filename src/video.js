@@ -338,18 +338,19 @@ class Video {
 
                 // Aug 2025: Log indexed counts to debug fetch process ending prematurely.
                 if (!appending) {
-                    this.debugStream.write(
-                        `[${printTimestamp(new Date())}] For video '${this._id}'.\n` +
-                        `  Expected commentCount:            ${this._commentCount.toLocaleString()}\n` +
-                        `  Comments indexed:                 ${this._indexedComments.toLocaleString()}\n` +
-                        `  Comment threads fetched:          ${this._newCommentThreads.toLocaleString()}\n` +
-                        `  pageToken used on last request:   ${pageToken || 'NONE'}\n` +
-                        `  nextPageToken given on last resp: ${response.data.nextPageToken ?? 'NONE'}\n` +
-                        `  proceed:                          ${proceed}\n`
-                    );
-
-                    // If over 5% of expected comments are missing, print a warning
-                    if ((this._commentCount - this._indexedComments) / this._commentCount > 0.05) {
+                    // If over 5% of expected comments are missing, log some data
+                    const diff = this._commentCount - this._indexedComments;
+                    if (diff / this._commentCount > 0.05 && diff > 100) {
+                        this.debugStream.write(
+                            `[${printTimestamp(new Date())}] For video '${this._id}'. ------------------------------------------------\n` +
+                            `  Expected commentCount:            ${this._commentCount.toLocaleString()}\n` +
+                            `  Comments indexed:                 ${this._indexedComments.toLocaleString()}\n` +
+                            `  Comment threads fetched:          ${this._newCommentThreads.toLocaleString()}\n` +
+                            `  pageToken used on last request:   ${pageToken || 'NONE'}\n` +
+                            `  nextPageToken given on last resp: ${response.data.nextPageToken ?? 'NONE'}\n` +
+                            `  proceed:                          ${proceed}\n` + 
+                            `  last response JSON:  ${JSON.stringify(response.data)}\n`
+                        );
                         logger.log('warn', "On video %s: only %s of %s comments indexed.",
                             this._id, this._indexedComments.toLocaleString(), this._commentCount.toLocaleString());
                     }
