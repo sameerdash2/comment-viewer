@@ -47,8 +47,8 @@ class Database {
 
     addVideo(videoId, commentCount) {
         const now = Date.now();
-        this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, retrievedAt, lastUpdated, inProgress)' +
-            ' VALUES(?, ?, ?, ?, true)')
+        this._db.prepare('INSERT OR REPLACE INTO videos(id, initialCommentCount, commentCount, retrievedAt, lastUpdated, inProgress)' +
+            ' VALUES(?, ?, 0, ?, ?, true)')
             .run(videoId, commentCount, now, now);
         this._videosInProgress.add(videoId);
     }

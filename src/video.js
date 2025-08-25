@@ -203,7 +203,7 @@ class Video {
                             if (row.nextPageToken) {
                                 logger.log('info', "Attempting to resume unfinished fetch process on %s. Indexed %s comments; total expected: %s",
                                     this._id, row.commentCount.toLocaleString(), this._commentCount.toLocaleString());
-                                this._indexedComments = row.commentCount;
+                                this._indexedComments = row.commentCount ?? 0;
 
                                 this._app.database.reAddVideo(this._id);
                                 this.fetchAllComments(row.nextPageToken, false);
@@ -227,7 +227,7 @@ class Video {
                     else {
                         logger.log('info', "Appending to video %s. %s total; %s new.",
                             this._id, (this._commentCount).toLocaleString(), (this._commentCount - row.commentCount).toLocaleString());
-                        this._indexedComments = row.commentCount;
+                        this._indexedComments = row.commentCount ?? 0;
                         this._app.database.reAddVideo(this._id);
                         const lastCommentRow = this._app.database.getLastComment(this._id);
                         this._lastComment = { id: lastCommentRow.id, publishedAt: lastCommentRow["MAX(publishedAt)"] };
