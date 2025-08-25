@@ -325,8 +325,21 @@ class Video {
             // Broadcast load status to clients to display percentage
             this._io.to('video-' + this._id).emit("loadStatus", this._indexedComments);
 
+            // Sometimes, the API returns an empty page of comments and gives no nextPageToken.
+            // Retry this request 3 times. If nothing changes, assume it's really the end of comments.
+            if (
+                response.data.items.length === 0
+                && response.data.nextPageToken === undefined
+                && ++consecutiveErrors < MAX_CONSECUTIVE_ERRORS
+            ) {
+                logger.log('warn', "Empty API response received on %s after %s of %s expected comments indexed. Retrying.",
+                    this._id, this._indexedComments.toLocaleString(), this._commentCount.toLocaleString());
+                setTimeout(() => this.fetchAllComments(pageToken, appending, consecutiveErrors), 100);
+                return;
+            }
+
             // If there are more comments, and database-stored comments have not been reached, retrieve the next 100 comments
-            if (response.data.nextPageToken && proceed) {
+            if (response.data.nextPageToken !== undefined && proceed) {
                 setTimeout(() => this.fetchAllComments(response.data.nextPageToken, appending), 0);
             }
             else {
