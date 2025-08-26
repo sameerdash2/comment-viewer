@@ -330,6 +330,7 @@ class Video {
             if (
                 response.data.items.length === 0
                 && response.data.nextPageToken === undefined
+                && this._indexedComments < this._commentCount
                 && ++consecutiveErrors < MAX_CONSECUTIVE_ERRORS
             ) {
                 logger.log('warn', "Empty API response received on %s after %s of %s expected comments indexed. Retrying.",
