@@ -48,15 +48,16 @@ class Video {
                 this._socket.emit("idInvalid");
             }
         }, (err) => {
+            const error = err.response.data.error.errors[0];
             logger.log('error', "Video execute error on %s: %d ('%s') - '%s'",
-                idString, err.code, err.errors[0].reason, err.errors[0].message);
+                idString, err.code, error.reason, error.message);
 
             if (++consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
-                if (err.errors[0].reason === "quotaExceeded") {
+                if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._socket.emit("quotaExceeded");
                 }
-                else if (err.errors[0].reason === "processingFailure") {
+                else if (error.reason === "processingFailure") {
                     setTimeout(() => this.fetchTitle(idString, consecutiveErrors), 100);
                 }
             }
@@ -104,7 +105,7 @@ class Video {
                 });
             }
         }, (err) => {
-            const error = err.errors[0];
+            const error = err.response.data.error.errors[0];
             if (error.reason !== "commentsDisabled") {
                 logger.log('error', "TEST comment execute error on %s: %d ('%s') - '%s'",
                     this._id, err.code, error.reason, error.message);
@@ -267,7 +268,7 @@ class Video {
 
     fetchAllComments(pageToken, appending, consecutiveErrors = 0) {
         // Impose 30-second limit on API response.
-        const timeoutHolder = new Promise((resolve) => setTimeout(resolve, 30*1000, -1));
+        let timeoutHolder = new Promise((resolve) => setTimeout(resolve, 30*1000, -1));
         Promise.race([timeoutHolder, this._app.ytapi.executeCommentChunk(this._id, pageToken)]).then((response) => {
             if (response === -1) {
                 logger.log('warn', "Fetch process on %s timed out. Indexed %s comments; total expected: %s",
@@ -379,7 +380,7 @@ class Video {
                 this.requestLoadedComments("dateOldest", 0, config.defaultPageSize, true, undefined, undefined, true);
             }
         }, (err) => {
-            const error = err.errors[0];
+            const error = err.response.data.error.errors[0];
             logger.log('error', "Comments execute error on %s: %d ('%s') - '%s'",
                 this._id, err.code, error.reason, error.message);
 
@@ -445,15 +446,16 @@ class Video {
                 this.fetchTitle(idString);
             }
         }, (err) => {
+            const error = err.response.data.error.errors[0];
             logger.log('error', "Linked comment execute error on %s: %d ('%s') - '%s'",
-                parentId, err.code, err.errors[0].reason, err.errors[0].message);
+                parentId, err.code, error.reason, error.message);
 
             if (++consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
-                if (err.errors[0].reason === "quotaExceeded") {
+                if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._socket.emit("quotaExceeded");
                 }
-                else if (err.errors[0].reason === "processingFailure") {
+                else if (error.reason === "processingFailure") {
                     setTimeout(() => this.fetchLinkedComment(idString, parentId, replyId, consecutiveErrors), 100);
                 }
             }
@@ -583,15 +585,16 @@ class Video {
                 this.sendReplies(commentId, replies);
             }
         }, (err) => {
+            const error = err.response.data.error.errors[0];
             logger.log('error', "Replies execute error on %s: %d ('%s') - '%s'",
-                this._id, err.code, err.errors[0].reason, err.errors[0].message);
+                this._id, err.code, error.reason, error.message);
 
             if (++consecutiveErrors < MAX_CONSECUTIVE_ERRORS) {
-                if (err.errors[0].reason === "quotaExceeded") {
+                if (error.reason === "quotaExceeded") {
                     this._app.ytapi.quotaExceeded();
                     this._socket.emit("quotaExceeded");
                 }
-                else if (err.errors[0].reason === "processingFailure") {
+                else if (error.reason === "processingFailure") {
                     setTimeout(() => this.fetchReplies(commentId, pageToken, replies, consecutiveErrors), 100);
                 }
             }
