@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (max > 0) {
                 displayNote(`Videos with over ${max.toLocaleString()} comments are not currently supported.
-                    (This may change in the future)`);
+                    (This limit has recently been lowered due to increased traffic.)`);
                 gtag('event', 'max_comments', {
                     'event_category': 'data_request',
                     'value': num
